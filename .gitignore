@@ -1,0 +1,34 @@
+# Environment files
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Dependencies
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Reference and test folders
+stitch_login_screen/
+stitch_login_screen/**
+stitch*/
+stitch*/**
+source/
+source/**
+project_test/
+project_test/**
+project-test/
+project-test/**
+volp-reminder/
+volp-reminder/**
+
+# Logs & temp
+*.log
+.DS_Store
+Thumbs.db

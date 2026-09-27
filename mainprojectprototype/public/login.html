@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VOLP Reminder — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .login-wrapper {
+      min-height: 100vh;
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      position: relative;
+    }
+
+    .login-card {
+      width: 440px;
+      max-width: 90%;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 44px 38px;
+      position: relative;
+      z-index: 10;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .login-header-title {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
+      color: var(--text);
+      margin-bottom: 28px;
+    }
+
+    .login-header-title .accent {
+      color: var(--accent);
+    }
+
+    .theme-toggle-fixed {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 50;
+    }
+
+    .demo-creds-box {
+      margin-top: 20px;
+      padding: 12px 14px;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .demo-creds-box code {
+      color: var(--accent);
+      cursor: pointer;
+      background: rgba(200, 255, 61, 0.1);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+
+    .auth-error-banner {
+      display: none;
+      margin-bottom: 18px;
+      padding: 10px 14px;
+      background: var(--danger-dim);
+      border: 1px solid var(--danger);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--danger);
+    }
+  </style>
+</head>
+<body class="login-wrapper">
+  <div class="noise-overlay"></div>
+  
+  <button class="btn btn--icon theme-toggle-fixed" id="themeToggleBtn" aria-label="Toggle Theme">☼</button>
+
+  <div class="login-card">
+    <div class="login-header-title">
+      <span class="accent">VOLP</span> REMINDER
+    </div>
+
+    <div class="auth-error-banner" id="errorBanner"></div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="username" class="form-label">Email / Username</label>
+        <input 
+          type="text" 
+          id="username" 
+          class="form-input" 
+          placeholder="student@university.edu" 
+          required 
+          autocomplete="username"
+        >
+      </div>
+
+      <div class="form-group" style="margin-bottom: 24px;">
+        <label for="password" class="form-label">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          class="form-input" 
+          placeholder="••••••••••••" 
+          required 
+          autocomplete="current-password"
+        >
+      </div>
+
+      <button type="submit" class="login-btn-submit" id="loginSubmitBtn">
+        LOGIN
+      </button>
+    </form>
+
+    <div class="demo-creds-box">
+      <div><strong>VOLP SECURE GATEWAY</strong></div>
+      <div style="margin-top: 4px;">Click to auto-fill test login: <code onclick="fillDemo()">student@university.edu</code></div>
+    </div>
+
+    <div class="login-footer-info">
+      VOLP REMINDER — BRUTALIST EDITION V1.0
+    </div>
+  </div>
+
+  <script>
+    // Theme toggle
+    const themeBtn = document.getElementById('themeToggleBtn');
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeBtn.textContent = savedTheme === 'dark' ? '☼' : '◐';
+
+    themeBtn.addEventListener('click', () => {
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      themeBtn.textContent = next === 'dark' ? '☼' : '◐';
+    });
+
+    function fillDemo() {
+      document.getElementById('username').value = 'student@university.edu';
+      document.getElementById('password').value = 'password123';
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('loginSubmitBtn');
+      const errorBanner = document.getElementById('errorBanner');
+      
+      errorBanner.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'AUTHENTICATING...';
+
+      try {
+        // Attempt backend login first
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem('volp_user', JSON.stringify({
+            email: data.email || username,
+            token: data.token || 'demo_token_' + Date.now()
+          }));
+          window.location.href = 'index.html';
+          return;
+        } else {
+          // If server responded with error, check if offline / fallback
+          const errorData = await response.json().catch(() => ({ error: 'Auth failed' }));
+          showError(errorData.error || 'Authentication error.');
+        }
+      } catch (networkErr) {
+        // Backend offline or running purely as static HTML: fallback to mock session
+        console.warn('Backend unavailable, entering offline demo mode:', networkErr);
+        localStorage.setItem('volp_user', JSON.stringify({
+          email: username || 'student@university.edu',
+          token: 'offline_token_' + Date.now()
+        }));
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 600);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'LOGIN';
+      }
+    }
+
+    function showError(msg) {
+      const banner = document.getElementById('errorBanner');
+      banner.textContent = '⚠ ' + msg;
+      banner.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
