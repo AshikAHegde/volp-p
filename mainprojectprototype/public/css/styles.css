@@ -650,7 +650,6 @@ h1, h2, h3, h4, h5, h6 {
   margin-left: auto;
 }
 
-.header-action-reminder,
 .header-action-signout,
 .header-action-optional {
   display: inline-flex;
