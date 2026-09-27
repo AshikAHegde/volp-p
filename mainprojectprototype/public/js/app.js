@@ -277,9 +277,9 @@ function navigateTo(pageId, event) {
 
   const titles = {
     dashboard: 'PROJECTS DASHBOARD',
-    tasks: 'MY ASSIGNMENTS',
-    courses: 'ENROLLED COURSES',
-    blocked: 'BLOCK MANAGER',
+    tasks: 'ASSIGNMENTS',
+    courses: 'COURSES',
+    blocked: 'BLOCKED ITEMS',
     reminders: 'REMINDERS & NOTIFICATION LOG',
     settings: 'ACCOUNT CONFIGURATION'
   };
