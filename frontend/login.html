@@ -170,6 +170,7 @@
       btn.textContent = 'AUTHENTICATING...';
 
       try {
+        // Attempt backend login first
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -185,10 +186,12 @@
           window.location.href = 'index.html';
           return;
         } else {
+          // If server responded with error, check if offline / fallback
           const errorData = await response.json().catch(() => ({ error: 'Auth failed' }));
           showError(errorData.error || 'Authentication error.');
         }
       } catch (networkErr) {
+        // Backend offline or running purely as static HTML: fallback to mock session
         console.warn('Backend unavailable, entering offline demo mode:', networkErr);
         localStorage.setItem('volp_user', JSON.stringify({
           email: username || 'student@university.edu',
