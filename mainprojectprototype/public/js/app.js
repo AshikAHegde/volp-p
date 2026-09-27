@@ -195,23 +195,6 @@ function cleanHtmlTitle(html) {
     .trim();
 }
 
-function formatTimestamp(ts) {
-  if (!ts) return 'RECENT';
-  try {
-    const d = new Date(ts);
-    if (isNaN(d.getTime())) return String(ts);
-    return d.toLocaleString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch (e) {
-    return String(ts);
-  }
-}
-
 // 4. Data Fetching from Backend API
 async function loadAppData(refresh = false) {
   try {
@@ -254,105 +237,28 @@ async function loadAppData(refresh = false) {
     if (rawAssignments.length === 0) rawAssignments = [...DEFAULT_FALLBACK_ASSIGNMENTS];
     const statusEl = document.getElementById('settingsDataSource');
     if (statusEl) statusEl.value = 'Offline / Fallback Local Storage Mode';
-    await loadBlockedData();
   }
 
   renderAllViews();
 }
 
 async function loadBlockedData() {
-  const email = currentUser?.email;
-  if (!email) return;
-
   try {
-    const bCourseRes = await fetch(`/api/blocked?email=${encodeURIComponent(email)}`);
+    const bCourseRes = await fetch(`/api/blocked?email=${encodeURIComponent(currentUser.email)}`);
     if (bCourseRes.ok) {
       const bData = await bCourseRes.json();
       blockedCoursesList = bData.blocked || [];
     }
     
-    const bAssignRes = await fetch(`/api/blocked-assignments?email=${encodeURIComponent(email)}`);
+    const bAssignRes = await fetch(`/api/blocked-assignments?email=${encodeURIComponent(currentUser.email)}`);
     if (bAssignRes.ok) {
       const aData = await bAssignRes.json();
       blockedAssignmentsList = aData.blocked || [];
     }
   } catch (e) {
-    console.warn('Could not load blocked data from API:', e.message);
     blockedCoursesList = rawCourses.filter(c => c.is_blocked);
     blockedAssignmentsList = rawAssignments.filter(a => a.is_blocked);
   }
-
-  // 1. Synchronize Courses Blocked State
-  const blockedColidSet = new Set(blockedCoursesList.map(c => Number(c.colid)));
-  rawCourses.forEach(course => {
-    if (blockedColidSet.has(Number(course.colid))) {
-      course.is_blocked = true;
-      const bc = blockedCoursesList.find(c => Number(c.colid) === Number(course.colid));
-      if (bc && (bc.blocked_at || bc.updated_at)) {
-        course.blocked_at = bc.blocked_at || bc.updated_at;
-      }
-    } else if (course.is_blocked) {
-      blockedCoursesList.push(course);
-      blockedColidSet.add(Number(course.colid));
-    } else {
-      course.is_blocked = false;
-    }
-  });
-
-  // Ensure any blocked course in blockedCoursesList is present in rawCourses
-  blockedCoursesList.forEach(bc => {
-    if (!rawCourses.some(rc => Number(rc.colid) === Number(bc.colid))) {
-      rawCourses.push({
-        colid: Number(bc.colid),
-        crsid: bc.crsid || null,
-        course_name: bc.course_name || ('Course #' + bc.colid),
-        semester: bc.semester || null,
-        academic_year: bc.academic_year || null,
-        is_blocked: true,
-        blocked_at: bc.blocked_at || bc.updated_at || null
-      });
-    }
-  });
-
-  // 2. Synchronize Assignments Blocked State & Merge Missing Blocked Assignments
-  const blockedAssignMap = new Map();
-  blockedAssignmentsList.forEach(ba => {
-    const key = `${Number(ba.assignment_id)}_${normalizeType(ba.assignment_type) || 'SUBJECTIVE'}`;
-    blockedAssignMap.set(key, ba);
-  });
-
-  rawAssignments.forEach(assignment => {
-    const key = `${Number(assignment.assignment_id)}_${normalizeType(assignment.assignment_type) || 'SUBJECTIVE'}`;
-    if (blockedAssignMap.has(key)) {
-      assignment.is_blocked = true;
-      const ba = blockedAssignMap.get(key);
-      if (ba.blocked_at) assignment.blocked_at = ba.blocked_at;
-      if (!assignment.title_html && ba.title_hint) assignment.title_html = ba.title_hint;
-      if (!assignment.course_name && ba.course_name) assignment.course_name = ba.course_name;
-    } else {
-      assignment.is_blocked = false;
-    }
-  });
-
-  // Merge any blocked assignments that were omitted by backend /my-assignments
-  blockedAssignmentsList.forEach(ba => {
-    const key = `${Number(ba.assignment_id)}_${normalizeType(ba.assignment_type) || 'SUBJECTIVE'}`;
-    const exists = rawAssignments.some(ra => `${Number(ra.assignment_id)}_${normalizeType(ra.assignment_type) || 'SUBJECTIVE'}` === key);
-    if (!exists) {
-      rawAssignments.push({
-        assignment_id: Number(ba.assignment_id),
-        assignment_type: ba.assignment_type || 'SUBJECTIVE',
-        colid: ba.colid ? Number(ba.colid) : null,
-        course_name: ba.course_name || 'Course',
-        unit_name: ba.unit_name || null,
-        title_html: ba.title_hint || ba.title_html || '',
-        due_date_raw: ba.due_date_raw || '',
-        is_submitted: false,
-        is_blocked: true,
-        blocked_at: ba.blocked_at || null
-      });
-    }
-  });
 }
 
 // 5. View Navigation
@@ -452,7 +358,7 @@ function getFilteredAssignments() {
       }
     }
 
-    // 3. Status Filter ('all', 'pending', 'submitted', 'overdue', 'blocked')
+    // 3. Status Filter ('all', 'pending', 'submitted', 'overdue')
     const submitted = isSubmitted(item);
     const overdue = isAssignmentOverdue(item);
 
@@ -461,9 +367,7 @@ function getFilteredAssignments() {
     } else if (currentStatusFilter === 'submitted') {
       if (!submitted) return false;
     } else if (currentStatusFilter === 'overdue') {
-      if (!overdue || item.is_blocked) return false;
-    } else if (currentStatusFilter === 'blocked') {
-      if (!item.is_blocked) return false;
+      if (!overdue) return false;
     }
 
     return true;
@@ -527,7 +431,7 @@ function renderDashboardProjectsGrid() {
 
   displayCourses.forEach(course => {
     const courseAssignments = rawAssignments.filter(a => Number(a.colid) === Number(course.colid));
-    const pendingCount = courseAssignments.filter(a => !isSubmitted(a) && !a.is_blocked).length;
+    const pendingCount = courseAssignments.filter(a => !isSubmitted(a)).length;
 
     const card = document.createElement('div');
     card.className = 'project-card';
@@ -544,7 +448,7 @@ function renderDashboardProjectsGrid() {
       </div>
       <div class="project-card-footer">
         <span class="code-tag code-tag--lime">COLID #${course.colid}</span>
-        <button class="btn btn--sm ${course.is_blocked ? 'btn--success' : 'btn--ghost'}" onclick="toggleCourseBlock(${course.colid}, '${escapeHtml(course.course_name || '')}', ${Boolean(course.is_blocked)})">
+        <button class="btn btn--sm ${course.is_blocked ? 'btn--success' : 'btn--ghost'}" onclick="toggleCourseBlock(${course.colid}, '${escapeHtml(course.course_name)}', ${Boolean(course.is_blocked)})">
           ${course.is_blocked ? 'UNBLOCK' : 'BLOCK'}
         </button>
       </div>
@@ -594,7 +498,7 @@ function renderDashboardRecentTable() {
         </span>
       </td>
       <td style="text-align:right">
-        <button class="btn ${item.is_blocked ? 'btn--success' : 'btn--ghost'} btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type || 'SUBJECTIVE')}', '${escapeHtml(item.course_name || '')}', null, ${Boolean(item.is_blocked)})">
+        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type)}', '${escapeHtml(item.course_name)}', '${escapeHtml(cleanTitle)}', ${Boolean(item.is_blocked)})">
           ${item.is_blocked ? 'RESTORE' : 'BLOCK'}
         </button>
       </td>
@@ -656,15 +560,15 @@ function renderKanbanBoard(items) {
         ${item.unit_name ? escapeHtml(item.unit_name) + ' · ' : ''}ID: #${item.assignment_id}
       </div>
       <div style="font-family:var(--font-mono);font-size:10px;margin-top:8px;display:flex;align-items:center;justify-content:space-between;">
-        <span style="color: ${overdue && !item.is_blocked ? 'var(--danger)' : 'var(--text-secondary)'};">
-          ${overdue && !item.is_blocked ? '⚠ OVERDUE: ' : 'Due: '}${escapeHtml(item.due_date_raw || 'No Deadline')}
+        <span style="color: ${overdue ? 'var(--danger)' : 'var(--text-secondary)'};">
+          ${overdue ? '⚠ OVERDUE: ' : 'Due: '}${escapeHtml(item.due_date_raw || 'No Deadline')}
         </span>
-        <span class="badge ${item.is_blocked ? 'badge--blocked' : (submitted ? 'badge--submitted' : (overdue ? 'badge--overdue' : 'badge--pending'))}">
-          ${item.is_blocked ? 'BLOCKED' : (submitted ? 'SUBMITTED' : (overdue ? 'OVERDUE' : 'PENDING'))}
+        <span class="badge ${submitted ? 'badge--submitted' : (overdue ? 'badge--overdue' : 'badge--pending')}">
+          ${submitted ? 'SUBMITTED' : (overdue ? 'OVERDUE' : 'PENDING')}
         </span>
       </div>
       <div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;justify-content:flex-end;">
-        <button class="btn ${item.is_blocked ? 'btn--success' : 'btn--ghost'} btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type || 'SUBJECTIVE')}', '${escapeHtml(item.course_name || '')}', null, ${Boolean(item.is_blocked)})">
+        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type)}', '${escapeHtml(item.course_name)}', '${escapeHtml(cleanTitle)}', ${Boolean(item.is_blocked)})">
           ${item.is_blocked ? 'RESTORE' : 'BLOCK'}
         </button>
       </div>
@@ -672,8 +576,6 @@ function renderKanbanBoard(items) {
 
     if (submitted) {
       doneCol.appendChild(card);
-    } else if (item.is_blocked) {
-      progressCol.appendChild(card);
     } else if (overdue) {
       todoCol.appendChild(card);
     } else {
@@ -703,7 +605,7 @@ function renderTasksTable(items) {
     const typeBadgeClass = typeNorm === 'HANDS_ON' ? 'type-badge--handson' : 'type-badge--subjective';
     const submitted = isSubmitted(item);
     const overdue = isAssignmentOverdue(item);
-    const cleanTitle = cleanHtmlTitle(item.title_html || item.title_hint) || 'Assignment #' + item.assignment_id;
+    const cleanTitle = cleanHtmlTitle(item.title_html) || 'Assignment #' + item.assignment_id;
 
     tr.innerHTML = `
       <td><span class="type-badge ${typeBadgeClass}">${typeLabel}</span></td>
@@ -715,17 +617,17 @@ function renderTasksTable(items) {
         <div class="assignment-sub">${item.unit_name ? escapeHtml(item.unit_name) + ' · ' : ''}ID: #${item.assignment_id}</div>
       </td>
       <td>
-        <span class="meta-text" style="color: ${overdue && !item.is_blocked ? 'var(--danger)' : 'var(--text-secondary)'};">
-          ${overdue && !item.is_blocked ? '⚠ ' : ''}${escapeHtml(item.due_date_raw || 'No Deadline')}
+        <span class="meta-text" style="color: ${overdue ? 'var(--danger)' : 'var(--text-secondary)'};">
+          ${overdue ? '⚠ ' : ''}${escapeHtml(item.due_date_raw || 'No Deadline')}
         </span>
       </td>
       <td>
-        <span class="badge ${item.is_blocked ? 'badge--blocked' : (submitted ? 'badge--submitted' : (overdue ? 'badge--overdue' : 'badge--pending'))}">
-          ${item.is_blocked ? 'BLOCKED' : (submitted ? 'SUBMITTED' : (overdue ? 'OVERDUE' : 'PENDING'))}
+        <span class="badge ${submitted ? 'badge--submitted' : (overdue ? 'badge--overdue' : (item.is_blocked ? 'badge--blocked' : 'badge--pending'))}">
+          ${submitted ? 'SUBMITTED' : (overdue ? 'OVERDUE' : (item.is_blocked ? 'BLOCKED' : 'PENDING'))}
         </span>
       </td>
       <td style="text-align:right">
-        <button class="btn ${item.is_blocked ? 'btn--success' : 'btn--ghost'} btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type || 'SUBJECTIVE')}', '${escapeHtml(item.course_name || '')}', null, ${Boolean(item.is_blocked)})">
+        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type)}', '${escapeHtml(item.course_name)}', '${escapeHtml(cleanTitle)}', ${Boolean(item.is_blocked)})">
           ${item.is_blocked ? 'RESTORE' : 'BLOCK'}
         </button>
       </td>
@@ -750,7 +652,7 @@ function renderCoursesView() {
 
   rawCourses.forEach(course => {
     const courseAssignments = rawAssignments.filter(a => Number(a.colid) === Number(course.colid));
-    const pendingCount = courseAssignments.filter(a => !isSubmitted(a) && !a.is_blocked).length;
+    const pendingCount = courseAssignments.filter(a => !isSubmitted(a)).length;
 
     const card = document.createElement('div');
     card.className = 'project-card';
@@ -767,7 +669,7 @@ function renderCoursesView() {
       </div>
       <div class="project-card-footer">
         <span class="code-tag code-tag--lime">COLID #${course.colid}</span>
-        <button class="btn btn--sm ${course.is_blocked ? 'btn--success' : 'btn--danger'}" onclick="toggleCourseBlock(${course.colid}, '${escapeHtml(course.course_name || '')}', ${Boolean(course.is_blocked)})">
+        <button class="btn btn--sm ${course.is_blocked ? 'btn--success' : 'btn--danger'}" onclick="toggleCourseBlock(${course.colid}, '${escapeHtml(course.course_name)}', ${Boolean(course.is_blocked)})">
           ${course.is_blocked ? 'RESTORE COURSE' : 'BLOCK COURSE'}
         </button>
       </div>
@@ -782,35 +684,19 @@ function renderBlockManagerView() {
   const cTbody = document.getElementById('blockedCoursesTableBody');
   if (cTbody) {
     cTbody.innerHTML = '';
-    
-    const coursesMap = new Map();
-    blockedCoursesList.forEach(c => {
-      if (c && c.colid) coursesMap.set(Number(c.colid), { ...c, is_blocked: true });
-    });
-    rawCourses.filter(c => c.is_blocked).forEach(c => {
-      const colid = Number(c.colid);
-      if (!coursesMap.has(colid)) {
-        coursesMap.set(colid, c);
-      } else {
-        coursesMap.set(colid, { ...c, ...coursesMap.get(colid) });
-      }
-    });
-
-    const blockedC = Array.from(coursesMap.values());
+    const blockedC = rawCourses.filter(c => c.is_blocked);
 
     if (blockedC.length === 0) {
       cTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;font-family:var(--font-mono);font-size:11px;">NO BLOCKED COURSES</td></tr>`;
     } else {
       blockedC.forEach(c => {
         const tr = document.createElement('tr');
-        const courseIdText = c.crsid ? String(c.crsid) : ('COLID #' + c.colid);
-        const blockedDate = c.blocked_at ? formatTimestamp(c.blocked_at) : (c.updated_at ? formatTimestamp(c.updated_at) : 'ACTIVE BLOCK');
         tr.innerHTML = `
-          <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(courseIdText)}</span></td>
-          <td><strong>${escapeHtml(c.course_name || 'Course ' + c.colid)}</strong></td>
-          <td><span class="meta-text">${escapeHtml(blockedDate)}</span></td>
+          <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(c.crsid ? String(c.crsid) : 'COLID #' + c.colid)}</span></td>
+          <td><strong>${escapeHtml(c.course_name)}</strong></td>
+          <td><span class="meta-text">${escapeHtml(c.blocked_at || 'ACTIVE BLOCK')}</span></td>
           <td style="text-align:right">
-            <button class="btn btn--success btn--sm" onclick="toggleCourseBlock(${c.colid}, '${escapeHtml(c.course_name || '')}', true)">RESTORE</button>
+            <button class="btn btn--success btn--sm" onclick="toggleCourseBlock(${c.colid}, '${escapeHtml(c.course_name)}', true)">RESTORE</button>
           </td>
         `;
         cTbody.appendChild(tr);
@@ -822,39 +708,21 @@ function renderBlockManagerView() {
   const aTbody = document.getElementById('blockedAssignmentsTableBody');
   if (aTbody) {
     aTbody.innerHTML = '';
-
-    const assignMap = new Map();
-    blockedAssignmentsList.forEach(a => {
-      if (a && a.assignment_id) {
-        const key = `${Number(a.assignment_id)}_${normalizeType(a.assignment_type) || 'SUBJECTIVE'}`;
-        assignMap.set(key, { ...a, is_blocked: true });
-      }
-    });
-    rawAssignments.filter(a => a.is_blocked).forEach(a => {
-      const key = `${Number(a.assignment_id)}_${normalizeType(a.assignment_type) || 'SUBJECTIVE'}`;
-      if (!assignMap.has(key)) {
-        assignMap.set(key, a);
-      } else {
-        assignMap.set(key, { ...a, ...assignMap.get(key) });
-      }
-    });
-
-    const blockedA = Array.from(assignMap.values());
+    const blockedA = rawAssignments.filter(a => a.is_blocked);
 
     if (blockedA.length === 0) {
       aTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:18px;font-family:var(--font-mono);font-size:11px;">NO BLOCKED ASSIGNMENTS</td></tr>`;
     } else {
       blockedA.forEach(a => {
         const tr = document.createElement('tr');
-        const cleanTitle = cleanHtmlTitle(a.title_hint || a.title_html) || ('Assignment #' + a.assignment_id);
-        const blockedDate = a.blocked_at ? formatTimestamp(a.blocked_at) : 'RECENT';
+        const cleanTitle = cleanHtmlTitle(a.title_html) || 'Assignment #' + a.assignment_id;
         tr.innerHTML = `
           <td><span class="code-tag code-tag--cyan">#${a.assignment_id}</span></td>
           <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(a.course_name || 'Course')}</span></td>
           <td>${escapeHtml(cleanTitle)}</td>
-          <td><span class="meta-text">${escapeHtml(blockedDate)}</span></td>
+          <td><span class="meta-text">${escapeHtml(a.blocked_at || 'RECENT')}</span></td>
           <td style="text-align:right">
-            <button class="btn btn--success btn--sm" onclick="toggleAssignmentBlock(${a.assignment_id}, '${escapeHtml(a.assignment_type || 'SUBJECTIVE')}', '${escapeHtml(a.course_name || '')}', null, true)">RESTORE</button>
+            <button class="btn btn--success btn--sm" onclick="toggleAssignmentBlock(${a.assignment_id}, '${escapeHtml(a.assignment_type)}', '${escapeHtml(a.course_name)}', '${escapeHtml(cleanTitle)}', true)">RESTORE</button>
           </td>
         `;
         aTbody.appendChild(tr);
@@ -868,8 +736,7 @@ function renderRemindersView() {
   const list = document.getElementById('remindersTimelineList');
   if (!list) return;
 
-  const isCourseBlocked = (colid) => blockedCoursesList.some(c => Number(c.colid) === Number(colid));
-  const pendingUnblocked = rawAssignments.filter(a => !isSubmitted(a) && !a.is_blocked && !isCourseBlocked(a.colid)).length;
+  const pendingUnblocked = rawAssignments.filter(a => !isSubmitted(a) && !a.is_blocked).length;
   const blockedCount = blockedCoursesList.length + blockedAssignmentsList.length;
 
   let html = `
@@ -974,41 +841,35 @@ async function triggerReminder() {
 
 // Block / Unblock Course
 async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
-  const colidNum = Number(colid);
-  const c = rawCourses.find(item => Number(item.colid) === colidNum) ||
-            blockedCoursesList.find(item => Number(item.colid) === colidNum);
+  const actionText = currentlyBlocked ? 'unblock' : 'block';
   
-  const actualName = courseName || c?.course_name || ('Course #' + colidNum);
-  const isCurrentlyBlocked = currentlyBlocked !== undefined ? Boolean(currentlyBlocked) : Boolean(c?.is_blocked);
-  const actionText = isCurrentlyBlocked ? 'unblock' : 'block';
-
   openModal(
     `${actionText.toUpperCase()} COURSE`,
-    `Are you sure you want to ${actionText} "${actualName}"? ${isCurrentlyBlocked ? 'It will reappear in daily reminders.' : 'All assignments for this course will be omitted from 8 PM email digests.'}`,
+    `Are you sure you want to ${actionText} "${courseName}"? ${currentlyBlocked ? 'It will reappear in daily reminders.' : 'All assignments for this course will be omitted from 8 PM email digests.'}`,
     async () => {
       try {
-        if (!isCurrentlyBlocked) {
+        if (!currentlyBlocked) {
           await fetch('/api/blocked', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: currentUser.email, colid: colidNum, course_name: actualName })
+            body: JSON.stringify({ email: currentUser.email, colid, course_name: courseName })
           });
         } else {
           await fetch('/api/blocked', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: currentUser.email, colid: colidNum })
+            body: JSON.stringify({ email: currentUser.email, colid })
           });
         }
       } catch (e) {
-        console.warn('Backend route offline, mutating locally:', e.message);
+        console.warn('Backend route offline, mutating locally');
       }
 
-      const targetCourse = rawCourses.find(item => Number(item.colid) === colidNum);
-      if (targetCourse) targetCourse.is_blocked = !isCurrentlyBlocked;
+      const c = rawCourses.find(item => Number(item.colid) === Number(colid));
+      if (c) c.is_blocked = !currentlyBlocked;
       await loadBlockedData();
       
-      showToast(`Course "${actualName}" ${actionText}ed successfully`, 'success');
+      showToast(`Course "${courseName}" ${actionText}ed successfully`, 'success');
       renderAllViews();
     }
   );
@@ -1016,36 +877,23 @@ async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
 
 // Block / Unblock Assignment
 async function toggleAssignmentBlock(assignmentId, assignmentType, courseName, titleHint, currentlyBlocked) {
-  const idNum = Number(assignmentId);
-  const normType = normalizeType(assignmentType);
-
-  const a = rawAssignments.find(item => Number(item.assignment_id) === idNum && (!normType || normalizeType(item.assignment_type) === normType)) ||
-            rawAssignments.find(item => Number(item.assignment_id) === idNum) ||
-            blockedAssignmentsList.find(item => Number(item.assignment_id) === idNum && (!normType || normalizeType(item.assignment_type) === normType)) ||
-            blockedAssignmentsList.find(item => Number(item.assignment_id) === idNum);
-
-  const actualType = normType || normalizeType(a?.assignment_type) || 'SUBJECTIVE';
-  const actualCourse = courseName || a?.course_name || 'Course';
-  const actualTitle = titleHint || cleanHtmlTitle(a?.title_hint || a?.title_html) || ('Assignment #' + idNum);
-  const isCurrentlyBlocked = currentlyBlocked !== undefined ? Boolean(currentlyBlocked) : Boolean(a?.is_blocked);
-  const actionText = isCurrentlyBlocked ? 'restore' : 'block';
+  const actionText = currentlyBlocked ? 'unblock' : 'block';
 
   openModal(
     `${actionText.toUpperCase()} ASSIGNMENT`,
-    `Are you sure you want to ${actionText} "${actualTitle}"?`,
+    `Are you sure you want to ${actionText} "${titleHint || 'Assignment #' + assignmentId}"?`,
     async () => {
       try {
-        if (!isCurrentlyBlocked) {
+        if (!currentlyBlocked) {
           await fetch('/api/blocked-assignments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               email: currentUser.email,
-              assignment_id: idNum,
-              assignment_type: actualType,
-              colid: a?.colid ? Number(a.colid) : null,
-              course_name: actualCourse,
-              title_hint: a?.title_html || a?.title_hint || actualTitle
+              assignment_id: assignmentId,
+              assignment_type: assignmentType,
+              course_name: courseName,
+              title_hint: titleHint
             })
           });
         } else {
@@ -1054,36 +902,20 @@ async function toggleAssignmentBlock(assignmentId, assignmentType, courseName, t
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               email: currentUser.email,
-              assignment_id: idNum,
-              assignment_type: actualType
+              assignment_id: assignmentId,
+              assignment_type: assignmentType
             })
           });
         }
       } catch (e) {
-        console.warn('Backend route offline, mutating locally:', e.message);
+        console.warn('Backend route offline, mutating locally');
       }
 
-      const targetAssignment = rawAssignments.find(item => Number(item.assignment_id) === idNum && normalizeType(item.assignment_type) === normalizeType(actualType));
-      if (targetAssignment) {
-        targetAssignment.is_blocked = !isCurrentlyBlocked;
-      } else if (!isCurrentlyBlocked) {
-        rawAssignments.push({
-          assignment_id: idNum,
-          assignment_type: actualType,
-          colid: a?.colid ? Number(a.colid) : null,
-          course_name: actualCourse,
-          unit_name: a?.unit_name || null,
-          title_html: a?.title_html || a?.title_hint || actualTitle,
-          due_date_raw: a?.due_date_raw || '',
-          is_submitted: false,
-          is_blocked: true,
-          blocked_at: new Date().toISOString()
-        });
-      }
-
+      const a = rawAssignments.find(item => Number(item.assignment_id) === Number(assignmentId));
+      if (a) a.is_blocked = !currentlyBlocked;
       await loadBlockedData();
 
-      showToast(`Assignment #${idNum} ${actionText === 'restore' ? 'restored' : 'blocked'} successfully`, 'success');
+      showToast(`Assignment #${assignmentId} ${actionText}ed successfully`, 'success');
       renderAllViews();
     }
   );
