@@ -845,13 +845,13 @@ async function triggerReminder() {
       throw new Error(data.error || 'Server error');
     }
   } catch (e) {
-    showToast('8 PM Reminder triggered: ' + e.message, 'info');
+    showToast('8 PM Reminder failed: ' + e.message, 'error');
     if (!window.reminderLogs) window.reminderLogs = [];
     window.reminderLogs.unshift({
-      title: 'MANUAL 8 PM DISPATCH TRIGGER',
-      message: `Trigger executed for ${currentUser.email}. Check server terminal / mailbox.`,
+      title: 'MANUAL 8 PM DISPATCH FAILED',
+      message: e.message,
       time: new Date().toLocaleTimeString(),
-      success: true
+      success: false
     });
     renderRemindersView();
   } finally {
