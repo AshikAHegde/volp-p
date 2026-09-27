@@ -10,7 +10,7 @@ import { startCronJob } from './services/cron.service.js';
 
 import authRoutes from './routes/auth.routes.js';
 import assignmentRoutes from './routes/assignment.routes.js';
-import blockedRoutes from './routes/blocked.routes.js';
+import blockedRoutes from './routes/blocked_courses.routes.js';
 import blockedAssignmentRoutes from './routes/blocked_assignments.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);

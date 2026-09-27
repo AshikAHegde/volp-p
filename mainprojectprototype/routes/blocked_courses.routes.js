@@ -1,5 +1,5 @@
 /**
- * blocked.routes.js - Blocked Courses Management Routes (Modern ES Module)
+ * blocked_courses.routes.js - Blocked Courses Management Routes (Modern ES Module)
  */
 import express from 'express';
 import { coursesCollection } from '../services/db.service.js';
@@ -8,7 +8,7 @@ import { requireUser } from '../middleware/auth.middleware.js';
 const router = express.Router();
 router.use(requireUser);
 
-// GET  /api/blocked?email=xxx  — list all blocked courses for a user
+// GET  /api/blocked?email=xxx — list all blocked courses for a user
 router.get('/', async (req, res) => {
   const { email } = req.query;
   if (!email) return res.status(400).json({ error: 'email query param is required.' });

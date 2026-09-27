@@ -22,7 +22,7 @@ flowchart TD
             direction LR
             R_Auth["<b>auth.routes.js</b><br/>───────────────<br/>POST /api/auth/login"]
             R_Assign["<b>assignment.routes.js</b><br/>───────────────<br/>POST /api/assignments/my-courses<br/>POST /api/assignments/my-assignments<br/>POST /api/assignments/trigger-8pm-reminder"]
-            R_Block["<b>blocked.routes.js</b><br/>───────────────<br/>GET    /api/blocked<br/>POST   /api/blocked<br/>DELETE /api/blocked"]
+            R_Block["<b>blocked_courses.routes.js</b><br/>───────────────<br/>GET    /api/blocked<br/>POST   /api/blocked<br/>DELETE /api/blocked"]
             R_BlockAss["<b>blocked_assignments.routes.js</b><br/>───────────────<br/>GET    /api/blocked-assignments<br/>POST   /api/blocked-assignments<br/>DELETE /api/blocked-assignments"]
         end
 
@@ -217,7 +217,7 @@ flowchart TD
 ### UC-5 · User Blocks a Course
 
 ```text
-  User (Browser)          blocked.routes.js          MongoDB (courses)
+  User (Browser)          blocked_courses.routes.js  MongoDB (courses)
        │                        │                             │
        │  Click "🚫 Block"      │                             │
        │  POST /api/blocked     │                             │
@@ -240,7 +240,7 @@ flowchart TD
 ### UC-6 · User Unblocks a Course
 
 ```text
-  User (Browser)          blocked.routes.js          MongoDB (courses)
+  User (Browser)          blocked_courses.routes.js  MongoDB (courses)
        │                        │                             │
        │  Click "✅ Unblock"    │                             │
        │  DELETE /api/blocked   │                             │
@@ -395,7 +395,7 @@ mainprojectprototype/
 │   ├── assignment.routes.js      # POST /api/assignments/my-courses
 │   │                             # POST /api/assignments/my-assignments
 │   │                             # POST /api/assignments/trigger-8pm-reminder
-│   ├── blocked.routes.js         # GET/POST/DELETE /api/blocked
+│   ├── blocked_courses.routes.js # GET/POST/DELETE /api/blocked
 │   └── blocked_assignments.routes.js # GET/POST/DELETE /api/blocked-assignments
 └── public/
     └── index.html                # Tabbed dark-mode web dashboard
