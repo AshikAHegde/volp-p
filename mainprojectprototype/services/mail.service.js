@@ -1,15 +1,16 @@
 /**
- * mail.service.js - Email Notification Service via Mailtrap (Modern ES Module with Dotenv)
+ * mail.service.js - SMTP Email Notification Service (Modern ES Module with Dotenv)
  */
 import 'dotenv/config';
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  host: process.env.MAILTRAP_SMTP_HOST,
-  port: Number(process.env.MAILTRAP_SMTP_PORT),
+  host: process.env.SMTP_HOST || process.env.MAILTRAP_SMTP_HOST,
+  port: Number(process.env.SMTP_PORT || process.env.MAILTRAP_SMTP_PORT || 587),
+  secure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
   auth: {
-    user: process.env.MAILTRAP_SMTP_USER,
-    pass: process.env.MAILTRAP_SMTP_PASS
+    user: process.env.SMTP_USER || process.env.MAILTRAP_SMTP_USER,
+    pass: process.env.SMTP_PASS || process.env.MAILTRAP_SMTP_PASS
   }
 });
 
@@ -49,7 +50,7 @@ export const sendAssignmentReminderEmail = async (userEmail, assignments) => {
   `;
 
   const info = await transporter.sendMail({
-    from: process.env.MAILTRAP_SMTP_FROM,
+    from: process.env.SMTP_FROM || process.env.MAILTRAP_SMTP_FROM,
     to: userEmail,
     subject: `VOLP Reminder: ${pendingAssignments.length} Pending Assignment(s)`,
     html: htmlContent

@@ -4,7 +4,7 @@ A modern **Express + Node.js (ES Modules)** application that:
 1. Authenticates users against the live **VOLP portal** (`https://admin.volp.in/login/process`).
 2. Persists user credentials and session tokens in a **MongoDB database**.
 3. Lets users **block specific courses** so those courses are skipped during all assignment fetches and email reminders.
-4. Runs a **configurable cron job** (default: daily at 8:00 PM `0 20 * * *`) that fetches assignments and sends summary emails via **Mailtrap**.
+4. Runs a **configurable cron job** (default: daily at 8:00 PM `0 20 * * *`) that fetches assignments and sends summary emails through an SMTP provider.
 5. Serves a **tabbed web dashboard** to log in, view assignments, manage blocked courses, and manually trigger reminder emails.
 
 ---
@@ -50,7 +50,7 @@ flowchart TD
         V_LMS["<b>learner.volp.in</b><br/>──────────────<br/>POST /learnerCourseDashboard/learnerCourseList<br/>POST /learnerCourseContent/courseContentData<br/>POST /SubjectiveAssignment/getSubjectiveAssignment_new<br/>POST /HandOnAssignment/getHandsOnDetails"]
     end
 
-    Mailtrap["📧 Mailtrap SMTP<br/>sandbox.smtp.mailtrap.io:2525"]
+    MailServer["📧 SMTP Email Provider"]
     CronTimer(["⏰ node-cron<br/>0 20 ✶ ✶ ✶<br/>Daily at 8:00 PM"])
 
     %% Browser → Server
@@ -78,10 +78,10 @@ flowchart TD
     S_DB <-->|"SQL Queries"| T_Users
     S_DB <-->|"SQL Queries"| T_Courses
     S_DB <-->|"SQL Queries"| T_Assignments
-    S_Mail -->|"SMTP sendMail"| Mailtrap
+    S_Mail -->|"SMTP sendMail"| MailServer
 
     %% Responses
-    Mailtrap -.->|"📬 Reminder Email"| Browser
+    MailServer -.->|"📬 Reminder Email"| Browser
 ```
 
 ---
@@ -175,7 +175,7 @@ flowchart TD
         │                       │────────────────────────────────────────────────────────────────▶│
         │                       │                  │                         │  filter pending     │
         │                       │                  │                         │  render HTML table  │
-        │                       │                  │                         │  SMTP → Mailtrap    │
+        │                       │                  │                         │  SMTP → provider   │
         │                       │◀───────────────────────────────────────────────────────────────── true
 ```
 
@@ -284,7 +284,7 @@ flowchart TD
        │                        │                        │──────────────────────────────────────────▶│
        │                        │                        │                      │  filter pending    │
        │                        │                        │                      │  render HTML       │
-       │                        │                        │                      │  SMTP → Mailtrap   │
+      │                        │                        │                      │  SMTP → provider  │
        │                        │                        │◀──────────────────────────────────────────  true
        │                        │◀───────────────────────│                      │                    │
        │  { success: true,      │                        │                      │                    │
@@ -368,10 +368,10 @@ flowchart TD
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│       5. EMAIL REMINDER (mail.service.js + Mailtrap)        │
+│       5. EMAIL REMINDER (mail.service.js + SMTP)            │
 │  - Filter pending/un-submitted assignments                  │
 │  - Render HTML table (course, type, title, due date)        │
-│  - Send via Nodemailer → Mailtrap sandbox SMTP              │
+│  - Send via Nodemailer → configured SMTP provider           │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -389,7 +389,7 @@ mainprojectprototype/
 │   ├── db.service.js             # MongoDB client, collections & indexes
 │   ├── volp.service.js           # VOLP login & assignment discovery logic
 │   ├── cron.service.js           # Daily 8:00 PM cron job (node-cron)
-│   └── mail.service.js           # Mailtrap email rendering & sending
+│   └── mail.service.js           # SMTP email rendering & sending
 ├── routes/
 │   ├── auth.routes.js            # POST /api/auth/login
 │   ├── assignment.routes.js      # POST /api/assignments/my-courses
@@ -488,11 +488,12 @@ mainprojectprototype/
 | `VOLP_LEARNER_URL` | VOLP learner root API (`https://learner.volp.in`) |
 | `MONGODB_URI` | MongoDB connection string (default: `mongodb://127.0.0.1:27017`) |
 | `MONGODB_DB_NAME` | MongoDB database name (default: `volp_db`) |
-| `MAILTRAP_SMTP_HOST` | Mailtrap SMTP host (`sandbox.smtp.mailtrap.io`) |
-| `MAILTRAP_SMTP_PORT` | Mailtrap SMTP port (`2525`) |
-| `MAILTRAP_SMTP_USER` | Mailtrap SMTP username |
-| `MAILTRAP_SMTP_PASS` | Mailtrap SMTP password |
-| `MAILTRAP_SMTP_FROM` | Sender name/address header |
+| `SMTP_HOST` | SMTP provider hostname |
+| `SMTP_PORT` | SMTP port, usually `587` or `465` |
+| `SMTP_SECURE` | `true` for port `465`; otherwise `false` |
+| `SMTP_USER` | SMTP username or provider API username |
+| `SMTP_PASS` | SMTP password, app password, or provider SMTP key |
+| `SMTP_FROM` | Verified sender name/address header |
 | `CRON_SCHEDULE` | Cron expression (default: `0 20 * * *` — Daily at 8:00 PM) |
 
 ### Cron Schedule Reference
@@ -518,7 +519,7 @@ npm install
 ### 2. Configure environment
 ```bash
 cp .env.example .env
-nano .env   # fill in your MongoDB and Mailtrap credentials
+nano .env   # fill in your MongoDB and SMTP credentials
 ```
 
 ### 3. Start the server
@@ -538,5 +539,5 @@ Open **[http://localhost:4000](http://localhost:4000)** in your browser.
 - **ES Modules (ES2022+)** — native `import`/`export`, top-level `await`, optional chaining, nullish coalescing.
 - **No dummy/fallback data** — all data comes from live VOLP API and MongoDB.
 - **Blocked Courses** — per-user course block list; blocked courses are skipped in all automated runs, manual triggers, and dashboard fetches.
-- **Mailtrap Integration** — emails delivered to your Mailtrap sandbox inbox for safe testing.
+- **SMTP Email Integration** — supports Mailtrap for testing and production providers for real delivery.
 - **Tabbed Web Dashboard** — Assignments view + Blocked Courses manager in a single-page dark-mode UI.
