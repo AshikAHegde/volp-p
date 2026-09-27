@@ -210,7 +210,7 @@ async function loadAppData(refresh = false) {
       rawCourses = courseData.courses || [];
       isOfflineMode = false;
       const statusEl = document.getElementById('settingsDataSource');
-      if (statusEl) statusEl.value = `Source: ${courseData.source || 'MYSQL_DATABASE'} (Live Connected)`;
+      if (statusEl) statusEl.value = `Source: ${courseData.source || 'MONGODB_DATABASE'} (Live Connected)`;
     } else {
       throw new Error('Course API returned ' + courseRes.status);
     }

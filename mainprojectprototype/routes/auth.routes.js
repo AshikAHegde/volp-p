@@ -3,7 +3,7 @@
  */
 import express from 'express';
 import { loginVOLP } from '../services/volp.service.js';
-import { pool } from '../services/db.service.js';
+import { usersCollection } from '../services/db.service.js';
 
 const router = express.Router();
 
@@ -18,11 +18,14 @@ router.post('/login', async (req, res) => {
     // 1. Authenticate with VOLP Admin portal
     const token = await loginVOLP(username, password);
 
-    // 2. Save/Update User in MySQL database
-    await pool.query(
-      `INSERT INTO users (email, password, token) VALUES (?, ?, ?)
-       ON DUPLICATE KEY UPDATE password = VALUES(password), token = VALUES(token)`,
-      [username, password, token]
+    // 2. Save/Update User in MongoDB
+    await usersCollection.updateOne(
+      { email: username },
+      {
+        $set: { password, token, updated_at: new Date() },
+        $setOnInsert: { email: username, created_at: new Date() }
+      },
+      { upsert: true }
     );
 
     // 3. Return session response

@@ -2,7 +2,7 @@
  * blocked_assignments.routes.js - Block / Unblock individual assignments (Modern ES Module)
  */
 import express from 'express';
-import { pool } from '../services/db.service.js';
+import { assignmentsCollection } from '../services/db.service.js';
 
 const router = express.Router();
 
@@ -12,13 +12,17 @@ router.get('/', async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Email required.' });
 
   try {
-    const [rows] = await pool.query(
-      `SELECT assignment_id, assignment_type, colid, course_name, unit_name, title_html AS title_hint, due_date_raw, blocked_at
-       FROM assignments
-       WHERE user_email = ? AND is_blocked = TRUE
-       ORDER BY blocked_at DESC`,
-      [email]
-    );
+    const rows = await assignmentsCollection
+      .find(
+        { user_email: email, is_blocked: true },
+        { projection: { _id: 0, assignment_id: 1, assignment_type: 1, colid: 1, course_name: 1, unit_name: 1, title_html: 1, due_date_raw: 1, blocked_at: 1 } }
+      )
+      .sort({ blocked_at: -1 })
+      .toArray();
+    rows.forEach(row => {
+      row.title_hint = row.title_html;
+      delete row.title_html;
+    });
     res.json({ success: true, blocked: rows });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -33,14 +37,26 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    await pool.query(
-      `INSERT INTO assignments
-        (user_email, assignment_id, assignment_type, colid, course_name, title_html, is_blocked, blocked_at)
-       VALUES (?, ?, ?, ?, ?, ?, TRUE, CURRENT_TIMESTAMP)
-       ON DUPLICATE KEY UPDATE
-         is_blocked = TRUE,
-         blocked_at = CURRENT_TIMESTAMP`,
-      [email, Number(assignment_id), assignment_type, colid ? Number(colid) : null, course_name || 'Assignment', title_hint || '']
+    await assignmentsCollection.updateOne(
+      { user_email: email, assignment_id: Number(assignment_id), assignment_type },
+      {
+        $set: {
+          is_blocked: true,
+          blocked_at: new Date(),
+          updated_at: new Date()
+        },
+        $setOnInsert: {
+          user_email: email,
+          assignment_id: Number(assignment_id),
+          assignment_type,
+          colid: colid ? Number(colid) : null,
+          course_name: course_name || 'Assignment',
+          title_html: title_hint || '',
+          is_submitted: false,
+          created_at: new Date()
+        }
+      },
+      { upsert: true }
     );
     res.json({ success: true, message: `Assignment #${assignment_id} blocked. It will no longer appear in reminder emails.` });
   } catch (err) {
@@ -56,11 +72,11 @@ router.delete('/', async (req, res) => {
   }
 
   try {
-    const [result] = await pool.query(
-      'UPDATE assignments SET is_blocked = FALSE, blocked_at = NULL WHERE user_email = ? AND assignment_id = ? AND assignment_type = ?',
-      [email, Number(assignment_id), assignment_type]
+    const result = await assignmentsCollection.updateOne(
+      { user_email: email, assignment_id: Number(assignment_id), assignment_type },
+      { $set: { is_blocked: false, blocked_at: null, updated_at: new Date() } }
     );
-    if (result.affectedRows === 0) {
+    if (result.matchedCount === 0) {
       return res.status(404).json({ error: 'No matching assignment found.' });
     }
     res.json({ success: true, message: `Assignment #${assignment_id} unblocked. It will appear in future reminder emails.` });

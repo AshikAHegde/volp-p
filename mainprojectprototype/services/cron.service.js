@@ -5,7 +5,7 @@ import 'dotenv/config';
 import cron from 'node-cron';
 import { fetchUserAssignments } from './volp.service.js';
 import { sendAssignmentReminderEmail } from './mail.service.js';
-import { pool } from './db.service.js';
+import { usersCollection, coursesCollection, assignmentsCollection } from './db.service.js';
 
 export const startCronJob = () => {
   const schedule = process.env.CRON_SCHEDULE;
@@ -20,11 +20,10 @@ export const startCronJob = () => {
     console.log('🔔 RUNNING VOLP REMINDER CRON JOB...');
     console.log('====================================================');
 
-    // 1. Fetch all registered users from MySQL database
+    // 1. Fetch all registered users from MongoDB
     let users = [];
     try {
-      const [rows] = await pool.query('SELECT email, token FROM users');
-      users = rows;
+      users = await usersCollection.find({}, { projection: { _id: 0, email: 1, token: 1 } }).toArray();
     } catch (e) {
       console.log('⚠ Could not fetch users from DB:', e.message);
       return;
@@ -40,17 +39,18 @@ export const startCronJob = () => {
       console.log(`\n➤ Processing user: ${user.email}`);
       try {
         // Load this user's blocked courses from unified courses table
-        const [blockedRows] = await pool.query(
-          'SELECT colid FROM courses WHERE user_email = ? AND is_blocked = TRUE',
-          [user.email]
-        );
+        const blockedRows = await coursesCollection
+          .find({ user_email: user.email, is_blocked: true }, { projection: { colid: 1 } })
+          .toArray();
         const blockedColids = new Set(blockedRows.map(r => r.colid));
 
         // Load this user's blocked assignments from unified assignments table
-        const [blockedAssRows] = await pool.query(
-          'SELECT assignment_id, assignment_type FROM assignments WHERE user_email = ? AND is_blocked = TRUE',
-          [user.email]
-        );
+        const blockedAssRows = await assignmentsCollection
+          .find(
+            { user_email: user.email, is_blocked: true },
+            { projection: { assignment_id: 1, assignment_type: 1 } }
+          )
+          .toArray();
         const blockedAssSet = new Set(blockedAssRows.map(r => `${r.assignment_id}:${r.assignment_type}`));
 
         const allAssignments = await fetchUserAssignments(user.token, user.email, blockedColids);
@@ -74,17 +74,18 @@ export const triggerCronNow = async (userEmail, token) => {
   console.log(`⚡ Manually triggering 8:00 PM reminder check for ${userEmail}...`);
 
   // Load blocked courses from unified courses table
-  const [blockedRows] = await pool.query(
-    'SELECT colid FROM courses WHERE user_email = ? AND is_blocked = TRUE',
-    [userEmail]
-  );
+  const blockedRows = await coursesCollection
+    .find({ user_email: userEmail, is_blocked: true }, { projection: { colid: 1 } })
+    .toArray();
   const blockedColids = new Set(blockedRows.map(r => r.colid));
 
   // Load blocked assignments from unified assignments table
-  const [blockedAssRows] = await pool.query(
-    'SELECT assignment_id, assignment_type FROM assignments WHERE user_email = ? AND is_blocked = TRUE',
-    [userEmail]
-  );
+  const blockedAssRows = await assignmentsCollection
+    .find(
+      { user_email: userEmail, is_blocked: true },
+      { projection: { assignment_id: 1, assignment_type: 1 } }
+    )
+    .toArray();
   const blockedAssSet = new Set(blockedAssRows.map(r => `${r.assignment_id}:${r.assignment_type}`));
 
   const allAssignments = await fetchUserAssignments(token, userEmail, blockedColids);

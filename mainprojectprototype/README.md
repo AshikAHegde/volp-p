@@ -2,7 +2,7 @@
 
 A modern **Express + Node.js (ES Modules)** application that:
 1. Authenticates users against the live **VOLP portal** (`https://admin.volp.in/login/process`).
-2. Persists user credentials and session tokens in a **local MySQL database**.
+2. Persists user credentials and session tokens in a **MongoDB database**.
 3. Lets users **block specific courses** so those courses are skipped during all assignment fetches and email reminders.
 4. Runs a **configurable cron job** (default: daily at 8:00 PM `0 20 * * *`) that fetches assignments and sends summary emails via **Mailtrap**.
 5. Serves a **tabbed web dashboard** to log in, view assignments, manage blocked courses, and manually trigger reminder emails.
@@ -31,13 +31,13 @@ flowchart TD
             S_Volp["<b>volp.service.js</b><br/>───────────────<br/>loginVOLP()<br/>fetchUserCourses()<br/>fetchUserAssignments()"]
             S_Cron["<b>cron.service.js</b><br/>───────────────<br/>startCronJob()<br/>triggerCronNow()"]
             S_Mail["<b>mail.service.js</b><br/>───────────────<br/>sendAssignmentReminderEmail()"]
-            S_DB["<b>db.service.js</b><br/>───────────────<br/>initDB()<br/>MySQL Connection Pool"]
+            S_DB["<b>db.service.js</b><br/>───────────────<br/>initDB()<br/>MongoDB Client & Collections"]
         end
 
         StaticUI["🖥️ public/index.html<br/>Dark-mode Tabbed Dashboard<br/>(Assignments · My Courses · Blocked Items)"]
     end
 
-    subgraph MySQL["🗄️ MySQL Database"]
+    subgraph MongoDB["🗄️ MongoDB Database"]
         direction LR
         T_Users["<b>users</b><br/>──────────────<br/>🔑 id  INT PK<br/>📧 email  VARCHAR UNIQUE<br/>🔒 password  VARCHAR<br/>🎫 token  TEXT<br/>🕐 created_at  TIMESTAMP"]
         T_Courses["<b>courses</b><br/>──────────────<br/>🔑 id  INT PK<br/>📧 user_email  VARCHAR<br/>🆔 colid  INT<br/>🏷️ crsid  INT<br/>📚 course_name  VARCHAR<br/>🏛️ semester  VARCHAR<br/>📅 academic_year VARCHAR<br/>🚫 is_blocked  BOOLEAN<br/>🕐 blocked_at  TIMESTAMP<br/>🔒 UNIQUE(user_email, colid)"]
@@ -93,7 +93,7 @@ flowchart TD
 ### UC-1 · User Login & Registration
 
 ```text
-  User (Browser)            auth.routes.js        volp.service.js        MySQL (users)
+  User (Browser)            auth.routes.js        volp.service.js        MongoDB (users)
        │                          │                      │                     │
        │  Enter email + password  │                      │                     │
        │  POST /api/auth/login    │                      │                     │
@@ -146,7 +146,7 @@ flowchart TD
 ### UC-3 · Automated Daily 8:00 PM Email Reminder Run
 
 ```text
-  node-cron (timer)       cron.service.js        MySQL                 volp.service.js       mail.service.js
+  node-cron (timer)       cron.service.js        MongoDB               volp.service.js       mail.service.js
         │                       │                  │                         │                     │
   fires daily at 8 PM           │                  │                         │                     │
   (0 20 * * *)                  │                  │                         │                     │
@@ -184,7 +184,7 @@ flowchart TD
 ### UC-4 · User Fetches Assignments via Dashboard
 
 ```text
-  User (Browser)         assignment.routes.js       MySQL              volp.service.js
+  User (Browser)         assignment.routes.js       MongoDB            volp.service.js
        │                         │                    │                      │
        │  Click "Refresh"        │                    │                      │
        │  POST /api/assignments  │                    │                      │
@@ -217,7 +217,7 @@ flowchart TD
 ### UC-5 · User Blocks a Course
 
 ```text
-  User (Browser)          blocked.routes.js          MySQL (courses)
+  User (Browser)          blocked.routes.js          MongoDB (courses)
        │                        │                             │
        │  Click "🚫 Block"      │                             │
        │  POST /api/blocked     │                             │
@@ -240,7 +240,7 @@ flowchart TD
 ### UC-6 · User Unblocks a Course
 
 ```text
-  User (Browser)          blocked.routes.js          MySQL (courses)
+  User (Browser)          blocked.routes.js          MongoDB (courses)
        │                        │                             │
        │  Click "✅ Unblock"    │                             │
        │  DELETE /api/blocked   │                             │
@@ -342,9 +342,9 @@ flowchart TD
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│          2. AUTHENTICATION & MYSQL PERSISTENCE              │
+│          2. AUTHENTICATION & MONGODB PERSISTENCE            │
 │  - Authenticate against VOLP (https://admin.volp.in)        │
-│  - Save email, password, token to MySQL `users` table       │
+│  - Save email, password, token to MongoDB `users` collection│
 │  - Fails explicitly if DB is offline (no silent fallback)   │
 └──────────────────────────────┬──────────────────────────────┘
                                │
@@ -352,8 +352,8 @@ flowchart TD
 ┌─────────────────────────────────────────────────────────────┐
 │          3. DAILY 8:00 PM CRON JOB (cron.service.js)        │
 │  - Scheduled via CRON_SCHEDULE env (default: 0 20 * * *)    │
-│  - Queries all registered users from MySQL `users` table    │
-│  - Loads each user's blocked courses from `courses` table   │
+│  - Queries all registered users from MongoDB `users` collection │
+│  - Loads each user's blocked courses from `courses` collection │
 └──────────────────────────────┬──────────────────────────────┘
                                │
                                ▼
@@ -386,7 +386,7 @@ mainprojectprototype/
 ├── .env.example                  # Environment template
 ├── server.js                     # Express entry point & async startup
 ├── services/
-│   ├── db.service.js             # MySQL pool & table auto-initialization
+│   ├── db.service.js             # MongoDB client, collections & indexes
 │   ├── volp.service.js           # VOLP login & assignment discovery logic
 │   ├── cron.service.js           # Daily 8:00 PM cron job (node-cron)
 │   └── mail.service.js           # Mailtrap email rendering & sending
@@ -403,51 +403,48 @@ mainprojectprototype/
 
 ---
 
-## 🗄️ Database Tables
+## 🗄️ MongoDB Collections
 
-### `users`
+### `users` collection
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | INT AUTO_INCREMENT | Primary key |
-| `email` | VARCHAR(255) UNIQUE | VOLP login email |
-| `password` | VARCHAR(255) | VOLP password |
-| `token` | TEXT | Active VOLP session token |
-| `created_at` | TIMESTAMP | Registration time |
+| `email` | String, unique | VOLP login email |
+| `password` | String | VOLP password |
+| `token` | String | Active VOLP session token |
+| `created_at` | Date | Registration time |
 
-### `courses`
+### `courses` collection
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | INT AUTO_INCREMENT | Primary key |
-| `user_email` | VARCHAR(255) | Owning user |
-| `colid` | INT | VOLP course offering ID |
-| `crsid` | INT | VOLP course ID |
-| `course_name` | VARCHAR(255) | Course code / title label |
-| `semester` | VARCHAR(50) | Semester identifier |
-| `academic_year` | VARCHAR(50) | Academic year identifier |
-| `is_blocked` | BOOLEAN | `TRUE` if course is blocked |
-| `blocked_at` | TIMESTAMP | When course was blocked (or `NULL`) |
-| `updated_at` | TIMESTAMP | Last sync/update time |
+| `user_email` | String | Owning user |
+| `colid` | Number | VOLP course offering ID |
+| `crsid` | Number | VOLP course ID |
+| `course_name` | String | Course code / title label |
+| `semester` | String | Semester identifier |
+| `academic_year` | String | Academic year identifier |
+| `is_blocked` | Boolean | `true` if course is blocked |
+| `blocked_at` | Date | When course was blocked (or `null`) |
+| `updated_at` | Date | Last sync/update time |
 
-> Unique key on `(user_email, colid)` — one entry per user per enrolled course.
+> Unique index on `{ user_email, colid }` — one entry per user per enrolled course.
 
-### `assignments`
+### `assignments` collection
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | INT AUTO_INCREMENT | Primary key |
-| `user_email` | VARCHAR(255) | Owning user |
-| `assignment_id` | INT | VOLP assignment ID |
-| `assignment_type` | VARCHAR(50) | `SUBJECTIVE` or `HANDS_ON` |
-| `colid` | INT | VOLP course offering ID |
-| `course_name` | VARCHAR(255) | Course code / title label |
-| `unit_name` | VARCHAR(255) | Unit name (Hands-On only) |
-| `title_html` | TEXT | Assignment prompt HTML |
-| `due_date_raw` | VARCHAR(100) | Due date string from API |
-| `is_submitted` | BOOLEAN | Submission status |
-| `is_blocked` | BOOLEAN | `TRUE` if assignment is blocked |
-| `blocked_at` | TIMESTAMP | When assignment was blocked (or `NULL`) |
-| `updated_at` | TIMESTAMP | Last sync/update time |
+| `user_email` | String | Owning user |
+| `assignment_id` | Number | VOLP assignment ID |
+| `assignment_type` | String | `SUBJECTIVE` or `HANDS_ON` |
+| `colid` | Number | VOLP course offering ID |
+| `course_name` | String | Course code / title label |
+| `unit_name` | String | Unit name (Hands-On only) |
+| `title_html` | String | Assignment prompt HTML |
+| `due_date_raw` | String | Due date string from API |
+| `is_submitted` | Boolean | Submission status |
+| `is_blocked` | Boolean | `true` if assignment is blocked |
+| `blocked_at` | Date | When assignment was blocked (or `null`) |
+| `updated_at` | Date | Last sync/update time |
 
-> Unique key on `(user_email, assignment_id, assignment_type)` — one entry per user per assignment.
+> Unique index on `{ user_email, assignment_id, assignment_type }` — one entry per user per assignment.
 
 ---
 
@@ -456,7 +453,7 @@ mainprojectprototype/
 ### Auth
 | Method | Route | Body | Description |
 |--------|-------|------|-------------|
-| `POST` | `/api/auth/login` | `{ username, password }` | Authenticate with VOLP, save user to DB |
+| `POST` | `/api/auth/login` | `{ username, password }` | Authenticate with VOLP, save user to MongoDB |
 
 ### Assignments & Courses
 | Method | Route | Body | Description |
@@ -489,11 +486,8 @@ mainprojectprototype/
 | `NODE_ENV` | `development` or `production` |
 | `VOLP_LOGIN_URL` | VOLP process endpoint (`https://admin.volp.in/login/process`) |
 | `VOLP_LEARNER_URL` | VOLP learner root API (`https://learner.volp.in`) |
-| `DB_HOST` | MySQL host (default: `localhost`) |
-| `DB_PORT` | MySQL port (default: `3306`) |
-| `DB_USER` | MySQL username |
-| `DB_PASSWORD` | MySQL password |
-| `DB_NAME` | MySQL database name |
+| `MONGODB_URI` | MongoDB connection string (default: `mongodb://127.0.0.1:27017`) |
+| `MONGODB_DB_NAME` | MongoDB database name (default: `volp_db`) |
 | `MAILTRAP_SMTP_HOST` | Mailtrap SMTP host (`sandbox.smtp.mailtrap.io`) |
 | `MAILTRAP_SMTP_PORT` | Mailtrap SMTP port (`2525`) |
 | `MAILTRAP_SMTP_USER` | Mailtrap SMTP username |
@@ -524,7 +518,7 @@ npm install
 ### 2. Configure environment
 ```bash
 cp .env.example .env
-nano .env   # fill in your MySQL and Mailtrap credentials
+nano .env   # fill in your MongoDB and Mailtrap credentials
 ```
 
 ### 3. Start the server
@@ -534,7 +528,7 @@ npm start
 
 Open **[http://localhost:4000](http://localhost:4000)** in your browser.
 
-> **MySQL must be running.** The app will fail on startup if the database is unreachable — this is intentional to avoid silent data loss.
+> **MongoDB must be reachable.** The app will fail on startup if the database is unreachable — this is intentional to avoid silent data loss.
 
 ---
 
@@ -542,7 +536,7 @@ Open **[http://localhost:4000](http://localhost:4000)** in your browser.
 
 - **Daily 8:00 PM Reminders** — automated reminder cron job scheduled by default at 8:00 PM (`0 20 * * *`).
 - **ES Modules (ES2022+)** — native `import`/`export`, top-level `await`, optional chaining, nullish coalescing.
-- **No dummy/fallback data** — all data comes from live VOLP API and MySQL DB.
+- **No dummy/fallback data** — all data comes from live VOLP API and MongoDB.
 - **Blocked Courses** — per-user course block list; blocked courses are skipped in all automated runs, manual triggers, and dashboard fetches.
 - **Mailtrap Integration** — emails delivered to your Mailtrap sandbox inbox for safe testing.
 - **Tabbed Web Dashboard** — Assignments view + Blocked Courses manager in a single-page dark-mode UI.

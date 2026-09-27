@@ -4,11 +4,11 @@
 import express from 'express';
 import { fetchUserAssignments, fetchUserCourses } from '../services/volp.service.js';
 import { triggerCronNow } from '../services/cron.service.js';
-import { pool } from '../services/db.service.js';
+import { coursesCollection, assignmentsCollection } from '../services/db.service.js';
 
 const router = express.Router();
 
-// Fetch all enrolled courses with active/blocked status (cached in MySQL courses table)
+// Fetch all enrolled courses with active/blocked status (cached in MongoDB courses collection)
 router.post('/my-courses', async (request, response) => {
   const { email, token, refresh = false } = request.body;
 
@@ -18,10 +18,10 @@ router.post('/my-courses', async (request, response) => {
 
   try {
     // Check if courses exist in database
-    const [cachedCoursesFromDb] = await pool.query(
-      'SELECT colid, crsid, course_name, semester, academic_year, is_blocked, updated_at FROM courses WHERE user_email = ? ORDER BY colid ASC',
-      [email]
-    );
+    const cachedCoursesFromDb = await coursesCollection
+      .find({ user_email: email })
+      .sort({ colid: 1 })
+      .toArray();
 
     let coursesList = cachedCoursesFromDb;
 
@@ -31,31 +31,32 @@ router.post('/my-courses', async (request, response) => {
 
       if (liveCourses.length > 0) {
         for (const currentCourse of liveCourses) {
-          await pool.query(
-            `INSERT INTO courses (user_email, colid, crsid, course_name, semester, academic_year)
-             VALUES (?, ?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE
-               crsid = VALUES(crsid),
-               course_name = VALUES(course_name),
-               semester = VALUES(semester),
-               academic_year = VALUES(academic_year),
-               updated_at = CURRENT_TIMESTAMP`,
-            [
-              email,
-              currentCourse.colid,
-              currentCourse.crsid || null,
-              currentCourse.course_name,
-              currentCourse.semester || null,
-              currentCourse.academic_year || null
-            ]
+          await coursesCollection.updateOne(
+            { user_email: email, colid: Number(currentCourse.colid) },
+            {
+              $set: {
+                crsid: currentCourse.crsid || null,
+                course_name: currentCourse.course_name,
+                semester: currentCourse.semester || null,
+                academic_year: currentCourse.academic_year || null,
+                updated_at: new Date()
+              },
+              $setOnInsert: {
+                user_email: email,
+                colid: Number(currentCourse.colid),
+                is_blocked: false,
+                blocked_at: null
+              }
+            },
+            { upsert: true }
           );
         }
 
         // Re-read fresh courses with their current is_blocked status from DB
-        const [freshCoursesFromDb] = await pool.query(
-          'SELECT colid, crsid, course_name, semester, academic_year, is_blocked, updated_at FROM courses WHERE user_email = ? ORDER BY colid ASC',
-          [email]
-        );
+        const freshCoursesFromDb = await coursesCollection
+          .find({ user_email: email })
+          .sort({ colid: 1 })
+          .toArray();
         coursesList = freshCoursesFromDb;
       }
     }
@@ -73,7 +74,7 @@ router.post('/my-courses', async (request, response) => {
     response.json({
       success: true,
       email,
-      source: (refresh || cachedCoursesFromDb.length === 0) ? 'VOLP_LIVE_SYNCED' : 'MYSQL_DATABASE',
+      source: (refresh || cachedCoursesFromDb.length === 0) ? 'VOLP_LIVE_SYNCED' : 'MONGODB_DATABASE',
       courses: coursesWithStatus
     });
   } catch (coursesError) {
@@ -81,7 +82,7 @@ router.post('/my-courses', async (request, response) => {
   }
 });
 
-// Fetch user assignments (cached in MySQL assignments table)
+// Fetch user assignments (cached in MongoDB assignments collection)
 router.post('/my-assignments', async (request, response) => {  
   const { email, token, refresh = false } = request.body;
 
@@ -91,20 +92,16 @@ router.post('/my-assignments', async (request, response) => {
 
   try {
     // 1. Load this user's blocked courses from unified courses table
-    const [blockedCourseRows] = await pool.query(
-      'SELECT colid FROM courses WHERE user_email = ? AND is_blocked = TRUE',
-      [email]
-    );
+    const blockedCourseRows = await coursesCollection
+      .find({ user_email: email, is_blocked: true }, { projection: { colid: 1 } })
+      .toArray();
     const blockedCourseColids = new Set(blockedCourseRows.map(courseRow => courseRow.colid));
 
-    // 2. Check if assignments exist in MySQL assignments table
-    const [cachedAssignmentsFromDb] = await pool.query(
-      `SELECT assignment_id, assignment_type, colid, course_name, unit_name, title_html, due_date_raw, is_submitted, is_blocked, updated_at
-       FROM assignments
-      WHERE user_email = ?
-       ORDER BY id ASC`,
-      [email]
-    );
+    // 2. Check if assignments exist in MongoDB assignments collection
+    const cachedAssignmentsFromDb = await assignmentsCollection
+      .find({ user_email: email })
+      .sort({ created_at: 1 })
+      .toArray();
 
     let currentAssignments = cachedAssignmentsFromDb;
 
@@ -114,40 +111,40 @@ router.post('/my-assignments', async (request, response) => {
 
       // Cache/sync discovered assignments into assignments table
       for (const assignmentItem of liveAssignments) {
-        await pool.query(
-          `INSERT INTO assignments
-            (user_email, assignment_id, assignment_type, colid, course_name, unit_name, title_html, due_date_raw, is_submitted)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE
-             colid = VALUES(colid),
-             course_name = VALUES(course_name),
-             unit_name = VALUES(unit_name),
-             title_html = VALUES(title_html),
-             due_date_raw = VALUES(due_date_raw),
-             is_submitted = VALUES(is_submitted),
-             updated_at = CURRENT_TIMESTAMP`,
-          [
-            email,
-            assignmentItem.assignment_id,
-            assignmentItem.assignment_type,
-            assignmentItem.colid ?? null,
-            assignmentItem.course_name,
-            assignmentItem.unit_name ?? null,
-            assignmentItem.title_html,
-            assignmentItem.due_date_raw ?? null,
-            Boolean(assignmentItem.is_submitted)
-          ]
+        await assignmentsCollection.updateOne(
+          {
+            user_email: email,
+            assignment_id: Number(assignmentItem.assignment_id),
+            assignment_type: assignmentItem.assignment_type
+          },
+          {
+            $set: {
+              colid: assignmentItem.colid ?? null,
+              course_name: assignmentItem.course_name,
+              unit_name: assignmentItem.unit_name ?? null,
+              title_html: assignmentItem.title_html,
+              due_date_raw: assignmentItem.due_date_raw ?? null,
+              is_submitted: Boolean(assignmentItem.is_submitted),
+              updated_at: new Date()
+            },
+            $setOnInsert: {
+              user_email: email,
+              assignment_id: Number(assignmentItem.assignment_id),
+              assignment_type: assignmentItem.assignment_type,
+              is_blocked: false,
+              blocked_at: null,
+              created_at: new Date()
+            }
+          },
+          { upsert: true }
         );
       }
 
       // Re-read fresh non-blocked assignments from DB
-      const [freshAssignmentsFromDb] = await pool.query(
-        `SELECT assignment_id, assignment_type, colid, course_name, unit_name, title_html, due_date_raw, is_submitted, is_blocked, updated_at
-         FROM assignments
-         WHERE user_email = ?
-         ORDER BY id ASC`,
-        [email]
-      );
+      const freshAssignmentsFromDb = await assignmentsCollection
+        .find({ user_email: email })
+        .sort({ created_at: 1 })
+        .toArray();
       currentAssignments = freshAssignmentsFromDb;
     }
 
@@ -159,7 +156,7 @@ router.post('/my-assignments', async (request, response) => {
     response.json({
       success: true,
       email,
-      source: (refresh || cachedAssignmentsFromDb.length === 0) ? 'VOLP_LIVE_SYNCED' : 'MYSQL_DATABASE',
+      source: (refresh || cachedAssignmentsFromDb.length === 0) ? 'VOLP_LIVE_SYNCED' : 'MONGODB_DATABASE',
       count: nonBlockedAssignments.length,
       assignments: nonBlockedAssignments
     });
