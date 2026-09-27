@@ -269,6 +269,35 @@ h1, h2, h3, h4, h5, h6 {
   color: #10120E;
 }
 
+/* Button Syncing / Loading State */
+@keyframes syncSpinnerRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.sync-icon {
+  flex-shrink: 0;
+}
+
+.sync-spinner {
+  display: none;
+}
+
+.btn.is-syncing {
+  opacity: 0.85;
+  cursor: wait;
+  pointer-events: none;
+}
+
+.btn.is-syncing .sync-default-icon {
+  display: none !important;
+}
+
+.btn.is-syncing .sync-spinner {
+  display: inline-block !important;
+  animation: syncSpinnerRotate 0.75s linear infinite;
+}
+
 .btn--ghost {
   background: transparent;
   border-color: var(--border);
@@ -394,30 +423,75 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 20px 20px 20px;
+  padding: 20px 18px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.sidebar-brand h1 {
-  font-family: var(--font-mono);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  letter-spacing: 2px;
-  color: var(--text);
-  margin: 0;
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  min-width: 0;
 }
 
-.sidebar-brand h1 .accent {
+.brand-logo-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-logo-img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(212, 255, 0, 0.22));
+  transition: transform var(--transition-fast);
+}
+
+.sidebar-brand:hover .brand-logo-img {
+  transform: scale(1.06);
+}
+
+.brand-text-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.brand-title {
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.25px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.1;
+  text-transform: lowercase;
+}
+
+.brand-title .accent {
   color: var(--accent);
+}
+
+.brand-title .brand-dot {
+  color: var(--accent);
+}
+
+.brand-title .brand-rem {
+  color: var(--text);
 }
 
 .brand-sub {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 8.5px;
   letter-spacing: 1.5px;
   color: var(--muted);
   margin-top: 3px;
   font-weight: 600;
+  text-transform: uppercase;
 }
 
 .sidebar-close-btn {
@@ -585,6 +659,53 @@ h1, h2, h3, h4, h5, h6 {
   min-width: 0;
   flex: 1 1 auto;
   overflow: hidden;
+}
+
+.header-brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.header-logo-img {
+  width: 20px;
+  height: 20px;
+  display: block;
+  object-fit: contain;
+}
+
+.header-brand-text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+.header-brand-text .accent {
+  color: var(--accent);
+}
+
+.header-title-divider {
+  width: 1px;
+  height: 22px;
+  background-color: var(--border);
+  flex-shrink: 0;
+}
+
+@media (min-width: 1025px) {
+  .header-brand-badge {
+    display: none;
+  }
+  .header-title-divider {
+    display: none;
+  }
 }
 
 .header-title-group {
@@ -1384,19 +1505,57 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadow-modal);
 }
 
+.login-brand-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.login-brand-logo {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 4px 16px rgba(212, 255, 0, 0.25));
+  transition: transform var(--transition-fast);
+}
+
+.login-brand-logo:hover {
+  transform: scale(1.06);
+}
+
 .login-header-title {
   font-family: var(--font-mono);
-  font-size: clamp(1.2rem, 1rem + 0.8vw, 1.4rem);
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-transform: uppercase;
+  font-size: clamp(1.4rem, 1.1rem + 1vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: -0.25px;
+  text-transform: lowercase;
   text-align: center;
   color: var(--text);
-  margin-bottom: 24px;
+  margin-bottom: 4px;
+  line-height: 1.1;
 }
 
 .login-header-title .accent {
   color: var(--accent);
+}
+
+.login-header-title .brand-dot {
+  color: var(--accent);
+}
+
+.login-header-title .brand-rem {
+  color: var(--text);
+}
+
+.login-brand-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  text-align: center;
 }
 
 .theme-toggle-fixed {

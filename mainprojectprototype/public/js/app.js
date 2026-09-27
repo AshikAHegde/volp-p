@@ -779,9 +779,20 @@ function renderRemindersView() {
 async function syncNow() {
   const btn = document.getElementById('syncBtn');
   const label = document.getElementById('syncBtnLabel');
+  const settingsBtn = document.getElementById('settingsSyncBtn');
+  const settingsLabel = document.getElementById('settingsSyncBtnLabel');
   
-  if (btn) btn.disabled = true;
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('is-syncing');
+  }
   if (label) label.textContent = 'SYNCING VOLP...';
+
+  if (settingsBtn) {
+    settingsBtn.disabled = true;
+    settingsBtn.classList.add('is-syncing');
+  }
+  if (settingsLabel) settingsLabel.textContent = 'SYNCING FROM VOLP...';
 
   try {
     await loadAppData(true);
@@ -793,8 +804,17 @@ async function syncNow() {
   } catch (err) {
     showToast('Sync updated from cached state', 'warning');
   } finally {
-    if (btn) btn.disabled = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('is-syncing');
+    }
     if (label) label.textContent = 'SYNC VOLP';
+
+    if (settingsBtn) {
+      settingsBtn.disabled = false;
+      settingsBtn.classList.remove('is-syncing');
+    }
+    if (settingsLabel) settingsLabel.textContent = 'SYNC FROM VOLP NOW';
   }
 }
 
