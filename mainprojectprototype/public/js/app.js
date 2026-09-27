@@ -196,12 +196,20 @@ function cleanHtmlTitle(html) {
 }
 
 // 4. Data Fetching from Backend API
+function getAuthHeaders() {
+  if (!currentUser?.token || !currentUser?.email) return {};
+  return {
+    Authorization: `Bearer ${currentUser.token}`,
+    'X-User-Email': currentUser.email
+  };
+}
+
 async function loadAppData(refresh = false) {
   try {
     // 1. Fetch Courses
     const courseRes = await fetch('/api/assignments/my-courses', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({ email: currentUser.email, token: currentUser.token, refresh })
     });
 
@@ -218,13 +226,15 @@ async function loadAppData(refresh = false) {
     // 2. Fetch Assignments
     const assignRes = await fetch('/api/assignments/my-assignments', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({ email: currentUser.email, token: currentUser.token, refresh })
     });
 
     if (assignRes.ok) {
       const assignData = await assignRes.json();
       rawAssignments = assignData.assignments || [];
+    } else {
+      throw new Error('Assignment API returned ' + assignRes.status);
     }
 
     // 3. Fetch Blocked Items
@@ -244,16 +254,24 @@ async function loadAppData(refresh = false) {
 
 async function loadBlockedData() {
   try {
-    const bCourseRes = await fetch(`/api/blocked?email=${encodeURIComponent(currentUser.email)}`);
+    const bCourseRes = await fetch(`/api/blocked?email=${encodeURIComponent(currentUser.email)}`, {
+      headers: getAuthHeaders()
+    });
     if (bCourseRes.ok) {
       const bData = await bCourseRes.json();
       blockedCoursesList = bData.blocked || [];
+    } else {
+      throw new Error('Blocked course API returned ' + bCourseRes.status);
     }
     
-    const bAssignRes = await fetch(`/api/blocked-assignments?email=${encodeURIComponent(currentUser.email)}`);
+    const bAssignRes = await fetch(`/api/blocked-assignments?email=${encodeURIComponent(currentUser.email)}`, {
+      headers: getAuthHeaders()
+    });
     if (bAssignRes.ok) {
       const aData = await bAssignRes.json();
       blockedAssignmentsList = aData.blocked || [];
+    } else {
+      throw new Error('Blocked assignment API returned ' + bAssignRes.status);
     }
   } catch (e) {
     blockedCoursesList = rawCourses.filter(c => c.is_blocked);
@@ -451,7 +469,7 @@ function renderDashboardProjectsGrid() {
       </div>
       <div class="project-card-footer">
         <span class="code-tag code-tag--lime">COLID #${course.colid}</span>
-        <button class="btn btn--sm ${course.is_blocked ? 'btn--success' : 'btn--ghost'}" onclick="toggleCourseBlock(${course.colid}, '${escapeHtml(course.course_name)}', ${Boolean(course.is_blocked)})">
+        <button class="btn btn--sm ${course.is_blocked ? 'btn--success' : 'btn--ghost'}" onclick="toggleCourseBlock(${course.colid}, '${escapeJsString(course.course_name)}', ${Boolean(course.is_blocked)})">
           ${course.is_blocked ? 'UNBLOCK' : 'BLOCK'}
         </button>
       </div>
@@ -501,7 +519,7 @@ function renderDashboardRecentTable() {
         </span>
       </td>
       <td style="text-align:right">
-        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type)}', '${escapeHtml(item.course_name)}', '${escapeHtml(cleanTitle)}', ${Boolean(item.is_blocked)})">
+        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
           ${item.is_blocked ? 'RESTORE' : 'BLOCK'}
         </button>
       </td>
@@ -571,7 +589,7 @@ function renderKanbanBoard(items) {
         </span>
       </div>
       <div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;justify-content:flex-end;">
-        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type)}', '${escapeHtml(item.course_name)}', '${escapeHtml(cleanTitle)}', ${Boolean(item.is_blocked)})">
+        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
           ${item.is_blocked ? 'RESTORE' : 'BLOCK'}
         </button>
       </div>
@@ -630,7 +648,7 @@ function renderTasksTable(items) {
         </span>
       </td>
       <td style="text-align:right">
-        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type)}', '${escapeHtml(item.course_name)}', '${escapeHtml(cleanTitle)}', ${Boolean(item.is_blocked)})">
+        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
           ${item.is_blocked ? 'RESTORE' : 'BLOCK'}
         </button>
       </td>
@@ -672,7 +690,7 @@ function renderCoursesView() {
       </div>
       <div class="project-card-footer">
         <span class="code-tag code-tag--lime">COLID #${course.colid}</span>
-        <button class="btn btn--sm ${course.is_blocked ? 'btn--success' : 'btn--danger'}" onclick="toggleCourseBlock(${course.colid}, '${escapeHtml(course.course_name)}', ${Boolean(course.is_blocked)})">
+        <button class="btn btn--sm ${course.is_blocked ? 'btn--success' : 'btn--danger'}" onclick="toggleCourseBlock(${course.colid}, '${escapeJsString(course.course_name)}', ${Boolean(course.is_blocked)})">
           ${course.is_blocked ? 'RESTORE COURSE' : 'BLOCK COURSE'}
         </button>
       </div>
@@ -699,7 +717,7 @@ function renderBlockManagerView() {
           <td><strong>${escapeHtml(c.course_name)}</strong></td>
           <td><span class="meta-text">${escapeHtml(c.blocked_at || 'ACTIVE BLOCK')}</span></td>
           <td style="text-align:right">
-            <button class="btn btn--success btn--sm" onclick="toggleCourseBlock(${c.colid}, '${escapeHtml(c.course_name)}', true)">RESTORE</button>
+            <button class="btn btn--success btn--sm" onclick="toggleCourseBlock(${c.colid}, '${escapeJsString(c.course_name)}', true)">RESTORE</button>
           </td>
         `;
         cTbody.appendChild(tr);
@@ -725,7 +743,7 @@ function renderBlockManagerView() {
           <td>${escapeHtml(cleanTitle)}</td>
           <td><span class="meta-text">${escapeHtml(a.blocked_at || 'RECENT')}</span></td>
           <td style="text-align:right">
-            <button class="btn btn--success btn--sm" onclick="toggleAssignmentBlock(${a.assignment_id}, '${escapeHtml(a.assignment_type)}', '${escapeHtml(a.course_name)}', '${escapeHtml(cleanTitle)}', true)">RESTORE</button>
+            <button class="btn btn--success btn--sm" onclick="toggleAssignmentBlock(${a.assignment_id}, '${escapeJsString(a.assignment_type)}', '${escapeJsString(a.course_name)}', '${escapeJsString(cleanTitle)}', true)">RESTORE</button>
           </td>
         `;
         aTbody.appendChild(tr);
@@ -779,20 +797,9 @@ function renderRemindersView() {
 async function syncNow() {
   const btn = document.getElementById('syncBtn');
   const label = document.getElementById('syncBtnLabel');
-  const settingsBtn = document.getElementById('settingsSyncBtn');
-  const settingsLabel = document.getElementById('settingsSyncBtnLabel');
   
-  if (btn) {
-    btn.disabled = true;
-    btn.classList.add('is-syncing');
-  }
+  if (btn) btn.disabled = true;
   if (label) label.textContent = 'SYNCING VOLP...';
-
-  if (settingsBtn) {
-    settingsBtn.disabled = true;
-    settingsBtn.classList.add('is-syncing');
-  }
-  if (settingsLabel) settingsLabel.textContent = 'SYNCING FROM VOLP...';
 
   try {
     await loadAppData(true);
@@ -804,17 +811,8 @@ async function syncNow() {
   } catch (err) {
     showToast('Sync updated from cached state', 'warning');
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.classList.remove('is-syncing');
-    }
+    if (btn) btn.disabled = false;
     if (label) label.textContent = 'SYNC VOLP';
-
-    if (settingsBtn) {
-      settingsBtn.disabled = false;
-      settingsBtn.classList.remove('is-syncing');
-    }
-    if (settingsLabel) settingsLabel.textContent = 'SYNC FROM VOLP NOW';
   }
 }
 
@@ -828,7 +826,7 @@ async function triggerReminder() {
   try {
     const res = await fetch('/api/assignments/trigger-8pm-reminder', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({ email: currentUser.email, token: currentUser.token })
     });
 
@@ -874,14 +872,14 @@ async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
         if (!currentlyBlocked) {
           const response = await fetch('/api/blocked', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
             body: JSON.stringify({ email: currentUser.email, colid, course_name: courseName })
           });
           if (!response.ok) throw new Error(`Server returned ${response.status}`);
         } else {
           const response = await fetch('/api/blocked', {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
             body: JSON.stringify({ email: currentUser.email, colid })
           });
           if (!response.ok) throw new Error(`Server returned ${response.status}`);
@@ -914,7 +912,7 @@ async function toggleAssignmentBlock(assignmentId, assignmentType, courseName, t
         if (!currentlyBlocked) {
           const response = await fetch('/api/blocked-assignments', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
             body: JSON.stringify({
               email: currentUser.email,
               assignment_id: assignmentId,
@@ -927,7 +925,7 @@ async function toggleAssignmentBlock(assignmentId, assignmentType, courseName, t
         } else {
           const response = await fetch('/api/blocked-assignments', {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
             body: JSON.stringify({
               email: currentUser.email,
               assignment_id: assignmentId,
@@ -1003,4 +1001,10 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function escapeJsString(str) {
+  return escapeHtml(str)
+    .replace(/\\/g, '\\\\')
+    .replace(/&#039;/g, "\\'");
 }

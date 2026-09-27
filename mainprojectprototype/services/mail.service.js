@@ -46,12 +46,22 @@ const transporter = nodemailer.createTransport({
 
 console.log(`✉ Email provider: ${mailSettings.mode} (${mailSettings.host}:${mailSettings.port})`);
 
+/**
+ * Escape dynamic values before placing them in an HTML email.
+ */
+const escapeHtml = value => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#039;');
+
 export const sendAssignmentReminderEmail = async (userEmail, assignments) => {
-  const pendingAssignments = assignments.filter(a => !a.is_submitted);
+  const pendingAssignments = assignments.filter(a => !a.is_submitted && !a.is_blocked);
 
   const htmlContent = `
     <h2>📚 VOLP Assignment Reminder</h2>
-    <p>Hello <strong>${userEmail}</strong>,</p>
+    <p>Hello <strong>${escapeHtml(userEmail)}</strong>,</p>
     <p>Here is your summary of pending assignments:</p>
 
     <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
@@ -67,10 +77,10 @@ export const sendAssignmentReminderEmail = async (userEmail, assignments) => {
       <tbody>
         ${pendingAssignments.map(a => `
           <tr>
-            <td>${a.course_name}</td>
-            <td><strong>${a.assignment_type}</strong></td>
-            <td>${a.title_html}</td>
-            <td>${a.due_date_raw}</td>
+            <td>${escapeHtml(a.course_name)}</td>
+            <td><strong>${escapeHtml(a.assignment_type)}</strong></td>
+            <td>${escapeHtml(a.title_html)}</td>
+            <td>${escapeHtml(a.due_date_raw)}</td>
             <td style="color: red;"><strong>Pending</strong></td>
           </tr>
         `).join('')}

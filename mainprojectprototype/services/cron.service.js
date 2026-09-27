@@ -7,6 +7,8 @@ import { fetchUserAssignments } from './volp.service.js';
 import { sendAssignmentReminderEmail } from './mail.service.js';
 import { usersCollection, coursesCollection, assignmentsCollection } from './db.service.js';
 
+let isCronRunning = false;
+
 export const startCronJob = () => {
   const schedule = process.env.CRON_SCHEDULE;
   if (!schedule) {
@@ -16,26 +18,33 @@ export const startCronJob = () => {
   console.log(`⏰ Scheduling VOLP Assignment Reminder Cron Job ("${schedule}")...`);
 
   cron.schedule(schedule, async () => {
+    if (isCronRunning) {
+      console.log('⚠ Previous reminder run is still active. Skipping overlapping execution.');
+      return;
+    }
+
+    isCronRunning = true;
     console.log('\n====================================================');
     console.log('🔔 RUNNING VOLP REMINDER CRON JOB...');
     console.log('====================================================');
 
-    // 1. Fetch all registered users from MongoDB
-    let users = [];
     try {
-      users = await usersCollection.find({}, { projection: { _id: 0, email: 1, token: 1 } }).toArray();
-    } catch (e) {
-      console.log('⚠ Could not fetch users from DB:', e.message);
-      return;
-    }
+      // 1. Fetch all registered users from MongoDB
+      let users = [];
+      try {
+        users = await usersCollection.find({}, { projection: { _id: 0, email: 1, token: 1 } }).toArray();
+      } catch (e) {
+        console.log('⚠ Could not fetch users from DB:', e.message);
+        return;
+      }
 
-    if (users.length === 0) {
-      console.log('ℹ No registered users found for email notifications.');
-      return;
-    }
+      if (users.length === 0) {
+        console.log('ℹ No registered users found for email notifications.');
+        return;
+      }
 
-    // 2. Process assignments for each user
-    for (const user of users) {
+      // 2. Process assignments for each user
+      for (const user of users) {
       console.log(`\n➤ Processing user: ${user.email}`);
       try {
         // Load this user's blocked courses from unified courses table
@@ -65,8 +74,11 @@ export const startCronJob = () => {
       } catch (err) {
         console.log(`⚠ Failed to process user ${user.email}:`, err.message);
       }
+      }
+    } finally {
+      isCronRunning = false;
     }
-  });
+  }, { timezone: process.env.CRON_TIMEZONE || 'Asia/Kolkata' });
 };
 
 // Helper to manually trigger cron execution

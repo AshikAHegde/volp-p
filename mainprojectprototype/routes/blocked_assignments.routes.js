@@ -3,8 +3,10 @@
  */
 import express from 'express';
 import { assignmentsCollection } from '../services/db.service.js';
+import { requireUser } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+router.use(requireUser);
 
 // GET - list all blocked assignments for a user
 router.get('/', async (req, res) => {

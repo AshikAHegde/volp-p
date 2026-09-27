@@ -5,11 +5,12 @@ import express from 'express';
 import { fetchUserAssignments, fetchUserCourses } from '../services/volp.service.js';
 import { triggerCronNow } from '../services/cron.service.js';
 import { coursesCollection, assignmentsCollection } from '../services/db.service.js';
+import { requireUser } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
 // Fetch all enrolled courses with active/blocked status (cached in MongoDB courses collection)
-router.post('/my-courses', async (request, response) => {
+router.post('/my-courses', requireUser, async (request, response) => {
   const { email, token, refresh = false } = request.body;
 
   if (!email || !token) {
@@ -83,7 +84,7 @@ router.post('/my-courses', async (request, response) => {
 });
 
 // Fetch user assignments (cached in MongoDB assignments collection)
-router.post('/my-assignments', async (request, response) => {  
+router.post('/my-assignments', requireUser, async (request, response) => {
   const { email, token, refresh = false } = request.body;
 
   if (!email || !token) {
@@ -99,7 +100,24 @@ router.post('/my-assignments', async (request, response) => {
 
     // 2. Check if assignments exist in MongoDB assignments collection
     const cachedAssignmentsFromDb = await assignmentsCollection
-      .find({ user_email: email })
+      .find(
+        { user_email: email },
+        {
+          projection: {
+            _id: 0,
+            assignment_id: 1,
+            assignment_type: 1,
+            colid: 1,
+            course_name: 1,
+            unit_name: 1,
+            title_html: 1,
+            due_date_raw: 1,
+            is_submitted: 1,
+            is_blocked: 1,
+            updated_at: 1
+          }
+        }
+      )
       .sort({ created_at: 1 })
       .toArray();
 
@@ -142,7 +160,24 @@ router.post('/my-assignments', async (request, response) => {
 
       // Re-read fresh non-blocked assignments from DB
       const freshAssignmentsFromDb = await assignmentsCollection
-        .find({ user_email: email })
+        .find(
+          { user_email: email },
+          {
+            projection: {
+              _id: 0,
+              assignment_id: 1,
+              assignment_type: 1,
+              colid: 1,
+              course_name: 1,
+              unit_name: 1,
+              title_html: 1,
+              due_date_raw: 1,
+              is_submitted: 1,
+              is_blocked: 1,
+              updated_at: 1
+            }
+          }
+        )
         .sort({ created_at: 1 })
         .toArray();
       currentAssignments = freshAssignmentsFromDb;
@@ -166,8 +201,12 @@ router.post('/my-assignments', async (request, response) => {
 });
 
 // Trigger 8 PM Cron Notification test manually
-router.post('/trigger-8pm-reminder', async (request, response) => {
+router.post('/trigger-8pm-reminder', requireUser, async (request, response) => {
   const { email, token } = request.body;
+
+  if (!email || !token) {
+    return response.status(400).json({ error: 'Email and token are required.' });
+  }
 
   try {
     await triggerCronNow(email, token);

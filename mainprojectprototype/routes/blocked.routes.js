@@ -3,8 +3,10 @@
  */
 import express from 'express';
 import { coursesCollection } from '../services/db.service.js';
+import { requireUser } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+router.use(requireUser);
 
 // GET  /api/blocked?email=xxx  — list all blocked courses for a user
 router.get('/', async (req, res) => {

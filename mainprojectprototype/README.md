@@ -2,7 +2,7 @@
 
 A modern **Express + Node.js (ES Modules)** application that:
 1. Authenticates users against the live **VOLP portal** (`https://admin.volp.in/login/process`).
-2. Persists user credentials and session tokens in a **MongoDB database**.
+2. Persists user email and session tokens in a **MongoDB database** without storing VOLP passwords.
 3. Lets users **block specific courses** so those courses are skipped during all assignment fetches and email reminders.
 4. Runs a **configurable cron job** (default: daily at 8:00 PM `0 20 * * *`) that fetches assignments and sends summary emails through an SMTP provider.
 5. Serves a **tabbed web dashboard** to log in, view assignments, manage blocked courses, and manually trigger reminder emails.
@@ -39,7 +39,7 @@ flowchart TD
 
     subgraph MongoDB["🗄️ MongoDB Database"]
         direction LR
-        T_Users["<b>users</b><br/>──────────────<br/>🔑 id  INT PK<br/>📧 email  VARCHAR UNIQUE<br/>🔒 password  VARCHAR<br/>🎫 token  TEXT<br/>🕐 created_at  TIMESTAMP"]
+        T_Users["<b>users</b><br/>──────────────<br/>📧 email  String UNIQUE<br/>🎫 token  String<br/>🕐 created_at  Date"]
         T_Courses["<b>courses</b><br/>──────────────<br/>🔑 id  INT PK<br/>📧 user_email  VARCHAR<br/>🆔 colid  INT<br/>🏷️ crsid  INT<br/>📚 course_name  VARCHAR<br/>🏛️ semester  VARCHAR<br/>📅 academic_year VARCHAR<br/>🚫 is_blocked  BOOLEAN<br/>🕐 blocked_at  TIMESTAMP<br/>🔒 UNIQUE(user_email, colid)"]
         T_Assignments["<b>assignments</b><br/>──────────────<br/>🔑 id  INT PK<br/>📧 user_email  VARCHAR<br/>🆔 assignment_id  INT<br/>📝 assignment_type  VARCHAR<br/>🆔 colid  INT<br/>📚 course_name  VARCHAR<br/>🗂️ unit_name  VARCHAR<br/>📄 title_html  TEXT<br/>📅 due_date_raw  VARCHAR<br/>✅ is_submitted  BOOLEAN<br/>🚫 is_blocked  BOOLEAN<br/>🕐 blocked_at  TIMESTAMP<br/>🔒 UNIQUE(user_email, assignment_id, type)"]
     end
@@ -108,7 +108,7 @@ flowchart TD
        │                          │   return token       │                     │
        │                          │                      │                     │
        │                          │  INSERT INTO users   │                     │
-       │                          │  (email, pwd, token) │                     │
+      │                          │  (email, token)      │                     │
        │                          │────────────────────────────────────────────▶
        │                          │◀───────────────────────────────────────────
        │                          │  { success, email, token }                 │
@@ -344,7 +344,7 @@ flowchart TD
 ┌─────────────────────────────────────────────────────────────┐
 │          2. AUTHENTICATION & MONGODB PERSISTENCE            │
 │  - Authenticate against VOLP (https://admin.volp.in)        │
-│  - Save email, password, token to MongoDB `users` collection│
+│  - Save email and token to MongoDB `users` collection       │
 │  - Fails explicitly if DB is offline (no silent fallback)   │
 └──────────────────────────────┬──────────────────────────────┘
                                │
@@ -409,7 +409,6 @@ mainprojectprototype/
 | Column | Type | Description |
 |--------|------|-------------|
 | `email` | String, unique | VOLP login email |
-| `password` | String | VOLP password |
 | `token` | String | Active VOLP session token |
 | `created_at` | Date | Registration time |
 
@@ -495,6 +494,7 @@ mainprojectprototype/
 | `SMTP_PASS` | SMTP password, app password, or provider SMTP key |
 | `SMTP_FROM` | Verified sender name/address header |
 | `CRON_SCHEDULE` | Cron expression (default: `0 20 * * *` — Daily at 8:00 PM) |
+| `CRON_TIMEZONE` | IANA timezone for cron execution (default: `Asia/Kolkata`) |
 
 ### Cron Schedule Reference
 Edit `CRON_SCHEDULE` in `.env` and restart the server:

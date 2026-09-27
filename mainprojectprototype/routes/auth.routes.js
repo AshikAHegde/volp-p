@@ -22,7 +22,8 @@ router.post('/login', async (req, res) => {
     await usersCollection.updateOne(
       { email: username },
       {
-        $set: { password, token, updated_at: new Date() },
+        $set: { token, updated_at: new Date() },
+        $unset: { password: '' },
         $setOnInsert: { email: username, created_at: new Date() }
       },
       { upsert: true }
