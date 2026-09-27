@@ -53,6 +53,12 @@
               REMINDERS
             </a>
           </li>
+          <li class="sidebar-nav-item" data-page="settings">
+            <a href="#" onclick="navigateTo('settings', event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              ACCOUNT
+            </a>
+          </li>
         </ul>
       </nav>
       
@@ -68,7 +74,7 @@
       </div>
     </aside>
     
-    <!-- MAIN WRAPPER -->
+    <!-- MAIN CONTENT WRAPPER -->
     <div class="main-wrapper">
       <!-- TOP HEADER -->
       <header class="top-header">
@@ -108,7 +114,7 @@
             <div class="metric-card metric-card--accent">
               <div class="metric-label">TOTAL ASSIGNMENTS</div>
               <div class="metric-value" id="statTotalAssignments">0</div>
-              <div class="metric-delta">MYSQL DATABASE</div>
+              <div class="metric-delta">REGISTERED IN DB</div>
             </div>
             <div class="metric-card metric-card--warning">
               <div class="metric-label">PENDING</div>
@@ -169,25 +175,18 @@
             <div class="meta-text" id="assignmentsCountMeta">0 ITEMS</div>
           </div>
 
-          <!-- TOOLBAR: SEARCH + REAL DATA FILTERS -->
+          <!-- TOOLBAR: SEARCH + REAL STATUS FILTERS ONLY -->
           <div class="toolbar">
             <div class="search-input-wrapper">
               <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input type="text" class="search-input" id="taskSearchInput" placeholder="SEARCH ASSIGNMENTS..." oninput="filterTasks()">
             </div>
             
-            <!-- Real Status Filters from Backend: is_submitted (true / false) -->
+            <!-- Real Status Filter: ALL | PENDING | SUBMITTED -->
             <div class="filter-group" id="statusFilterGroup">
               <button class="filter-btn active" data-filter="all" onclick="setStatusFilter('all', this)">ALL</button>
               <button class="filter-btn" data-filter="pending" onclick="setStatusFilter('pending', this)">PENDING</button>
               <button class="filter-btn" data-filter="submitted" onclick="setStatusFilter('submitted', this)">SUBMITTED</button>
-            </div>
-            
-            <!-- Real Type Filters from Backend: assignment_type (SUBJECTIVE / HANDS_ON) -->
-            <div class="filter-group" id="typeFilterGroup">
-              <button class="filter-btn active" data-filter="all" onclick="setTypeFilter('all', this)">ALL TYPES</button>
-              <button class="filter-btn" data-filter="SUBJECTIVE" onclick="setTypeFilter('SUBJECTIVE', this)">SUBJECTIVE</button>
-              <button class="filter-btn" data-filter="HANDS_ON" onclick="setTypeFilter('HANDS_ON', this)">HANDS-ON</button>
             </div>
           </div>
           
@@ -299,6 +298,35 @@
               <div class="note-card-footer">
                 TRIGGER ENDPOINT: POST /api/assignments/trigger-8pm-reminder
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= 6. ACCOUNT / SESSION ================= -->
+        <div class="page-view" id="page-settings">
+          <div class="page-header">
+            <div class="section-title">ACCOUNT & VOLP SESSION</div>
+            <div class="meta-text">CONNECTED CREDENTIALS</div>
+          </div>
+
+          <div class="settings-card" style="max-width: 560px;">
+            <div class="profile-card-header">
+              <div class="profile-avatar-large" id="settingsLargeAvatar">VO</div>
+              <div>
+                <div class="profile-title" id="settingsProfileTitle">VOLP LEARNER</div>
+                <div class="profile-id">AUTHENTICATED USER SESSION</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">CONNECTED VOLP EMAIL</label>
+              <input type="email" class="form-input" id="settingsEmail" value="" readonly>
+            </div>
+
+            <div class="settings-footer-actions">
+              <button type="button" class="btn btn--danger" onclick="handleSignOut()">
+                SIGN OUT OF VOLP SESSION
+              </button>
             </div>
           </div>
         </div>

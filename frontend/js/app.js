@@ -15,7 +15,6 @@ let blockedAssignments = [];
 // UI Filter State
 let currentTab = 'dashboard';
 let currentStatusFilter = 'all'; // 'all' | 'pending' | 'submitted'
-let currentTypeFilter = 'all';   // 'all' | 'SUBJECTIVE' | 'HANDS_ON'
 let currentSearchQuery = '';
 let pendingModalAction = null;
 let lastSyncSource = '';
@@ -71,9 +70,15 @@ function checkAuthAndInit() {
 
   const sideName = document.getElementById('sidebarUserName');
   const sideAvatar = document.getElementById('sidebarAvatar');
+  const settingsEmail = document.getElementById('settingsEmail');
+  const settingsLargeAvatar = document.getElementById('settingsLargeAvatar');
+  const settingsProfileTitle = document.getElementById('settingsProfileTitle');
 
   if (sideName) sideName.textContent = currentUser.email;
   if (sideAvatar) sideAvatar.textContent = initials;
+  if (settingsEmail) settingsEmail.value = currentUser.email;
+  if (settingsLargeAvatar) settingsLargeAvatar.textContent = initials;
+  if (settingsProfileTitle) settingsProfileTitle.textContent = currentUser.email;
 
   // Load Real Data from Backend
   fetchRealBackendData(false);
@@ -197,7 +202,8 @@ function navigateTo(pageId, event) {
     assignments: 'ASSIGNMENTS',
     courses: 'MY COURSES',
     blocked: 'BLOCK MANAGER',
-    reminders: 'REMINDERS'
+    reminders: 'REMINDERS',
+    settings: 'ACCOUNT & VOLP SESSION'
   };
 
   const titleEl = document.getElementById('headerTitle');
@@ -243,7 +249,7 @@ function renderDashboardStats() {
   document.getElementById('statBlockedAssignments').textContent = blockedTotal;
 }
 
-// Dashboard 3-Column Course Grid
+// Dashboard Course Grid
 function renderDashboardCoursesGrid() {
   const container = document.getElementById('dashboardProjectsGrid');
   if (!container) return;
@@ -330,7 +336,7 @@ function renderDashboardRecentTable() {
   });
 }
 
-// 6. Assignments List & Filter Logic (Direct Real Fields)
+// 6. Assignments List & Status Filter Logic (ALL | PENDING | SUBMITTED)
 function filterTasks() {
   currentSearchQuery = document.getElementById('taskSearchInput').value.trim().toLowerCase();
   renderAssignmentsView();
@@ -343,16 +349,9 @@ function setStatusFilter(filter, el) {
   renderAssignmentsView();
 }
 
-function setTypeFilter(filter, el) {
-  currentTypeFilter = filter;
-  document.querySelectorAll('#typeFilterGroup .filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderAssignmentsView();
-}
-
 function getFilteredAssignments() {
   return assignments.filter(item => {
-    // Search filter
+    // Search query filter
     if (currentSearchQuery) {
       const title = (item.title_html || '').toLowerCase();
       const course = (item.course_name || '').toLowerCase();
@@ -360,12 +359,6 @@ function getFilteredAssignments() {
       if (!title.includes(currentSearchQuery) && !course.includes(currentSearchQuery) && !unit.includes(currentSearchQuery)) {
         return false;
       }
-    }
-
-    // Type filter: 'all' | 'SUBJECTIVE' | 'HANDS_ON'
-    if (currentTypeFilter !== 'all') {
-      const itemType = (item.assignment_type || '').toUpperCase();
-      if (itemType !== currentTypeFilter) return false;
     }
 
     // Status filter: 'all' | 'pending' | 'submitted'
@@ -456,7 +449,7 @@ function renderCoursesView() {
   });
 }
 
-// 8. Block Manager View (Live MySQL Block Tables)
+// 8. Block Manager View
 function renderBlockManagerView() {
   // Blocked Courses
   const cTbody = document.getElementById('blockedCoursesTableBody');
