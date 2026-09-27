@@ -42,8 +42,7 @@ router.post('/', async (req, res) => {
         },
         $setOnInsert: {
           user_email: email,
-          colid: Number(colid),
-          is_blocked: true
+          colid: Number(colid)
         }
       },
       { upsert: true }
