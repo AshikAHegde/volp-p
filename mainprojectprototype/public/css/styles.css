@@ -582,7 +582,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: 12px;
   min-width: 0;
-  flex: 1;
+  flex: 1 1 auto;
   overflow: hidden;
 }
 
@@ -590,7 +590,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  flex: 1;
+  flex: 1 1 auto;
   overflow: hidden;
 }
 
@@ -606,6 +606,8 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   min-width: 40px;
   min-height: 40px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   transition: all var(--transition-fast);
 }
@@ -624,6 +626,7 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
   display: block;
 }
 
@@ -636,6 +639,7 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .header-actions {
@@ -643,8 +647,11 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
+.header-action-reminder,
+.header-action-signout,
 .header-action-optional {
   display: inline-flex;
 }
@@ -1690,25 +1697,39 @@ h1, h2, h3, h4, h5, h6 {
 /* 16.3. Mobile Devices (max-width: 600px) */
 @media (max-width: 600px) {
   .top-header {
-    padding: 0 12px;
+    padding: 0 10px;
     gap: 8px;
   }
 
   .header-left {
     gap: 8px;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .header-title-group {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
   }
 
   .header-meta {
-    display: none;
+    display: none !important;
   }
 
   .header-title-text {
-    font-size: var(--text-xs);
+    font-size: clamp(11px, 3.2vw, 13px);
     letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    display: block;
   }
 
-  /* Hide non-critical header actions on mobile */
-  .header-action-optional {
+  /* On mobile: Hide sign out from header (already accessible in hamburger menu & Account view) */
+  .header-action-signout {
     display: none !important;
   }
 
@@ -1719,23 +1740,75 @@ h1, h2, h3, h4, h5, h6 {
 
   .header-actions {
     gap: 6px;
+    flex-shrink: 0;
+    margin-left: auto;
   }
 
   .header-actions .btn,
   .hamburger-btn {
-    min-width: 38px;
-    height: 38px;
-    min-height: 38px;
-    padding: 8px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    width: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  /* Accessible 44x44px touch hit area without visual swelling */
+  .header-actions .btn::after,
+  .hamburger-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 44px;
+    min-height: 44px;
+    width: 100%;
+    height: 100%;
   }
 
   .header-actions .btn-icon-mobile {
-    display: none;
+    display: none !important;
   }
 }
 
 /* 16.4. Small Mobile Devices (max-width: 480px) */
 @media (max-width: 480px) {
+  .top-header {
+    padding: 0 8px;
+    gap: 6px;
+  }
+
+  .header-left {
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .header-title-text {
+    font-size: 11px;
+    letter-spacing: 0.25px;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .header-actions .btn,
+  .hamburger-btn {
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px;
+    width: 34px;
+    padding: 0;
+  }
+
   .metric-grid {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -1743,11 +1816,6 @@ h1, h2, h3, h4, h5, h6 {
 
   .main-content {
     padding: 12px;
-  }
-
-  .header-title-text {
-    font-size: 11px;
-    letter-spacing: 0.5px;
   }
 
   .toast-container {
