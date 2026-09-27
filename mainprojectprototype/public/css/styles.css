@@ -146,6 +146,7 @@ html, body {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  scroll-behavior: smooth;
   background-color: var(--bg);
   color: var(--text);
   font-family: var(--font-primary);
@@ -664,6 +665,7 @@ h1, h2, h3, h4, h5, h6 {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  scroll-behavior: smooth;
   padding: clamp(16px, 2.2vw, 32px);
 }
 
@@ -673,12 +675,37 @@ h1, h2, h3, h4, h5, h6 {
 
 .page-view.active {
   display: block;
-  animation: fadeIn 0.18s ease-out;
+  animation: fadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page-view.active > * {
+  animation: sectionReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.page-view.active > *:nth-child(2) { animation-delay: 45ms; }
+.page-view.active > *:nth-child(3) { animation-delay: 90ms; }
+.page-view.active > *:nth-child(4) { animation-delay: 135ms; }
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sectionReveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html, body, .main-content {
+    scroll-behavior: auto;
+  }
+
+  .page-view.active,
+  .page-view.active > * {
+    animation: none;
+  }
 }
 
 .page-header {

@@ -287,6 +287,9 @@ function navigateTo(pageId, event) {
   const titleEl = document.getElementById('headerTitle');
   if (titleEl) titleEl.textContent = titles[pageId] || pageId.toUpperCase();
 
+  const mainContent = document.getElementById('mainContent');
+  if (mainContent) mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+
   if (pageId === 'reminders') {
     renderRemindersView();
   }
