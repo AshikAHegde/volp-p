@@ -65,10 +65,10 @@
       <!-- STITCH USER BADGE FOOTER -->
       <div class="sidebar-footer">
         <div class="user-profile-badge">
-          <div class="user-avatar-circle" id="sidebarAvatar">AC</div>
+          <div class="user-avatar-circle" id="sidebarAvatar">VO</div>
           <div class="user-profile-info">
-            <div class="user-name" id="sidebarUserName">Alex Chen</div>
-            <div class="user-role-tag">STUDENT ADMIN</div>
+            <div class="user-name" id="sidebarUserName">student@university.edu</div>
+            <div class="user-role-tag">AUTHENTICATED</div>
           </div>
         </div>
       </div>
@@ -84,7 +84,7 @@
           </button>
           <div>
             <div class="header-title-text" id="headerTitle">PROJECTS DASHBOARD</div>
-            <div class="header-meta" id="headerSubMeta">VOLP ASSIGNMENT SYSTEM / LIVE SYNC ACTIVE</div>
+            <div class="header-meta" id="headerSubMeta">VOLP ASSIGNMENT CONSOLE</div>
           </div>
         </div>
         
@@ -113,34 +113,34 @@
           <div class="metric-grid">
             <div class="metric-card metric-card--accent">
               <div class="metric-label">TOTAL ASSIGNMENTS</div>
-              <div class="metric-value" id="statTotalAssignments">128</div>
-              <div class="metric-delta">↑ 12 THIS SEMESTER</div>
+              <div class="metric-value" id="statTotalAssignments">0</div>
+              <div class="metric-delta">REGISTERED IN DB</div>
             </div>
             <div class="metric-card metric-card--warning">
               <div class="metric-label">PENDING SUBMISSIONS</div>
-              <div class="metric-value" id="statPendingAssignments">24</div>
-              <div class="metric-delta">+4 DUE THIS WEEK</div>
+              <div class="metric-value" id="statPendingAssignments">0</div>
+              <div class="metric-delta">ACTIVE DEADLINES</div>
             </div>
             <div class="metric-card metric-card--success">
               <div class="metric-label">SUBMITTED TASKS</div>
-              <div class="metric-value" id="statSubmittedAssignments">91</div>
-              <div class="metric-delta">↑ 8 COMPLETED</div>
+              <div class="metric-value" id="statSubmittedAssignments">0</div>
+              <div class="metric-delta">VERIFIED ON VOLP</div>
             </div>
             <div class="metric-card metric-card--danger">
               <div class="metric-label">BLOCKED / MUTED</div>
-              <div class="metric-value" id="statBlockedAssignments">13</div>
-              <div class="metric-delta">2 COURSES · 11 TASKS</div>
+              <div class="metric-value" id="statBlockedAssignments">0</div>
+              <div class="metric-delta">OMITTED FROM CRON</div>
             </div>
           </div>
           
-          <!-- PROJECTS / COURSE GRID (MATCHING STITCH PROJECTS DASHBOARD SCREEN) -->
+          <!-- PROJECTS / COURSE GRID -->
           <div class="page-header">
             <div class="section-title">ACTIVE COURSE MODULES</div>
-            <div class="meta-text" id="lastSyncStatusLabel">LAST SYNC: TODAY, 11:42 PM</div>
+            <div class="meta-text" id="lastSyncStatusLabel">INITIALIZING...</div>
           </div>
           
           <div class="projects-grid" id="dashboardProjectsGrid">
-            <!-- Rendered dynamically by JS -->
+            <!-- Dynamically populated from backend -->
           </div>
           
           <!-- RECENT PENDING ASSIGNMENTS TABLE -->
@@ -162,21 +162,19 @@
                 </tr>
               </thead>
               <tbody id="dashboardRecentTableBody">
-                <!-- Populated by JS -->
+                <!-- Dynamically populated from backend -->
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- ================= PAGE 2: TASKS & ASSIGNMENTS (STITCH TASK BOARD) ================= -->
+        <!-- ================= PAGE 2: TASKS & ASSIGNMENTS ================= -->
         <div class="page-view" id="page-tasks">
-          <!-- SUB-NAVIGATION TABS (MATCHING STITCH) -->
+          <!-- SUB-NAVIGATION TABS -->
           <div class="sub-nav-tabs">
-            <button class="sub-nav-tab" onclick="setTasksSubTab('overview')">OVERVIEW</button>
             <button class="sub-nav-tab active" onclick="setTasksSubTab('tasks')">TASKS</button>
+            <button class="sub-nav-tab" onclick="setTasksSubTab('overview')">OVERVIEW</button>
             <button class="sub-nav-tab" onclick="setTasksSubTab('milestones')">MILESTONES</button>
-            <button class="sub-nav-tab" onclick="setTasksSubTab('files')">FILES</button>
-            <button class="sub-nav-tab" onclick="setTasksSubTab('members')">MEMBERS</button>
           </div>
           
           <!-- TOOLBAR & VIEW TOGGLE -->
@@ -211,7 +209,7 @@
             </div>
           </div>
           
-          <!-- KANBAN BOARD VIEW (MATCHING STITCH PROJECT TASKS SCREEN) -->
+          <!-- KANBAN BOARD VIEW -->
           <div class="kanban-board" id="tasksKanbanView">
             <!-- TO DO COLUMN -->
             <div class="kanban-column">
@@ -255,7 +253,7 @@
                 </tr>
               </thead>
               <tbody id="tasksFullTableBody">
-                <!-- Populated by JS -->
+                <!-- Dynamically populated from backend -->
               </tbody>
             </table>
           </div>
@@ -265,11 +263,11 @@
         <div class="page-view" id="page-courses">
           <div class="page-header">
             <div class="section-title">ENROLLED COURSES</div>
-            <div class="meta-text" id="coursesCountMeta">6 ACTIVE COURSES</div>
+            <div class="meta-text" id="coursesCountMeta">0 COURSES</div>
           </div>
           
           <div class="projects-grid" id="allCoursesGrid">
-            <!-- Populated by JS -->
+            <!-- Dynamically populated from backend -->
           </div>
         </div>
 
@@ -288,14 +286,14 @@
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>COURSE CODE</th>
+                    <th>COURSE COLID</th>
                     <th>COURSE NAME</th>
                     <th>BLOCKED TIMESTAMP</th>
                     <th style="text-align:right">ACTION</th>
                   </tr>
                 </thead>
                 <tbody id="blockedCoursesTableBody">
-                  <!-- Populated by JS -->
+                  <!-- Dynamically populated from backend -->
                 </tbody>
               </table>
             </div>
@@ -309,7 +307,7 @@
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>ID</th>
+                    <th>ID / TYPE</th>
                     <th>COURSE</th>
                     <th>ASSIGNMENT TITLE</th>
                     <th>BLOCKED DATE</th>
@@ -317,19 +315,19 @@
                   </tr>
                 </thead>
                 <tbody id="blockedAssignmentsTableBody">
-                  <!-- Populated by JS -->
+                  <!-- Dynamically populated from backend -->
                 </tbody>
               </table>
             </div>
           </div>
         </div>
 
-        <!-- ================= PAGE 5: REMINDERS & NOTES (STITCH NOTES TAB) ================= -->
+        <!-- ================= PAGE 5: REMINDERS & NOTES ================= -->
         <div class="page-view" id="page-reminders">
           <div class="page-header">
             <div>
-              <div class="section-title">REMINDERS & NOTIFICATION LOG</div>
-              <div class="meta-text" style="margin-top:4px;">AUTOMATIC 8 PM DAILY DIGEST DISPATCH LOGS</div>
+              <div class="section-title">REMINDERS & CRON SERVICE</div>
+              <div class="meta-text" style="margin-top:4px;">AUTOMATIC 8 PM DAILY EMAIL DISPATCH VIA NODE-CRON & NODEMAILER</div>
             </div>
             <button class="btn btn--primary" onclick="triggerReminder()">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
@@ -337,112 +335,60 @@
             </button>
           </div>
 
-          <!-- STITCH NOTES TAB BRUTALIST CARDS -->
           <div class="notes-list" id="remindersTimelineList">
             <div class="note-card">
               <div class="note-card-header">
-                <span>SCHEDULED CRON DISPATCH — TODAY @ 8:00 PM</span>
-                <span class="badge badge--pending">QUEUED</span>
+                <span>SCHEDULED CRON NOTIFICATION DISPATCH</span>
+                <span class="badge badge--submitted">ACTIVE</span>
               </div>
               <div class="note-card-body">
-                Node.js cron task active. Daily assignment summary ready to aggregate pending items for active enrolled courses and dispatch via Nodemailer SMTP.
+                The Node.js cron service is active. Daily at 8:00 PM, pending non-blocked assignments from all active courses are consolidated and emailed to your registered address.
               </div>
               <div class="note-card-footer">
-                TARGET: student@university.edu | CRON: "0 20 * * *" | STATUS: ACTIVE
-              </div>
-            </div>
-
-            <div class="note-card">
-              <div class="note-card-header">
-                <span>VOLP SYNC NOTIFICATION — SEP 26, 8:00 PM</span>
-                <span class="badge badge--submitted">SENT</span>
-              </div>
-              <div class="note-card-body">
-                Dispatched reminder email containing 24 pending assignments. Blocked assignments (#101, #104) and Blocked course CS305 were automatically omitted from the digest.
-              </div>
-              <div class="note-card-footer">
-                RECIPIENT: student@university.edu | DELIVERED: 20:00:04 IST | SERVER: SMTP HOST
-              </div>
-            </div>
-
-            <div class="note-card">
-              <div class="note-card-header">
-                <span>VOLP SYNC NOTIFICATION — SEP 25, 8:00 PM</span>
-                <span class="badge badge--submitted">SENT</span>
-              </div>
-              <div class="note-card-body">
-                Dispatched reminder email containing 26 pending assignments. 2 assignments completed and verified on VOLP Admin portal.
-              </div>
-              <div class="note-card-footer">
-                RECIPIENT: student@university.edu | DELIVERED: 20:00:02 IST | SERVER: SMTP HOST
+                TRIGGER ROUTE: POST /api/assignments/trigger-8pm-reminder
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ================= PAGE 6: SETTINGS (STITCH SETTINGS SCREEN) ================= -->
+        <!-- ================= PAGE 6: SETTINGS ================= -->
         <div class="page-view" id="page-settings">
           <div class="page-header">
             <div class="section-title">SETTINGS - PROFILE & CONFIG</div>
-            <div class="meta-text">PROJECT CAMP / VOLP BRUTALIST EDITION</div>
+            <div class="meta-text">VOLP AUTHENTICATED SESSION</div>
           </div>
 
           <div class="settings-layout">
-            <!-- SETTINGS SIDE NAV (MATCHING STITCH) -->
             <ul class="settings-nav">
               <li class="settings-nav-item active" onclick="setSettingsTab('profile', this)">PROFILE</li>
               <li class="settings-nav-item" onclick="setSettingsTab('notifications', this)">NOTIFICATIONS</li>
               <li class="settings-nav-item" onclick="setSettingsTab('sync', this)">SYNC CONFIG</li>
-              <li class="settings-nav-item" onclick="setSettingsTab('integrations', this)">INTEGRATIONS</li>
             </ul>
 
-            <!-- SETTINGS MAIN CARD (MATCHING STITCH PROFILE FORM) -->
             <div class="settings-card" id="settingsContentCard">
               <div class="profile-card-header">
-                <div class="profile-avatar-large" id="settingsLargeAvatar">AC</div>
+                <div class="profile-avatar-large" id="settingsLargeAvatar">VO</div>
                 <div>
                   <div class="profile-title" id="settingsProfileTitle">USER PROFILE</div>
-                  <div class="profile-id">USER ID: #VOLP-8829-STITCH</div>
+                  <div class="profile-id">VOLP PORTAL INTEGRATION</div>
                 </div>
               </div>
 
               <form onsubmit="handleSaveSettings(event)">
                 <div class="settings-row">
                   <div class="form-group">
-                    <label class="form-label">FULL NAME</label>
-                    <input type="text" class="form-input" id="settingsFullName" value="Alex Chen">
+                    <label class="form-label">USERNAME / HANDLE</label>
+                    <input type="text" class="form-input" id="settingsUsername" value="" readonly>
                   </div>
                   <div class="form-group">
-                    <label class="form-label">USERNAME</label>
-                    <input type="text" class="form-input" id="settingsUsername" value="alexc_dev">
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">EMAIL ADDRESS</label>
-                  <input type="email" class="form-input" id="settingsEmail" value="student@university.edu" readonly>
-                </div>
-
-                <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border);">
-                  <div class="section-title" style="font-size: 11px; margin-bottom: 14px;">CHANGE PASSWORD</div>
-                  <div class="settings-row">
-                    <div class="form-group">
-                      <label class="form-label">CURRENT PASSWORD</label>
-                      <input type="password" class="form-input" placeholder="••••••••">
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">NEW PASSWORD</label>
-                      <input type="password" class="form-input" placeholder="••••••••">
-                    </div>
+                    <label class="form-label">EMAIL ADDRESS</label>
+                    <input type="email" class="form-input" id="settingsEmail" value="" readonly>
                   </div>
                 </div>
 
                 <div class="settings-footer-actions">
-                  <button type="submit" class="btn btn--primary" style="background:#FFFFFF;color:#10120E;border:none;">
-                    SAVE CHANGES
-                  </button>
                   <button type="button" class="btn btn--danger" onclick="handleSignOut()">
-                    DELETE SESSION / LOGOUT
+                    LOGOUT / SIGN OUT
                   </button>
                 </div>
               </form>
