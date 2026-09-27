@@ -277,7 +277,7 @@ function navigateTo(pageId, event) {
 
   const titles = {
     dashboard: 'PROJECTS DASHBOARD',
-    tasks: 'PROJECT: ASSIGNMENTS & TASKS',
+    tasks: 'MY ASSIGNMENTS',
     courses: 'ENROLLED COURSES',
     blocked: 'BLOCK MANAGER',
     reminders: 'REMINDERS & NOTIFICATION LOG',
