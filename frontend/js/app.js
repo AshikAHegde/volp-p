@@ -1,6 +1,6 @@
 /**
  * VOLP Reminder — Assignment Console App Client
- * Brutalist UI matching Stitch reference designs
+ * Pure real-data integration with VOLP backend APIs
  */
 
 // Global State
@@ -11,37 +11,18 @@ let blockedCoursesList = [];
 let blockedAssignmentsList = [];
 
 let currentTab = 'dashboard';
-let currentTaskView = 'kanban'; // 'kanban' | 'table'
 let currentStatusFilter = 'all';
-let currentTypeFilter = 'all';
 let currentSearchQuery = '';
-let isOfflineMode = false;
 let pendingModalAction = null;
-
-// Initial Mock Dataset for Offline/Fallback Use
-const DEFAULT_MOCK_COURSES = [
-  { colid: 1, crsid: 'CS301', course_name: 'Operating Systems', semester: 'Sem 5', academic_year: '2025-2026', is_blocked: false, team_count: 5, admin_tag: '#6A8FC8' },
-  { colid: 2, crsid: 'CS302', course_name: 'Database Management Systems', semester: 'Sem 5', academic_year: '2025-2026', is_blocked: false, team_count: 8, admin_tag: '#C8A84A' },
-  { colid: 3, crsid: 'CS303', course_name: 'Computer Networks', semester: 'Sem 5', academic_year: '2025-2026', is_blocked: false, team_count: 4, admin_tag: '#6A8FC8' },
-  { colid: 4, crsid: 'CS304', course_name: 'Software Engineering', semester: 'Sem 5', academic_year: '2025-2026', is_blocked: false, team_count: 6, admin_tag: '#C8A84A' },
-  { colid: 5, crsid: 'CS305', course_name: 'Artificial Intelligence', semester: 'Sem 5', academic_year: '2025-2026', is_blocked: true, team_count: 3, admin_tag: '#6A8FC8' },
-  { colid: 6, crsid: 'CS306', course_name: 'Web Technologies', semester: 'Sem 5', academic_year: '2025-2026', is_blocked: false, team_count: 2, admin_tag: '#6A8FC8' }
-];
-
-const DEFAULT_MOCK_ASSIGNMENTS = [
-  { assignment_id: 101, assignment_type: 'subjective', colid: 1, course_name: 'Operating Systems', unit_name: 'Unit 1: Process Management', title_html: 'Process Scheduling Analysis (Round Robin & Priority)', due_date_raw: 'Today, 11:59 PM', is_submitted: false, is_blocked: false, subtasks: '0/4', author: 'alex.d' },
-  { assignment_id: 102, assignment_type: 'handson', colid: 2, course_name: 'Database Management Systems', unit_name: 'Unit 2: Relational Models', title_html: 'Build REST API Integration with PostgreSQL CRUD', due_date_raw: 'In 2 Days', is_submitted: false, is_blocked: false, subtasks: '2/5', author: 'liam.t' },
-  { assignment_id: 103, assignment_type: 'subjective', colid: 3, course_name: 'Computer Networks', unit_name: 'Unit 3: Protocol Architecture', title_html: 'Setup development environment & TCP/IP Stack Report', due_date_raw: 'In 5 Days', is_submitted: true, is_blocked: false, subtasks: '4/4', author: 'sarah.p' },
-  { assignment_id: 104, assignment_type: 'handson', colid: 4, course_name: 'Software Engineering', unit_name: 'Unit 1: Agile Planning', title_html: 'Define user personas & Sprint Jira Board', due_date_raw: 'In 3 Days', is_submitted: true, is_blocked: false, subtasks: '3/3', author: 'alex.d' },
-  { assignment_id: 105, assignment_type: 'subjective', colid: 2, course_name: 'Database Management Systems', unit_name: 'Unit 3: Schema Normalization', title_html: 'Create style guide & 3NF / BCNF Proofs', due_date_raw: 'Tomorrow', is_submitted: false, is_blocked: false, subtasks: '1/3', author: 'maria.k' },
-  { assignment_id: 106, assignment_type: 'handson', colid: 6, course_name: 'Web Technologies', unit_name: 'Unit 4: Modern Frontends', title_html: 'Implement responsive brutalist UI framework', due_date_raw: 'In 6 Days', is_submitted: false, is_blocked: false, subtasks: '2/5', author: 'liam.t' },
-  { assignment_id: 107, assignment_type: 'subjective', colid: 1, course_name: 'Operating Systems', unit_name: 'Unit 3: Memory Systems', title_html: 'Virtual Memory Paging & Replacement Simulation', due_date_raw: 'Overdue (Yesterday)', is_submitted: false, is_blocked: false, subtasks: '0/2', author: 'alex.d' }
-];
 
 // Document Ready Initialization
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
-  initUserSession();
+  const hasUser = initUserSession();
+  if (!hasUser) {
+    window.location.href = 'login.html';
+    return;
+  }
   await loadAppData();
 });
 
@@ -69,29 +50,39 @@ function updateThemeIcon(theme) {
 // 2. User Session Management
 function initUserSession() {
   const stored = localStorage.getItem('volp_user');
-  if (stored) {
-    try {
-      currentUser = JSON.parse(stored);
-    } catch (e) {
-      currentUser = { email: 'student@university.edu', token: 'demo' };
+  if (!stored) {
+    return false;
+  }
+
+  try {
+    currentUser = JSON.parse(stored);
+    if (!currentUser || !currentUser.email || !currentUser.token) {
+      return false;
     }
-  } else {
-    currentUser = { email: 'student@university.edu', token: 'demo' };
+  } catch (e) {
+    return false;
   }
 
   // Update UI with User Details
-  const nameDisplay = currentUser.email.split('@')[0].toUpperCase();
-  const avatarText = nameDisplay.substring(0, 2);
-  
+  const email = currentUser.email || 'student@vit.edu';
+  const prefix = email.split('@')[0];
+  const avatarText = prefix.substring(0, 2).toUpperCase();
+
   const sideName = document.getElementById('sidebarUserName');
   const sideAvatar = document.getElementById('sidebarAvatar');
   const settingsEmail = document.getElementById('settingsEmail');
+  const settingsEmailDisplay = document.getElementById('settingsEmailDisplay');
   const settingsLargeAvatar = document.getElementById('settingsLargeAvatar');
-  
-  if (sideName) sideName.textContent = currentUser.email;
+  const reminderCronFooter = document.getElementById('reminderCronFooter');
+
+  if (sideName) sideName.textContent = email;
   if (sideAvatar) sideAvatar.textContent = avatarText;
-  if (settingsEmail) settingsEmail.value = currentUser.email;
+  if (settingsEmail) settingsEmail.value = email;
+  if (settingsEmailDisplay) settingsEmailDisplay.textContent = email;
   if (settingsLargeAvatar) settingsLargeAvatar.textContent = avatarText;
+  if (reminderCronFooter) reminderCronFooter.textContent = `TARGET: ${email} | SCHEDULE: "0 20 * * *" | STATUS: RUNNING`;
+
+  return true;
 }
 
 function handleSignOut() {
@@ -99,13 +90,19 @@ function handleSignOut() {
   showToast('Signed out successfully', 'info');
   setTimeout(() => {
     window.location.href = 'login.html';
-  }, 400);
+  }, 350);
 }
 
-// 3. Data Fetching (Backend API with automatic offline mock fallback)
+// 3. Data Fetching (Direct Backend API Integration)
 async function loadAppData(refresh = false) {
+  const syncBtn = document.getElementById('syncBtn');
+  if (syncBtn) syncBtn.classList.add('loading');
+
   try {
-    // 1. Fetch Courses
+    // 1. Fetch Blocked items first so we can mark blocked status
+    await loadBlockedData();
+
+    // 2. Fetch Courses
     const courseRes = await fetch('/api/assignments/my-courses', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -115,12 +112,11 @@ async function loadAppData(refresh = false) {
     if (courseRes.ok) {
       const courseData = await courseRes.json();
       rawCourses = courseData.courses || [];
-      isOfflineMode = false;
     } else {
-      throw new Error('Course API failed');
+      showToast('Failed to load courses from VOLP', 'error');
     }
 
-    // 2. Fetch Assignments
+    // 3. Fetch Assignments
     const assignRes = await fetch('/api/assignments/my-assignments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -130,443 +126,482 @@ async function loadAppData(refresh = false) {
     if (assignRes.ok) {
       const assignData = await assignRes.json();
       rawAssignments = assignData.assignments || [];
+    } else {
+      showToast('Failed to load assignments from VOLP', 'error');
     }
 
-    // 3. Fetch Blocked Items
-    await loadBlockedData();
-
   } catch (err) {
-    console.warn('Backend API unavailable. Using persistent local state:', err.message);
-    isOfflineMode = true;
-    if (rawCourses.length === 0) rawCourses = [...DEFAULT_MOCK_COURSES];
-    if (rawAssignments.length === 0) rawAssignments = [...DEFAULT_MOCK_ASSIGNMENTS];
+    console.error('Error fetching data:', err);
+    showToast(`Network error: ${err.message}`, 'error');
+  } finally {
+    if (syncBtn) syncBtn.classList.remove('loading');
+    renderAllViews();
   }
-
-  renderAllViews();
 }
 
 async function loadBlockedData() {
   try {
-    const bCourseRes = await fetch(`/api/blocked?email=${encodeURIComponent(currentUser.email)}`);
+    const [bCourseRes, bAssignRes] = await Promise.all([
+      fetch(`/api/blocked?email=${encodeURIComponent(currentUser.email)}`),
+      fetch(`/api/blocked-assignments?email=${encodeURIComponent(currentUser.email)}`)
+    ]);
+
     if (bCourseRes.ok) {
-      const bData = await bCourseRes.json();
-      blockedCoursesList = bData.blocked || [];
+      const bCData = await bCourseRes.json();
+      blockedCoursesList = bCData.blockedCourses || [];
     }
-    
-    const bAssignRes = await fetch(`/api/blocked-assignments?email=${encodeURIComponent(currentUser.email)}`);
+
     if (bAssignRes.ok) {
-      const aData = await bAssignRes.json();
-      blockedAssignmentsList = aData.blocked || [];
+      const bAData = await bAssignRes.json();
+      blockedAssignmentsList = bAData.blockedAssignments || [];
     }
-  } catch (e) {
-    blockedCoursesList = rawCourses.filter(c => c.is_blocked);
-    blockedAssignmentsList = rawAssignments.filter(a => a.is_blocked);
+  } catch (err) {
+    console.error('Failed to load blocked list:', err);
   }
 }
 
-// 4. View Navigation
+async function syncNow() {
+  showToast('Connecting to VOLP Portal...', 'info');
+  await loadAppData(true);
+  showToast('Live synchronization complete', 'success');
+}
+
+// 4. Page Navigation & Tab Switcher
 function navigateTo(pageId, event) {
   if (event) event.preventDefault();
-  
   currentTab = pageId;
-  document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.sidebar-nav-item').forEach(el => el.classList.remove('active'));
 
-  const targetPage = document.getElementById(`page-${pageId}`);
-  if (targetPage) targetPage.classList.add('active');
+  // Sidebar Links Active Class
+  document.querySelectorAll('.sidebar-nav-item').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-page') === pageId);
+  });
 
-  const navItem = document.querySelector(`.sidebar-nav-item[data-page="${pageId}"]`);
-  if (navItem) navItem.classList.add('active');
+  // Page Views
+  document.querySelectorAll('.page-view').forEach(el => {
+    el.classList.toggle('active', el.id === `page-${pageId}`);
+  });
 
-  // Page title mapping matching Stitch screens
+  // Header Title Update
   const titles = {
-    dashboard: 'PROJECTS DASHBOARD',
-    tasks: 'PROJECT: ASSIGNMENTS & TASKS',
-    courses: 'ENROLLED COURSES',
-    blocked: 'BLOCK MANAGER',
-    reminders: 'REMINDERS & TIMELINE LOG',
-    settings: 'SETTINGS - PROFILE'
+    dashboard: { title: 'PROJECTS DASHBOARD', meta: 'VOLP ASSIGNMENT SYSTEM / LIVE SYNC ACTIVE' },
+    tasks: { title: 'ASSIGNMENTS & SUBMISSIONS', meta: 'MANAGE ALL COURSE ASSIGNMENTS & STATUS' },
+    courses: { title: 'ENROLLED COURSES', meta: 'VOLP COURSE MODULE DIRECTORY' },
+    blocked: { title: 'NOTIFICATION BLOCK MANAGER', meta: 'SUPPRESS REMINDERS FOR COURSES OR TASKS' },
+    reminders: { title: 'DAILY REMINDER SERVICE', meta: 'AUTOMATIC 8:00 PM EMAIL DIGEST' },
+    settings: { title: 'ACCOUNT SETTINGS', meta: 'VOLP AUTHENTICATED SESSION' }
   };
 
-  const titleEl = document.getElementById('headerTitle');
-  if (titleEl) titleEl.textContent = titles[pageId] || pageId.toUpperCase();
+  const info = titles[pageId] || { title: 'VOLP REMINDER', meta: 'SYSTEM CONSOLE' };
+  const hTitle = document.getElementById('headerTitle');
+  const hMeta = document.getElementById('headerSubMeta');
+  if (hTitle) hTitle.textContent = info.title;
+  if (hMeta) hMeta.textContent = info.meta;
 
-  // Close mobile sidebar if open
+  // Close Mobile Sidebar if opened
   closeSidebar();
+  renderAllViews();
 }
 
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
-  sidebar.classList.toggle('open');
-  overlay.classList.toggle('active');
+  if (sidebar && overlay) {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  }
 }
 
 function closeSidebar() {
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
-  if (sidebar) sidebar.classList.remove('open');
-  if (overlay) overlay.classList.remove('active');
+  if (sidebar && overlay) {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  }
 }
 
 // 5. Render All Views
 function renderAllViews() {
-  renderDashboardStats();
-  renderDashboardProjectsGrid();
-  renderDashboardRecentTable();
-  renderTasksView();
-  renderCoursesView();
-  renderBlockManagerView();
+  renderDashboard();
+  renderTasks();
+  renderCourses();
+  renderBlocked();
 }
 
-// Render Dashboard Metrics
-function renderDashboardStats() {
+// 6. View: Dashboard
+function renderDashboard() {
+  // Aggregate Metrics
   const total = rawAssignments.length;
-  const pending = rawAssignments.filter(a => !a.is_submitted && !a.is_blocked).length;
   const submitted = rawAssignments.filter(a => a.is_submitted).length;
-  const blocked = blockedCoursesList.length + blockedAssignmentsList.length;
+  const pending = rawAssignments.filter(a => !a.is_submitted).length;
+  const blockedCount = blockedAssignmentsList.length + blockedCoursesList.length;
 
-  document.getElementById('statTotalAssignments').textContent = total || '128';
-  document.getElementById('statPendingAssignments').textContent = pending || '24';
-  document.getElementById('statSubmittedAssignments').textContent = submitted || '91';
-  document.getElementById('statBlockedAssignments').textContent = blocked || '13';
-}
+  const statTotal = document.getElementById('statTotalAssignments');
+  const statPending = document.getElementById('statPendingAssignments');
+  const statSubmitted = document.getElementById('statSubmittedAssignments');
+  const statBlocked = document.getElementById('statBlockedAssignments');
+  const statBlockedSub = document.getElementById('statBlockedSubLabel');
 
-// Render 3-Column Project/Course Cards (Matching Stitch Projects Dashboard)
-function renderDashboardProjectsGrid() {
-  const container = document.getElementById('dashboardProjectsGrid');
-  if (!container) return;
-
-  container.innerHTML = '';
-  const displayCourses = rawCourses.slice(0, 6);
-
-  displayCourses.forEach(course => {
-    const courseAssignments = rawAssignments.filter(a => a.colid === course.colid);
-    const pendingCount = courseAssignments.filter(a => !a.is_submitted).length;
-    const adminTag = course.admin_tag || (course.colid % 2 === 0 ? '#C8A84A' : '#6A8FC8');
-    const tagClass = adminTag === '#C8A84A' ? 'code-tag--amber' : 'code-tag--cyan';
-
-    const card = document.createElement('div');
-    card.className = 'project-card';
-    card.innerHTML = `
-      <div class="project-card-header">
-        <div class="project-card-title">${course.course_name}</div>
-        <ul class="project-card-meta-list">
-          <li><span class="meta-key">Course Code:</span> ${course.crsid || 'CS30' + course.colid}</li>
-          <li><span class="meta-key">Status:</span> ${course.is_blocked ? '<span style="color:var(--danger)">BLOCKED</span>' : 'Active In Progress'}</li>
-          <li><span class="meta-key">Assignments:</span> ${courseAssignments.length || 18} (${pendingCount} Pending)</li>
-          <li><span class="meta-key">Team:</span> ${course.team_count || 5} Members</li>
-        </ul>
-      </div>
-      <div class="project-card-footer">
-        <span class="code-tag ${tagClass}">Admin ${adminTag}</span>
-        <button class="btn btn--sm ${course.is_blocked ? 'btn--success' : 'btn--ghost'}" onclick="toggleCourseBlock(${course.colid}, '${escapeHtml(course.course_name)}', ${course.is_blocked})">
-          ${course.is_blocked ? 'UNBLOCK' : 'BLOCK'}
-        </button>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-// Render Dashboard Recent Table
-function renderDashboardRecentTable() {
-  const tbody = document.getElementById('dashboardRecentTableBody');
-  if (!tbody) return;
-
-  tbody.innerHTML = '';
-  const pendingItems = rawAssignments.filter(a => !a.is_submitted && !a.is_blocked).slice(0, 5);
-
-  if (pendingItems.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">NO PENDING DEADLINES FOUND</td></tr>`;
-    return;
+  if (statTotal) statTotal.textContent = total;
+  if (statPending) statPending.textContent = pending;
+  if (statSubmitted) statSubmitted.textContent = submitted;
+  if (statBlocked) statBlocked.textContent = blockedCount;
+  if (statBlockedSub) {
+    statBlockedSub.textContent = `${blockedCoursesList.length} COURSES · ${blockedAssignmentsList.length} ASSIGNMENTS`;
   }
 
-  pendingItems.forEach(item => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><span class="type-badge ${item.assignment_type === 'handson' ? 'type-badge--handson' : 'type-badge--subjective'}">${(item.assignment_type || 'TASK').toUpperCase()}</span></td>
-      <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${item.course_name || 'CS301'}</span></td>
-      <td>
-        <div class="assignment-title">${item.title_html || 'Assignment'}</div>
-        <div class="assignment-sub">${item.unit_name || 'Unit Module'}</div>
-      </td>
-      <td><span class="meta-text" style="color:${item.due_date_raw?.toLowerCase().includes('today') || item.due_date_raw?.toLowerCase().includes('overdue') ? 'var(--danger)' : 'var(--warning)'};">${item.due_date_raw || 'Pending'}</span></td>
-      <td><span class="badge ${item.is_submitted ? 'badge--submitted' : 'badge--pending'}">${item.is_submitted ? 'SUBMITTED' : 'PENDING'}</span></td>
-      <td style="text-align:right">
-        <button class="btn btn--ghost btn--sm" onclick="quickToggleSubmit(${item.assignment_id})">
-          ${item.is_submitted ? 'REOPEN' : 'COMPLETE'}
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+  // Dashboard Course Grid
+  const grid = document.getElementById('dashboardProjectsGrid');
+  if (grid) {
+    if (rawCourses.length === 0) {
+      grid.innerHTML = `<div class="empty-state">No courses found. Click 'SYNC VOLP' to fetch data.</div>`;
+    } else {
+      grid.innerHTML = rawCourses.map(course => {
+        const isBlocked = isCourseBlocked(course.crsid, course.course_name);
+        const courseAssignments = rawAssignments.filter(a => 
+          (a.course_name && a.course_name === course.course_name) ||
+          (a.colid && course.colid && String(a.colid) === String(course.colid))
+        );
+        const pendingForCourse = courseAssignments.filter(a => !a.is_submitted).length;
+        const totalForCourse = courseAssignments.length;
+        const progressPct = totalForCourse > 0 ? Math.round(((totalForCourse - pendingForCourse) / totalForCourse) * 100) : 100;
+
+        return `
+          <div class="project-card ${isBlocked ? 'blocked' : ''}">
+            <div class="project-card-header">
+              <div class="project-code-tag">${escapeHtml(course.crsid || 'CRS')}</div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                ${isBlocked ? '<span class="badge badge--danger">BLOCKED</span>' : '<span class="badge badge--submitted">ACTIVE</span>'}
+              </div>
+            </div>
+            
+            <div class="project-card-title">${escapeHtml(course.course_name || 'Untitled Course')}</div>
+            
+            <div class="project-card-meta">
+              <span>${escapeHtml(course.semester || 'Current Semester')}</span>
+              <span>·</span>
+              <span>${escapeHtml(course.academic_year || '')}</span>
+            </div>
+            
+            <div class="project-card-footer">
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: ${progressPct}%;"></div>
+              </div>
+              <div class="project-stats-line">
+                <span>${pendingForCourse} PENDING / ${totalForCourse} TOTAL</span>
+                <span>${progressPct}%</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // Dashboard Pending Assignments Table
+  const recentTable = document.getElementById('dashboardRecentTableBody');
+  if (recentTable) {
+    const pendingList = rawAssignments.filter(a => !a.is_submitted).slice(0, 5);
+    if (pendingList.length === 0) {
+      recentTable.innerHTML = `<tr><td colspan="6" class="empty-state">No pending assignments! All caught up.</td></tr>`;
+    } else {
+      recentTable.innerHTML = pendingList.map(a => renderTableRowHtml(a, true)).join('');
+    }
+  }
 }
 
-// 6. Tasks & Kanban Rendering (Matching Stitch Project Tasks Screen)
-function switchTaskView(mode) {
-  currentTaskView = mode;
-  document.getElementById('viewToggleKanban').classList.toggle('active', mode === 'kanban');
-  document.getElementById('viewToggleTable').classList.toggle('active', mode === 'table');
-  
-  document.getElementById('tasksKanbanView').style.display = mode === 'kanban' ? 'grid' : 'none';
-  document.getElementById('tasksTableView').style.display = mode === 'table' ? 'block' : 'none';
-  renderTasksView();
-}
+// 7. View: Tasks & Assignments
+function renderTasks() {
+  const filtered = getFilteredAssignments();
 
-function setTasksSubTab(tab) {
-  document.querySelectorAll('.sub-nav-tab').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-  showToast(`Viewing ${tab.toUpperCase()} module`, 'info');
-}
-
-function filterTasks() {
-  currentSearchQuery = document.getElementById('taskSearchInput').value.trim().toLowerCase();
-  renderTasksView();
-}
-
-function setStatusFilter(filter, el) {
-  currentStatusFilter = filter;
-  document.querySelectorAll('#statusFilterGroup .filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderTasksView();
-}
-
-function setTypeFilter(filter, el) {
-  currentTypeFilter = filter;
-  document.querySelectorAll('#typeFilterGroup .filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderTasksView();
+  // Full Table View
+  const tableBody = document.getElementById('tasksFullTableBody');
+  if (tableBody) {
+    if (filtered.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="7" class="empty-state">No assignments match your search or filter.</td></tr>`;
+    } else {
+      tableBody.innerHTML = filtered.map(a => renderTableRowHtml(a, false)).join('');
+    }
+  }
 }
 
 function getFilteredAssignments() {
   return rawAssignments.filter(item => {
-    // Search match
-    if (currentSearchQuery) {
-      const matchTitle = (item.title_html || '').toLowerCase().includes(currentSearchQuery);
-      const matchCourse = (item.course_name || '').toLowerCase().includes(currentSearchQuery);
-      const matchUnit = (item.unit_name || '').toLowerCase().includes(currentSearchQuery);
-      if (!matchTitle && !matchCourse && !matchUnit) return false;
-    }
-
-    // Type match
-    if (currentTypeFilter !== 'all' && item.assignment_type !== currentTypeFilter) {
-      return false;
-    }
-
-    // Status match
-    if (currentStatusFilter === 'pending' && (item.is_submitted || item.is_blocked)) return false;
+    // 1. Status Filter
+    if (currentStatusFilter === 'pending' && item.is_submitted) return false;
     if (currentStatusFilter === 'submitted' && !item.is_submitted) return false;
-    if (currentStatusFilter === 'overdue') {
-      const isOverdue = (item.due_date_raw || '').toLowerCase().includes('overdue');
-      if (!isOverdue || item.is_submitted) return false;
+
+    // 2. Search Query
+    if (currentSearchQuery.trim() !== '') {
+      const q = currentSearchQuery.toLowerCase();
+      const title = stripHtml(item.title_html || '').toLowerCase();
+      const course = (item.course_name || '').toLowerCase();
+      const unit = (item.unit_name || '').toLowerCase();
+      const type = (item.assignment_type || '').toLowerCase();
+      if (!title.includes(q) && !course.includes(q) && !unit.includes(q) && !type.includes(q)) {
+        return false;
+      }
     }
 
     return true;
   });
 }
 
-function renderTasksView() {
-  const filtered = getFilteredAssignments();
+function setStatusFilter(status, btnElement) {
+  currentStatusFilter = status;
+  const group = document.getElementById('statusFilterGroup');
+  if (group) {
+    group.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  }
+  if (btnElement) btnElement.classList.add('active');
+  renderTasks();
+}
 
-  if (currentTaskView === 'kanban') {
-    renderKanbanBoard(filtered);
-  } else {
-    renderTasksTable(filtered);
+function filterTasks() {
+  const input = document.getElementById('taskSearchInput');
+  if (input) currentSearchQuery = input.value;
+  renderTasks();
+}
+
+// Helper: Table Row HTML Renderer
+function renderTableRowHtml(a, isCompact = false) {
+  const isAssignBlocked = isAssignmentBlocked(a.assignment_id);
+  const isCourseBlk = isCourseBlocked(null, a.course_name);
+  const isBlocked = isAssignBlocked || isCourseBlk;
+
+  const statusBadge = a.is_submitted
+    ? '<span class="badge badge--submitted">SUBMITTED</span>'
+    : (isBlocked 
+        ? '<span class="badge badge--danger">MUTED</span>' 
+        : '<span class="badge badge--pending">PENDING</span>');
+
+  const cleanTitle = stripHtml(a.title_html || 'Untitled Assignment');
+  const typeLabel = (a.assignment_type || 'TASK').toUpperCase();
+
+  return `
+    <tr class="${isBlocked ? 'row-blocked' : ''}">
+      <td><span class="badge badge--code">${escapeHtml(typeLabel)}</span></td>
+      <td><strong>${escapeHtml(a.course_name || '--')}</strong></td>
+      ${!isCompact ? `<td><span class="meta-text">${escapeHtml(a.unit_name || '--')}</span></td>` : ''}
+      <td>
+        <div style="font-weight: 600; max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          ${escapeHtml(cleanTitle)}
+        </div>
+      </td>
+      <td>
+        <span class="mono-text">${escapeHtml(a.due_date_raw || '--')}</span>
+      </td>
+      <td>${statusBadge}</td>
+      <td style="text-align: right;">
+        ${isAssignBlocked 
+          ? `<button class="btn btn--ghost btn--sm" onclick="unblockAssignment('${a.assignment_id}')">UNMUTE</button>`
+          : `<button class="btn btn--danger btn--sm" onclick="blockAssignment('${a.assignment_id}', '${escapeHtml(cleanTitle)}', '${escapeHtml(a.course_name || '')}')">MUTE</button>`
+        }
+      </td>
+    </tr>
+  `;
+}
+
+// 8. View: My Courses
+function renderCourses() {
+  const grid = document.getElementById('allCoursesGrid');
+  const countMeta = document.getElementById('coursesCountMeta');
+  if (countMeta) countMeta.textContent = `${rawCourses.length} ACTIVE COURSES`;
+
+  if (grid) {
+    if (rawCourses.length === 0) {
+      grid.innerHTML = `<div class="empty-state">No courses found. Click 'SYNC VOLP' to load your courses.</div>`;
+      return;
+    }
+
+    grid.innerHTML = rawCourses.map(course => {
+      const isBlocked = isCourseBlocked(course.crsid, course.course_name);
+      const courseAssignments = rawAssignments.filter(a => 
+        (a.course_name && a.course_name === course.course_name) ||
+        (a.colid && course.colid && String(a.colid) === String(course.colid))
+      );
+      const pendingCount = courseAssignments.filter(a => !a.is_submitted).length;
+
+      return `
+        <div class="project-card ${isBlocked ? 'blocked' : ''}">
+          <div class="project-card-header">
+            <div class="project-code-tag">${escapeHtml(course.crsid || 'CRS')}</div>
+            <div>
+              ${isBlocked 
+                ? '<span class="badge badge--danger">NOTIFICATIONS MUTED</span>' 
+                : '<span class="badge badge--submitted">NOTIFICATIONS ACTIVE</span>'
+              }
+            </div>
+          </div>
+          
+          <div class="project-card-title">${escapeHtml(course.course_name || 'Untitled Course')}</div>
+          
+          <div class="project-card-meta">
+            <span>SEMESTER: ${escapeHtml(course.semester || 'Sem 5')}</span>
+            <span>·</span>
+            <span>YEAR: ${escapeHtml(course.academic_year || '2025-26')}</span>
+          </div>
+
+          <div style="margin: 16px 0; font-size: 12px; color: var(--text-secondary);">
+            Pending Assignments: <strong style="color: var(--text);">${pendingCount}</strong>
+          </div>
+          
+          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+            ${isBlocked 
+              ? `<button class="btn btn--ghost btn--sm" onclick="unblockCourse('${escapeHtml(course.crsid || course.course_name)}')">UNMUTE COURSE</button>`
+              : `<button class="btn btn--danger btn--sm" onclick="blockCourse('${escapeHtml(course.crsid || course.course_name)}', '${escapeHtml(course.course_name)}')">MUTE COURSE</button>`
+            }
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 }
 
-function renderKanbanBoard(items) {
-  const todoCol = document.getElementById('kanbanColTodo');
-  const progressCol = document.getElementById('kanbanColProgress');
-  const doneCol = document.getElementById('kanbanColDone');
+// 9. View: Block Manager
+function renderBlocked() {
+  const cBody = document.getElementById('blockedCoursesTableBody');
+  const aBody = document.getElementById('blockedAssignmentsTableBody');
 
-  todoCol.innerHTML = '';
-  progressCol.innerHTML = '';
-  doneCol.innerHTML = '';
-
-  items.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'kanban-card';
-    
-    const authorName = item.author || 'alex.d';
-    const subtasks = item.subtasks || (item.is_submitted ? '4/4' : '1/3');
-    
-    card.innerHTML = `
-      <div class="kanban-card-top">
-        <div class="kanban-card-title">${item.title_html || 'Task Item'}</div>
-        <span class="kanban-card-course">${item.course_name?.split(' ')[0] || 'CS301'}</span>
-      </div>
-      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:4px;">
-        ${item.unit_name || 'Module 1'} · Due: ${item.due_date_raw || 'Pending'}
-      </div>
-      <div class="kanban-card-user">
-        <div class="kanban-user-avatar">${authorName.substring(0,2).toUpperCase()}</div>
-        <span>${authorName}</span>
-      </div>
-      <div class="kanban-card-footer">
-        <span>Subtasks</span>
-        <span>${subtasks}</span>
-      </div>
-      <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;">
-        <button class="btn btn--ghost btn--sm" onclick="quickToggleSubmit(${item.assignment_id})">
-          ${item.is_submitted ? 'REOPEN' : 'SUBMIT'}
-        </button>
-        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${item.assignment_type}', '${escapeHtml(item.course_name)}', '${escapeHtml(item.title_html)}', ${item.is_blocked})">
-          BLOCK
-        </button>
-      </div>
-    `;
-
-    if (item.is_submitted) {
-      doneCol.appendChild(card);
-    } else if ((item.due_date_raw || '').toLowerCase().includes('overdue')) {
-      todoCol.appendChild(card);
+  if (cBody) {
+    if (blockedCoursesList.length === 0) {
+      cBody.innerHTML = `<tr><td colspan="4" class="empty-state">No courses currently blocked.</td></tr>`;
     } else {
-      progressCol.appendChild(card);
+      cBody.innerHTML = blockedCoursesList.map(item => `
+        <tr>
+          <td><span class="badge badge--code">${escapeHtml(item.course_id || item.course_name || '--')}</span></td>
+          <td><strong>${escapeHtml(item.course_name || '--')}</strong></td>
+          <td><span class="mono-text">${escapeHtml(item.blocked_at || item.created_at || 'Active')}</span></td>
+          <td style="text-align: right;">
+            <button class="btn btn--ghost btn--sm" onclick="unblockCourse('${escapeHtml(item.course_id || item.course_name)}')">UNBLOCK</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  if (aBody) {
+    if (blockedAssignmentsList.length === 0) {
+      aBody.innerHTML = `<tr><td colspan="5" class="empty-state">No individual assignments blocked.</td></tr>`;
+    } else {
+      aBody.innerHTML = blockedAssignmentsList.map(item => `
+        <tr>
+          <td><span class="badge badge--code">#${escapeHtml(String(item.assignment_id || '--'))}</span></td>
+          <td>${escapeHtml(item.course_name || '--')}</td>
+          <td><strong>${escapeHtml(item.assignment_title || `Assignment #${item.assignment_id}`)}</strong></td>
+          <td><span class="mono-text">${escapeHtml(item.blocked_at || item.created_at || 'Active')}</span></td>
+          <td style="text-align: right;">
+            <button class="btn btn--ghost btn--sm" onclick="unblockAssignment('${item.assignment_id}')">UNBLOCK</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  }
+}
+
+// 10. Block & Unblock API Actions
+function isCourseBlocked(courseId, courseName) {
+  return blockedCoursesList.some(b => 
+    (courseId && b.course_id === courseId) || 
+    (courseName && b.course_name === courseName) ||
+    (courseName && b.course_id === courseName)
+  );
+}
+
+function isAssignmentBlocked(assignId) {
+  return blockedAssignmentsList.some(b => String(b.assignment_id) === String(assignId));
+}
+
+async function blockCourse(courseId, courseName) {
+  openModal('MUTE COURSE NOTIFICATIONS', `Are you sure you want to mute all 8 PM reminders for course: "${courseName}"?`, async () => {
+    try {
+      const res = await fetch('/api/blocked', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentUser.email, course_id: courseId, course_name: courseName })
+      });
+      if (res.ok) {
+        showToast(`Muted course: ${courseName}`, 'success');
+        await loadBlockedData();
+        renderAllViews();
+      } else {
+        showToast('Failed to mute course', 'error');
+      }
+    } catch (e) {
+      showToast(e.message, 'error');
     }
   });
-
-  if (todoCol.children.length === 0) todoCol.innerHTML = '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px;">No tasks in this state</div>';
-  if (progressCol.children.length === 0) progressCol.innerHTML = '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px;">No active tasks</div>';
-  if (doneCol.children.length === 0) doneCol.innerHTML = '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px;">No completed tasks</div>';
 }
 
-function renderTasksTable(items) {
-  const tbody = document.getElementById('tasksFullTableBody');
-  tbody.innerHTML = '';
-
-  if (items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">NO MATCHING ASSIGNMENTS</td></tr>`;
-    return;
-  }
-
-  items.forEach(item => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><span class="type-badge ${item.assignment_type === 'handson' ? 'type-badge--handson' : 'type-badge--subjective'}">${(item.assignment_type || 'TASK').toUpperCase()}</span></td>
-      <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${item.course_name || 'CS301'}</span></td>
-      <td>
-        <div class="assignment-title">${item.title_html || 'Assignment'}</div>
-        <div class="assignment-sub">${item.unit_name || 'Unit Module'}</div>
-      </td>
-      <td><span class="meta-text">${item.due_date_raw || 'Pending'}</span></td>
-      <td><span class="badge ${item.is_submitted ? 'badge--submitted' : (item.is_blocked ? 'badge--blocked' : 'badge--pending')}">${item.is_submitted ? 'SUBMITTED' : (item.is_blocked ? 'BLOCKED' : 'PENDING')}</span></td>
-      <td style="text-align:right">
-        <button class="btn btn--ghost btn--sm" onclick="quickToggleSubmit(${item.assignment_id})">${item.is_submitted ? 'REOPEN' : 'DONE'}</button>
-        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${item.assignment_type}', '${escapeHtml(item.course_name)}', '${escapeHtml(item.title_html)}', ${item.is_blocked})">
-          ${item.is_blocked ? 'RESTORE' : 'BLOCK'}
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// 7. Render Courses View
-function renderCoursesView() {
-  const grid = document.getElementById('allCoursesGrid');
-  if (!grid) return;
-
-  grid.innerHTML = '';
-  document.getElementById('coursesCountMeta').textContent = `${rawCourses.length} ACTIVE ENROLLED COURSES`;
-
-  rawCourses.forEach(course => {
-    const card = document.createElement('div');
-    card.className = 'project-card';
-    card.innerHTML = `
-      <div class="project-card-header">
-        <div class="project-card-title">${course.course_name}</div>
-        <ul class="project-card-meta-list">
-          <li><span class="meta-key">Code:</span> ${course.crsid || 'CS30' + course.colid}</li>
-          <li><span class="meta-key">Semester:</span> ${course.semester || 'Semester 5'}</li>
-          <li><span class="meta-key">Academic Year:</span> ${course.academic_year || '2025-2026'}</li>
-          <li><span class="meta-key">Status:</span> ${course.is_blocked ? '<span style="color:var(--danger)">MUTED / BLOCKED</span>' : '<span style="color:var(--success)">ACTIVE</span>'}</li>
-        </ul>
-      </div>
-      <div class="project-card-footer">
-        <span class="code-tag code-tag--lime">COLID #${course.colid}</span>
-        <button class="btn btn--sm ${course.is_blocked ? 'btn--success' : 'btn--danger'}" onclick="toggleCourseBlock(${course.colid}, '${escapeHtml(course.course_name)}', ${course.is_blocked})">
-          ${course.is_blocked ? 'RESTORE COURSE' : 'BLOCK COURSE'}
-        </button>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
-}
-
-// 8. Render Block Manager View
-function renderBlockManagerView() {
-  // 1. Blocked Courses
-  const cTbody = document.getElementById('blockedCoursesTableBody');
-  cTbody.innerHTML = '';
-  const blockedC = rawCourses.filter(c => c.is_blocked);
-
-  if (blockedC.length === 0) {
-    cTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;">NO BLOCKED COURSES</td></tr>`;
-  } else {
-    blockedC.forEach(c => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${c.crsid || 'CS30' + c.colid}</span></td>
-        <td><strong>${c.course_name}</strong></td>
-        <td><span class="meta-text">${c.blocked_at || 'ACTIVE BLOCK'}</span></td>
-        <td style="text-align:right">
-          <button class="btn btn--success btn--sm" onclick="toggleCourseBlock(${c.colid}, '${escapeHtml(c.course_name)}', true)">RESTORE</button>
-        </td>
-      `;
-      cTbody.appendChild(tr);
-    });
-  }
-
-  // 2. Blocked Assignments
-  const aTbody = document.getElementById('blockedAssignmentsTableBody');
-  aTbody.innerHTML = '';
-  const blockedA = rawAssignments.filter(a => a.is_blocked);
-
-  if (blockedA.length === 0) {
-    aTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:18px;">NO BLOCKED ASSIGNMENTS</td></tr>`;
-  } else {
-    blockedA.forEach(a => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><span class="code-tag code-tag--cyan">#${a.assignment_id}</span></td>
-        <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${a.course_name}</span></td>
-        <td>${a.title_html || 'Assignment'}</td>
-        <td><span class="meta-text">${a.blocked_at || 'RECENT'}</span></td>
-        <td style="text-align:right">
-          <button class="btn btn--success btn--sm" onclick="toggleAssignmentBlock(${a.assignment_id}, '${a.assignment_type}', '${escapeHtml(a.course_name)}', '${escapeHtml(a.title_html)}', true)">RESTORE</button>
-        </td>
-      `;
-      aTbody.appendChild(tr);
-    });
-  }
-}
-
-// 9. Interactive Action Handlers (Sync, Reminders, Blocks)
-async function syncNow() {
-  const btn = document.getElementById('syncBtn');
-  const label = document.getElementById('syncBtnLabel');
-  
-  btn.disabled = true;
-  label.textContent = 'SYNCING VOLP...';
-
+async function unblockCourse(courseId) {
   try {
-    await loadAppData(true);
-    showToast('VOLP Live Sync completed successfully', 'success');
-    document.getElementById('lastSyncStatusLabel').textContent = `LAST SYNC: JUST NOW (${new Date().toLocaleTimeString()})`;
-  } catch (err) {
-    showToast('Sync updated from cached state', 'warning');
-  } finally {
-    btn.disabled = false;
-    label.textContent = 'SYNC VOLP';
+    const res = await fetch('/api/blocked', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: currentUser.email, course_id: courseId })
+    });
+    if (res.ok) {
+      showToast(`Unmuted course`, 'success');
+      await loadBlockedData();
+      renderAllViews();
+    } else {
+      showToast('Failed to unmute course', 'error');
+    }
+  } catch (e) {
+    showToast(e.message, 'error');
   }
 }
 
+async function blockAssignment(assignmentId, assignmentTitle, courseName) {
+  openModal('MUTE ASSIGNMENT REMINDER', `Are you sure you want to mute reminders for "${assignmentTitle}"?`, async () => {
+    try {
+      const res = await fetch('/api/blocked-assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: currentUser.email, 
+          assignment_id: assignmentId, 
+          assignment_title: assignmentTitle,
+          course_name: courseName 
+        })
+      });
+      if (res.ok) {
+        showToast(`Muted assignment #${assignmentId}`, 'success');
+        await loadBlockedData();
+        renderAllViews();
+      } else {
+        showToast('Failed to mute assignment', 'error');
+      }
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  });
+}
+
+async function unblockAssignment(assignmentId) {
+  try {
+    const res = await fetch('/api/blocked-assignments', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: currentUser.email, assignment_id: assignmentId })
+    });
+    if (res.ok) {
+      showToast(`Unmuted assignment #${assignmentId}`, 'success');
+      await loadBlockedData();
+      renderAllViews();
+    } else {
+      showToast('Failed to unmute assignment', 'error');
+    }
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+// 11. 8 PM Reminder Trigger
 async function triggerReminder() {
   const btn = document.getElementById('reminderBtn');
-  btn.disabled = true;
-  showToast('Simulating 8 PM Cron Assignment Reminder...', 'info');
+  if (btn) btn.disabled = true;
+  showToast('Dispatching 8 PM daily assignment summary...', 'info');
 
   try {
     const res = await fetch('/api/assignments/trigger-8pm-reminder', {
@@ -575,132 +610,52 @@ async function triggerReminder() {
       body: JSON.stringify({ email: currentUser.email, token: currentUser.token })
     });
 
-    if (res.ok) {
-      showToast('8 PM Reminder digest dispatched to student email!', 'success');
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(`Digest sent! ${data.message || 'Check your inbox.'}`, 'success');
+      addReminderTimelineLog('MANUAL 8 PM DISPATCH TRIGGERED', 'Email digest successfully dispatched to ' + currentUser.email, 'SENT');
     } else {
-      throw new Error('Reminder failed');
+      showToast(data.message || 'Reminder dispatch returned an error', 'error');
     }
-  } catch (e) {
-    showToast('8 PM Reminder triggered (Simulated Mode)', 'success');
+  } catch (err) {
+    showToast(`Failed: ${err.message}`, 'error');
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
 }
 
-function quickToggleSubmit(assignmentId) {
-  const item = rawAssignments.find(a => a.assignment_id === assignmentId);
-  if (item) {
-    item.is_submitted = !item.is_submitted;
-    showToast(`Assignment marked as ${item.is_submitted ? 'SUBMITTED' : 'PENDING'}`, 'success');
-    renderAllViews();
+function addReminderTimelineLog(title, desc, badge) {
+  const list = document.getElementById('remindersTimelineList');
+  if (list) {
+    const now = new Date().toLocaleTimeString();
+    const item = document.createElement('div');
+    item.className = 'note-card';
+    item.innerHTML = `
+      <div class="note-card-header">
+        <span>${escapeHtml(title)} — TODAY @ ${now}</span>
+        <span class="badge badge--submitted">${escapeHtml(badge)}</span>
+      </div>
+      <div class="note-card-body">${escapeHtml(desc)}</div>
+      <div class="note-card-footer">RECIPIENT: ${escapeHtml(currentUser.email)} | STATUS: PROCESSED</div>
+    `;
+    list.prepend(item);
   }
 }
 
-// Block / Unblock Course
-async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
-  const actionText = currentlyBlocked ? 'unblock' : 'block';
-  
-  openModal(
-    `${actionText.toUpperCase()} COURSE`,
-    `Are you sure you want to ${actionText} "${courseName}"? ${currentlyBlocked ? 'It will reappear in daily reminders.' : 'All assignments for this course will be omitted from 8 PM email digests.'}`,
-    async () => {
-      try {
-        if (!currentlyBlocked) {
-          await fetch('/api/blocked', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: currentUser.email, colid, course_name: courseName })
-          });
-        } else {
-          await fetch('/api/blocked', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: currentUser.email, colid })
-          });
-        }
-      } catch (e) {
-        console.warn('Backend route offline, mutating locally');
-      }
-
-      const c = rawCourses.find(item => item.colid === colid);
-      if (c) c.is_blocked = !currentlyBlocked;
-      
-      showToast(`Course "${courseName}" ${actionText}ed successfully`, 'success');
-      renderAllViews();
-    }
-  );
-}
-
-// Block / Unblock Assignment
-async function toggleAssignmentBlock(assignmentId, assignmentType, courseName, titleHint, currentlyBlocked) {
-  const actionText = currentlyBlocked ? 'unblock' : 'block';
-
-  openModal(
-    `${actionText.toUpperCase()} ASSIGNMENT`,
-    `Are you sure you want to ${actionText} "${titleHint || 'Assignment #' + assignmentId}"?`,
-    async () => {
-      try {
-        if (!currentlyBlocked) {
-          await fetch('/api/blocked-assignments', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: currentUser.email,
-              assignment_id: assignmentId,
-              assignment_type: assignmentType,
-              course_name: courseName,
-              title_hint: titleHint
-            })
-          });
-        } else {
-          await fetch('/api/blocked-assignments', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: currentUser.email,
-              assignment_id: assignmentId,
-              assignment_type: assignmentType
-            })
-          });
-        }
-      } catch (e) {
-        console.warn('Backend route offline, mutating locally');
-      }
-
-      const a = rawAssignments.find(item => item.assignment_id === assignmentId);
-      if (a) a.is_blocked = !currentlyBlocked;
-
-      showToast(`Assignment ${actionText}ed successfully`, 'success');
-      renderAllViews();
-    }
-  );
-}
-
-// 10. Settings Tabs & Saving
-function setSettingsTab(tabName, el) {
-  document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
-  el.classList.add('active');
-  showToast(`Switched settings view: ${tabName.toUpperCase()}`, 'info');
-}
-
-function handleSaveSettings(e) {
-  e.preventDefault();
-  const fullName = document.getElementById('settingsFullName').value;
-  const username = document.getElementById('settingsUsername').value;
-  
-  showToast(`Settings saved for ${fullName} (@${username})`, 'success');
-}
-
-// 11. Modal Utilities
-function openModal(title, body, confirmCallback) {
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalBody').textContent = body;
-  pendingModalAction = confirmCallback;
-  document.getElementById('modalOverlay').classList.add('active');
+// 12. Modal Helpers
+function openModal(title, body, onConfirm) {
+  const overlay = document.getElementById('modalOverlay');
+  const tEl = document.getElementById('modalTitle');
+  const bEl = document.getElementById('modalBody');
+  if (tEl) tEl.textContent = title;
+  if (bEl) bEl.textContent = body;
+  pendingModalAction = onConfirm;
+  if (overlay) overlay.classList.add('active');
 }
 
 function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('active');
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) overlay.classList.remove('active');
   pendingModalAction = null;
 }
 
@@ -711,7 +666,7 @@ function confirmModal() {
   closeModal();
 }
 
-// 12. Toast Notification System
+// 13. Toast Notifications
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
   if (!container) return;
@@ -720,23 +675,26 @@ function showToast(message, type = 'info') {
   toast.className = `toast toast--${type}`;
   toast.innerHTML = `
     <span>${escapeHtml(message)}</span>
-    <span style="cursor:pointer;margin-left:12px;opacity:0.6;" onclick="this.parentElement.remove()">✕</span>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:14px;line-height:1;">✕</button>
   `;
 
   container.appendChild(toast);
-
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transform = 'translateX(100%)';
-    toast.style.transition = 'all 0.2s ease';
-    setTimeout(() => toast.remove(), 200);
+    setTimeout(() => toast.remove(), 300);
   }, 3500);
 }
 
-// Helper: Escape HTML strings
+// 14. Utilities
+function stripHtml(html) {
+  const tmp = document.createElement('DIV');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
 function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
+  if (typeof str !== 'string') return String(str);
+  return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
