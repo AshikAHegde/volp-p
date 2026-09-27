@@ -6,85 +6,8 @@
   <title>VOLP Reminder — Sign In</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
-  <style>
-    .login-wrapper {
-      min-height: 100vh;
-      width: 100vw;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg);
-      position: relative;
-    }
-
-    .login-card {
-      width: 440px;
-      max-width: 90%;
-      background-color: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      padding: 44px 38px;
-      position: relative;
-      z-index: 10;
-      box-shadow: var(--shadow-subtle);
-    }
-
-    .login-header-title {
-      font-family: var(--font-mono);
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      text-align: center;
-      color: var(--text);
-      margin-bottom: 28px;
-    }
-
-    .login-header-title .accent {
-      color: var(--accent);
-    }
-
-    .theme-toggle-fixed {
-      position: fixed;
-      top: 24px;
-      right: 24px;
-      z-index: 50;
-    }
-
-    .demo-creds-box {
-      margin-top: 20px;
-      padding: 12px 14px;
-      background: var(--surface-raised);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-
-    .demo-creds-box code {
-      color: var(--accent);
-      cursor: pointer;
-      background: rgba(200, 255, 61, 0.1);
-      padding: 1px 4px;
-      border-radius: 2px;
-    }
-
-    .auth-error-banner {
-      display: none;
-      margin-bottom: 18px;
-      padding: 10px 14px;
-      background: var(--danger-dim);
-      border: 1px solid var(--danger);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--danger);
-    }
-  </style>
 </head>
 <body class="login-wrapper">
   <div class="noise-overlay"></div>
@@ -99,7 +22,7 @@
     <div class="auth-error-banner" id="errorBanner"></div>
 
     <form id="loginForm" onsubmit="handleLogin(event)">
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom: 16px;">
         <label for="username" class="form-label">Email / Username</label>
         <input 
           type="text" 
@@ -134,7 +57,7 @@
     </div>
 
     <div class="login-footer-info">
-      VOLP REMINDER — BRUTALIST EDITION V1.0
+      VOLP REMINDER — CONSOLE V1.0
     </div>
   </div>
 

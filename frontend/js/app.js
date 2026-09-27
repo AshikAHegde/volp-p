@@ -43,6 +43,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   initUserSession();
   await loadAppData();
+
+  // Accessibility & UX: Dismiss modal or mobile drawer on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('modalOverlay');
+      if (modal && modal.classList.contains('active')) {
+        closeModal();
+      } else {
+        closeSidebar();
+      }
+    }
+  });
 });
 
 // 1. Theme Management
