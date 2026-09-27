@@ -563,8 +563,8 @@ function renderKanbanBoard(items) {
         <span style="color: ${overdue ? 'var(--danger)' : 'var(--text-secondary)'};">
           ${overdue ? '⚠ OVERDUE: ' : 'Due: '}${escapeHtml(item.due_date_raw || 'No Deadline')}
         </span>
-        <span class="badge ${submitted ? 'badge--submitted' : (overdue ? 'badge--overdue' : 'badge--pending')}">
-          ${submitted ? 'SUBMITTED' : (overdue ? 'OVERDUE' : 'PENDING')}
+        <span class="badge ${submitted ? 'badge--submitted' : (item.is_blocked ? 'badge--blocked' : (overdue ? 'badge--overdue' : 'badge--pending'))}">
+          ${submitted ? 'SUBMITTED' : (item.is_blocked ? 'BLOCKED' : (overdue ? 'OVERDUE' : 'PENDING'))}
         </span>
       </div>
       <div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;justify-content:flex-end;">
@@ -684,7 +684,7 @@ function renderBlockManagerView() {
   const cTbody = document.getElementById('blockedCoursesTableBody');
   if (cTbody) {
     cTbody.innerHTML = '';
-    const blockedC = rawCourses.filter(c => c.is_blocked);
+    const blockedC = blockedCoursesList;
 
     if (blockedC.length === 0) {
       cTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;font-family:var(--font-mono);font-size:11px;">NO BLOCKED COURSES</td></tr>`;
@@ -708,14 +708,14 @@ function renderBlockManagerView() {
   const aTbody = document.getElementById('blockedAssignmentsTableBody');
   if (aTbody) {
     aTbody.innerHTML = '';
-    const blockedA = rawAssignments.filter(a => a.is_blocked);
+    const blockedA = blockedAssignmentsList;
 
     if (blockedA.length === 0) {
       aTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:18px;font-family:var(--font-mono);font-size:11px;">NO BLOCKED ASSIGNMENTS</td></tr>`;
     } else {
       blockedA.forEach(a => {
         const tr = document.createElement('tr');
-        const cleanTitle = cleanHtmlTitle(a.title_html) || 'Assignment #' + a.assignment_id;
+        const cleanTitle = cleanHtmlTitle(a.title_html || a.title_hint) || 'Assignment #' + a.assignment_id;
         tr.innerHTML = `
           <td><span class="code-tag code-tag--cyan">#${a.assignment_id}</span></td>
           <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(a.course_name || 'Course')}</span></td>
@@ -849,20 +849,24 @@ async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
     async () => {
       try {
         if (!currentlyBlocked) {
-          await fetch('/api/blocked', {
+          const response = await fetch('/api/blocked', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: currentUser.email, colid, course_name: courseName })
           });
+          if (!response.ok) throw new Error(`Server returned ${response.status}`);
         } else {
-          await fetch('/api/blocked', {
+          const response = await fetch('/api/blocked', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: currentUser.email, colid })
           });
+          if (!response.ok) throw new Error(`Server returned ${response.status}`);
         }
       } catch (e) {
-        console.warn('Backend route offline, mutating locally');
+        console.warn('Course block request failed:', e.message);
+        showToast(`Course ${actionText} failed: ${e.message}`, 'error');
+        return;
       }
 
       const c = rawCourses.find(item => Number(item.colid) === Number(colid));
@@ -885,7 +889,7 @@ async function toggleAssignmentBlock(assignmentId, assignmentType, courseName, t
     async () => {
       try {
         if (!currentlyBlocked) {
-          await fetch('/api/blocked-assignments', {
+          const response = await fetch('/api/blocked-assignments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -896,8 +900,9 @@ async function toggleAssignmentBlock(assignmentId, assignmentType, courseName, t
               title_hint: titleHint
             })
           });
+          if (!response.ok) throw new Error(`Server returned ${response.status}`);
         } else {
-          await fetch('/api/blocked-assignments', {
+          const response = await fetch('/api/blocked-assignments', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -906,9 +911,12 @@ async function toggleAssignmentBlock(assignmentId, assignmentType, courseName, t
               assignment_type: assignmentType
             })
           });
+          if (!response.ok) throw new Error(`Server returned ${response.status}`);
         }
       } catch (e) {
-        console.warn('Backend route offline, mutating locally');
+        console.warn('Assignment block request failed:', e.message);
+        showToast(`Assignment ${actionText} failed: ${e.message}`, 'error');
+        return;
       }
 
       const a = rawAssignments.find(item => Number(item.assignment_id) === Number(assignmentId));

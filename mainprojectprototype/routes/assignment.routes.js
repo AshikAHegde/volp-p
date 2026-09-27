@@ -101,7 +101,7 @@ router.post('/my-assignments', async (request, response) => {
     const [cachedAssignmentsFromDb] = await pool.query(
       `SELECT assignment_id, assignment_type, colid, course_name, unit_name, title_html, due_date_raw, is_submitted, is_blocked, updated_at
        FROM assignments
-       WHERE user_email = ? AND is_blocked = FALSE
+      WHERE user_email = ?
        ORDER BY id ASC`,
       [email]
     );
@@ -144,7 +144,7 @@ router.post('/my-assignments', async (request, response) => {
       const [freshAssignmentsFromDb] = await pool.query(
         `SELECT assignment_id, assignment_type, colid, course_name, unit_name, title_html, due_date_raw, is_submitted, is_blocked, updated_at
          FROM assignments
-         WHERE user_email = ? AND is_blocked = FALSE
+         WHERE user_email = ?
          ORDER BY id ASC`,
         [email]
       );
