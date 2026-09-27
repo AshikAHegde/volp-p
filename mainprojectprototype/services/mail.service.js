@@ -4,15 +4,47 @@
 import 'dotenv/config';
 import nodemailer from 'nodemailer';
 
+const isProduction = process.env.NODE_ENV === 'production';
+const mailSettings = isProduction
+  ? {
+      mode: 'production SMTP',
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+      from: process.env.SMTP_FROM
+    }
+  : {
+      mode: 'development Mailtrap',
+      host: process.env.MAILTRAP_SMTP_HOST,
+      port: Number(process.env.MAILTRAP_SMTP_PORT || 2525),
+      secure: String(process.env.MAILTRAP_SMTP_SECURE || 'false').toLowerCase() === 'true',
+      user: process.env.MAILTRAP_SMTP_USER,
+      pass: process.env.MAILTRAP_SMTP_PASS,
+      from: process.env.MAILTRAP_SMTP_FROM
+    };
+
+const missingMailSettings = ['host', 'user', 'pass', 'from']
+  .filter(setting => !mailSettings[setting]);
+
+if (missingMailSettings.length > 0) {
+  throw new Error(
+    `${mailSettings.mode} email configuration is incomplete. Missing: ${missingMailSettings.join(', ')}`
+  );
+}
+
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || process.env.MAILTRAP_SMTP_HOST,
-  port: Number(process.env.SMTP_PORT || process.env.MAILTRAP_SMTP_PORT || 587),
-  secure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
+  host: mailSettings.host,
+  port: mailSettings.port,
+  secure: mailSettings.secure,
   auth: {
-    user: process.env.SMTP_USER || process.env.MAILTRAP_SMTP_USER,
-    pass: process.env.SMTP_PASS || process.env.MAILTRAP_SMTP_PASS
+    user: mailSettings.user,
+    pass: mailSettings.pass
   }
 });
+
+console.log(`✉ Email provider: ${mailSettings.mode} (${mailSettings.host}:${mailSettings.port})`);
 
 export const sendAssignmentReminderEmail = async (userEmail, assignments) => {
   const pendingAssignments = assignments.filter(a => !a.is_submitted);
@@ -50,7 +82,7 @@ export const sendAssignmentReminderEmail = async (userEmail, assignments) => {
   `;
 
   const info = await transporter.sendMail({
-    from: process.env.SMTP_FROM || process.env.MAILTRAP_SMTP_FROM,
+    from: mailSettings.from,
     to: userEmail,
     subject: `VOLP Reminder: ${pendingAssignments.length} Pending Assignment(s)`,
     html: htmlContent
