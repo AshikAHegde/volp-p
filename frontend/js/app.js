@@ -12,11 +12,10 @@ let assignments = [];
 let blockedCourses = [];
 let blockedAssignments = [];
 
-// UI Filter and View State
+// UI Filter State
 let currentTab = 'dashboard';
-let currentTaskView = 'kanban'; // 'kanban' | 'table'
-let currentStatusFilter = 'all';
-let currentTypeFilter = 'all';
+let currentStatusFilter = 'all'; // 'all' | 'pending' | 'submitted'
+let currentTypeFilter = 'all';   // 'all' | 'SUBJECTIVE' | 'HANDS_ON'
 let currentSearchQuery = '';
 let pendingModalAction = null;
 let lastSyncSource = '';
@@ -72,17 +71,9 @@ function checkAuthAndInit() {
 
   const sideName = document.getElementById('sidebarUserName');
   const sideAvatar = document.getElementById('sidebarAvatar');
-  const settingsEmail = document.getElementById('settingsEmail');
-  const settingsUsername = document.getElementById('settingsUsername');
-  const settingsLargeAvatar = document.getElementById('settingsLargeAvatar');
-  const settingsProfileTitle = document.getElementById('settingsProfileTitle');
 
   if (sideName) sideName.textContent = currentUser.email;
   if (sideAvatar) sideAvatar.textContent = initials;
-  if (settingsEmail) settingsEmail.value = currentUser.email;
-  if (settingsUsername) settingsUsername.value = emailPrefix;
-  if (settingsLargeAvatar) settingsLargeAvatar.textContent = initials;
-  if (settingsProfileTitle) settingsProfileTitle.textContent = currentUser.email;
 
   // Load Real Data from Backend
   fetchRealBackendData(false);
@@ -163,11 +154,11 @@ async function fetchRealBackendData(forceRefresh = false) {
     const syncLabel = document.getElementById('lastSyncStatusLabel');
     if (syncLabel) {
       const timeStr = new Date().toLocaleTimeString();
-      syncLabel.textContent = `SOURCE: ${lastSyncSource} (${timeStr})`;
+      syncLabel.textContent = `SYNCED: ${lastSyncSource} (${timeStr})`;
     }
 
     if (forceRefresh) {
-      showToast('Live VOLP Sync completed successfully', 'success');
+      showToast('VOLP Live Sync Completed Successfully', 'success');
     }
 
   } catch (error) {
@@ -202,12 +193,11 @@ function navigateTo(pageId, event) {
   if (navItem) navItem.classList.add('active');
 
   const titles = {
-    dashboard: 'PROJECTS DASHBOARD',
-    tasks: 'PROJECT: ASSIGNMENTS & TASKS',
-    courses: 'ENROLLED COURSES',
+    dashboard: 'DASHBOARD',
+    assignments: 'ASSIGNMENTS',
+    courses: 'MY COURSES',
     blocked: 'BLOCK MANAGER',
-    reminders: 'REMINDERS & TIMELINE LOG',
-    settings: 'SETTINGS - PROFILE'
+    reminders: 'REMINDERS'
   };
 
   const titleEl = document.getElementById('headerTitle');
@@ -235,7 +225,7 @@ function renderAllViews() {
   renderDashboardStats();
   renderDashboardCoursesGrid();
   renderDashboardRecentTable();
-  renderTasksView();
+  renderAssignmentsView();
   renderCoursesView();
   renderBlockManagerView();
 }
@@ -262,8 +252,8 @@ function renderDashboardCoursesGrid() {
 
   if (courses.length === 0) {
     container.innerHTML = `
-      <div style="grid-column: 1 / -1; padding: 32px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius-md);">
-        NO ENROLLED COURSES FOUND IN DATABASE. CLICK "SYNC VOLP" TO FETCH FROM VOLP PORTAL.
+      <div style="grid-column: 1 / -1; padding: 28px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius-md);">
+        NO ENROLLED COURSES FOUND IN DATABASE. CLICK "SYNC VOLP" TO RETRIEVE FROM PORTAL.
       </div>
     `;
     return;
@@ -282,10 +272,10 @@ function renderDashboardCoursesGrid() {
       <div class="project-card-header">
         <div class="project-card-title">${escapeHtml(course.course_name)}</div>
         <ul class="project-card-meta-list">
-          <li><span class="meta-key">COLID:</span> #${course.colid} ${course.crsid ? `| CRSID #${course.crsid}` : ''}</li>
+          <li><span class="meta-key">COLID:</span> #${course.colid}</li>
           <li><span class="meta-key">Semester:</span> ${escapeHtml(course.semester || 'N/A')}</li>
           <li><span class="meta-key">Academic Year:</span> ${escapeHtml(course.academic_year || 'N/A')}</li>
-          <li><span class="meta-key">Status:</span> ${isBlocked ? '<span style="color:var(--danger)">BLOCKED / MUTED</span>' : '<span style="color:var(--success)">ACTIVE</span>'}</li>
+          <li><span class="meta-key">Status:</span> ${isBlocked ? '<span style="color:var(--danger)">BLOCKED (MUTED)</span>' : '<span style="color:var(--success)">ACTIVE</span>'}</li>
           <li><span class="meta-key">Assignments:</span> ${courseAssignments.length} total (${pendingCount} pending)</li>
         </ul>
       </div>
@@ -300,7 +290,7 @@ function renderDashboardCoursesGrid() {
   });
 }
 
-// Dashboard Urgent Deadlines Table
+// Dashboard Pending Assignments Table
 function renderDashboardRecentTable() {
   const tbody = document.getElementById('dashboardRecentTableBody');
   if (!tbody) return;
@@ -312,7 +302,7 @@ function renderDashboardRecentTable() {
     tbody.innerHTML = `
       <tr>
         <td colspan="6" style="text-align:center; color:var(--muted); padding:24px;">
-          NO PENDING ASSIGNMENTS DETECTED
+          NO PENDING ASSIGNMENTS IN VOLP
         </td>
       </tr>
     `;
@@ -322,13 +312,13 @@ function renderDashboardRecentTable() {
   pending.forEach(item => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><span class="type-badge ${item.assignment_type === 'handson' ? 'type-badge--handson' : 'type-badge--subjective'}">${escapeHtml(item.assignment_type || 'TASK').toUpperCase()}</span></td>
+      <td><span class="type-badge ${item.assignment_type === 'HANDS_ON' ? 'type-badge--handson' : 'type-badge--subjective'}">${escapeHtml(item.assignment_type || 'TASK')}</span></td>
       <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(item.course_name)}</span></td>
       <td>
         <div class="assignment-title">${item.title_html || 'Assignment #' + item.assignment_id}</div>
-        <div class="assignment-sub">${escapeHtml(item.unit_name || 'Unit ' + (item.colid || ''))}</div>
+        ${item.unit_name ? `<div class="assignment-sub">${escapeHtml(item.unit_name)}</div>` : ''}
       </td>
-      <td><span class="meta-text" style="color:var(--warning);">${escapeHtml(item.due_date_raw || 'No Due Date')}</span></td>
+      <td><span class="meta-text" style="color:var(--warning);">${escapeHtml(item.due_date_raw || 'Pending')}</span></td>
       <td><span class="badge badge--pending">PENDING</span></td>
       <td style="text-align:right">
         <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${item.assignment_type}', '${escapeHtml(item.course_name)}', '${escapeHtml(item.title_html || '')}', false)">
@@ -340,45 +330,29 @@ function renderDashboardRecentTable() {
   });
 }
 
-// 6. Tasks View & Filter Logic
-function switchTaskView(mode) {
-  currentTaskView = mode;
-  document.getElementById('viewToggleKanban').classList.toggle('active', mode === 'kanban');
-  document.getElementById('viewToggleTable').classList.toggle('active', mode === 'table');
-  
-  document.getElementById('tasksKanbanView').style.display = mode === 'kanban' ? 'grid' : 'none';
-  document.getElementById('tasksTableView').style.display = mode === 'table' ? 'block' : 'none';
-  renderTasksView();
-}
-
-function setTasksSubTab(tab) {
-  document.querySelectorAll('.sub-nav-tab').forEach(b => b.classList.remove('active'));
-  if (event && event.target) event.target.classList.add('active');
-  showToast(`Tab: ${tab.toUpperCase()}`, 'info');
-}
-
+// 6. Assignments List & Filter Logic (Direct Real Fields)
 function filterTasks() {
   currentSearchQuery = document.getElementById('taskSearchInput').value.trim().toLowerCase();
-  renderTasksView();
+  renderAssignmentsView();
 }
 
 function setStatusFilter(filter, el) {
   currentStatusFilter = filter;
   document.querySelectorAll('#statusFilterGroup .filter-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
-  renderTasksView();
+  renderAssignmentsView();
 }
 
 function setTypeFilter(filter, el) {
   currentTypeFilter = filter;
   document.querySelectorAll('#typeFilterGroup .filter-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
-  renderTasksView();
+  renderAssignmentsView();
 }
 
 function getFilteredAssignments() {
   return assignments.filter(item => {
-    // Search
+    // Search filter
     if (currentSearchQuery) {
       const title = (item.title_html || '').toLowerCase();
       const course = (item.course_name || '').toLowerCase();
@@ -388,100 +362,44 @@ function getFilteredAssignments() {
       }
     }
 
-    // Type
-    if (currentTypeFilter !== 'all' && item.assignment_type !== currentTypeFilter) {
-      return false;
+    // Type filter: 'all' | 'SUBJECTIVE' | 'HANDS_ON'
+    if (currentTypeFilter !== 'all') {
+      const itemType = (item.assignment_type || '').toUpperCase();
+      if (itemType !== currentTypeFilter) return false;
     }
 
-    // Status
+    // Status filter: 'all' | 'pending' | 'submitted'
     if (currentStatusFilter === 'pending' && Boolean(item.is_submitted)) return false;
     if (currentStatusFilter === 'submitted' && !Boolean(item.is_submitted)) return false;
-    if (currentStatusFilter === 'overdue') {
-      const due = (item.due_date_raw || '').toLowerCase();
-      if (!due.includes('overdue') && !due.includes('yesterday')) return false;
-    }
 
     return true;
   });
 }
 
-function renderTasksView() {
+function renderAssignmentsView() {
   const filtered = getFilteredAssignments();
+  const countMeta = document.getElementById('assignmentsCountMeta');
+  if (countMeta) countMeta.textContent = `${filtered.length} OF ${assignments.length} ITEMS`;
 
-  if (currentTaskView === 'kanban') {
-    renderKanbanBoard(filtered);
-  } else {
-    renderTasksTable(filtered);
-  }
-}
+  const tbody = document.getElementById('assignmentsTableBody');
+  if (!tbody) return;
 
-function renderKanbanBoard(items) {
-  const todoCol = document.getElementById('kanbanColTodo');
-  const progressCol = document.getElementById('kanbanColProgress');
-  const doneCol = document.getElementById('kanbanColDone');
-
-  todoCol.innerHTML = '';
-  progressCol.innerHTML = '';
-  doneCol.innerHTML = '';
-
-  items.forEach(item => {
-    const isDone = Boolean(item.is_submitted);
-    const due = (item.due_date_raw || '').toLowerCase();
-    const isOverdue = due.includes('overdue') || due.includes('yesterday');
-
-    const card = document.createElement('div');
-    card.className = 'kanban-card';
-    card.innerHTML = `
-      <div class="kanban-card-top">
-        <div class="kanban-card-title">${item.title_html || 'Assignment #' + item.assignment_id}</div>
-        <span class="kanban-card-course">COLID #${item.colid || 'N/A'}</span>
-      </div>
-      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);margin-top:4px;">
-        ${escapeHtml(item.course_name)}
-      </div>
-      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:2px;">
-        ${escapeHtml(item.unit_name || 'Unit Item')} · Due: ${escapeHtml(item.due_date_raw || 'Pending')}
-      </div>
-      <div class="kanban-card-footer">
-        <span class="badge ${isDone ? 'badge--submitted' : 'badge--pending'}">${isDone ? 'SUBMITTED' : 'PENDING'}</span>
-        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${item.assignment_type}', '${escapeHtml(item.course_name)}', '${escapeHtml(item.title_html || '')}', false)">
-          BLOCK
-        </button>
-      </div>
-    `;
-
-    if (isDone) {
-      doneCol.appendChild(card);
-    } else if (isOverdue) {
-      todoCol.appendChild(card);
-    } else {
-      progressCol.appendChild(card);
-    }
-  });
-
-  if (todoCol.children.length === 0) todoCol.innerHTML = '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px;">No overdue tasks</div>';
-  if (progressCol.children.length === 0) progressCol.innerHTML = '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px;">No pending tasks</div>';
-  if (doneCol.children.length === 0) doneCol.innerHTML = '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px;">No submitted tasks</div>';
-}
-
-function renderTasksTable(items) {
-  const tbody = document.getElementById('tasksFullTableBody');
   tbody.innerHTML = '';
 
-  if (items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">NO ASSIGNMENTS FOUND</td></tr>`;
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">NO MATCHING ASSIGNMENTS FOUND</td></tr>`;
     return;
   }
 
-  items.forEach(item => {
+  filtered.forEach(item => {
     const isDone = Boolean(item.is_submitted);
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><span class="type-badge ${item.assignment_type === 'handson' ? 'type-badge--handson' : 'type-badge--subjective'}">${escapeHtml(item.assignment_type || 'TASK').toUpperCase()}</span></td>
+      <td><span class="type-badge ${item.assignment_type === 'HANDS_ON' ? 'type-badge--handson' : 'type-badge--subjective'}">${escapeHtml(item.assignment_type || 'TASK')}</span></td>
       <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(item.course_name)}</span></td>
       <td>
         <div class="assignment-title">${item.title_html || 'Assignment #' + item.assignment_id}</div>
-        <div class="assignment-sub">${escapeHtml(item.unit_name || 'Unit')}</div>
+        ${item.unit_name ? `<div class="assignment-sub">${escapeHtml(item.unit_name)}</div>` : ''}
       </td>
       <td><span class="meta-text">${escapeHtml(item.due_date_raw || 'No date')}</span></td>
       <td><span class="badge ${isDone ? 'badge--submitted' : 'badge--pending'}">${isDone ? 'SUBMITTED' : 'PENDING'}</span></td>
@@ -501,12 +419,12 @@ function renderCoursesView() {
   if (!grid) return;
 
   grid.innerHTML = '';
-  document.getElementById('coursesCountMeta').textContent = `${courses.length} ENROLLED COURSES (VOLP)`;
+  document.getElementById('coursesCountMeta').textContent = `${courses.length} ENROLLED COURSES`;
 
   if (courses.length === 0) {
     grid.innerHTML = `
-      <div style="grid-column: 1 / -1; padding: 32px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius-md);">
-        NO COURSES FOUND. CLICK "SYNC VOLP" AT THE TOP RIGHT TO SYNC FROM VOLP.
+      <div style="grid-column: 1 / -1; padding: 28px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius-md);">
+        NO COURSES FOUND IN DATABASE. CLICK "SYNC VOLP" AT THE TOP RIGHT.
       </div>
     `;
     return;
@@ -524,7 +442,7 @@ function renderCoursesView() {
           <li><span class="meta-key">CRSID:</span> ${course.crsid ? '#' + course.crsid : 'N/A'}</li>
           <li><span class="meta-key">Semester:</span> ${escapeHtml(course.semester || 'N/A')}</li>
           <li><span class="meta-key">Academic Year:</span> ${escapeHtml(course.academic_year || 'N/A')}</li>
-          <li><span class="meta-key">Status:</span> ${isBlocked ? '<span style="color:var(--danger)">BLOCKED (NO REMINDERS)</span>' : '<span style="color:var(--success)">ACTIVE</span>'}</li>
+          <li><span class="meta-key">Status:</span> ${isBlocked ? '<span style="color:var(--danger)">BLOCKED (MUTED)</span>' : '<span style="color:var(--success)">ACTIVE</span>'}</li>
         </ul>
       </div>
       <div class="project-card-footer">
@@ -593,7 +511,7 @@ async function triggerReminder() {
   const btn = document.getElementById('reminderBtn');
   if (btn) btn.disabled = true;
 
-  showToast('Triggering 8 PM Email Reminder via Backend Cron Service...', 'info');
+  showToast('Triggering 8 PM Email Reminder via Backend Service...', 'info');
 
   try {
     const res = await fetch('/api/assignments/trigger-8pm-reminder', {
@@ -681,18 +599,6 @@ async function toggleAssignmentBlock(assignmentId, assignmentType, courseName, t
       }
     }
   );
-}
-
-// Settings
-function setSettingsTab(tabName, el) {
-  document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
-  if (el) el.classList.add('active');
-  showToast(`Settings Tab: ${tabName.toUpperCase()}`, 'info');
-}
-
-function handleSaveSettings(e) {
-  e.preventDefault();
-  showToast('Settings saved successfully', 'success');
 }
 
 // Modal Utilities

@@ -29,10 +29,10 @@
               DASHBOARD
             </a>
           </li>
-          <li class="sidebar-nav-item" data-page="tasks">
-            <a href="#" onclick="navigateTo('tasks', event)">
+          <li class="sidebar-nav-item" data-page="assignments">
+            <a href="#" onclick="navigateTo('assignments', event)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              TASKS / ASSIGNMENTS
+              ASSIGNMENTS
             </a>
           </li>
           <li class="sidebar-nav-item" data-page="courses">
@@ -50,31 +50,25 @@
           <li class="sidebar-nav-item" data-page="reminders">
             <a href="#" onclick="navigateTo('reminders', event)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-              REMINDERS / NOTES
-            </a>
-          </li>
-          <li class="sidebar-nav-item" data-page="settings">
-            <a href="#" onclick="navigateTo('settings', event)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-              SETTINGS
+              REMINDERS
             </a>
           </li>
         </ul>
       </nav>
       
-      <!-- STITCH USER BADGE FOOTER -->
+      <!-- USER BADGE -->
       <div class="sidebar-footer">
         <div class="user-profile-badge">
           <div class="user-avatar-circle" id="sidebarAvatar">VO</div>
           <div class="user-profile-info">
             <div class="user-name" id="sidebarUserName">student@university.edu</div>
-            <div class="user-role-tag">AUTHENTICATED</div>
+            <div class="user-role-tag">LOGGED IN</div>
           </div>
         </div>
       </div>
     </aside>
     
-    <!-- MAIN CONTENT WRAPPER -->
+    <!-- MAIN WRAPPER -->
     <div class="main-wrapper">
       <!-- TOP HEADER -->
       <header class="top-header">
@@ -83,8 +77,8 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
           <div>
-            <div class="header-title-text" id="headerTitle">PROJECTS DASHBOARD</div>
-            <div class="header-meta" id="headerSubMeta">VOLP ASSIGNMENT CONSOLE</div>
+            <div class="header-title-text" id="headerTitle">DASHBOARD</div>
+            <div class="header-meta" id="headerSubMeta">VOLP ASSIGNMENT SYSTEM</div>
           </div>
         </div>
         
@@ -107,35 +101,35 @@
       <!-- MAIN BODY PAGES -->
       <main class="main-content" id="mainContent">
         
-        <!-- ================= PAGE 1: PROJECTS DASHBOARD ================= -->
+        <!-- ================= 1. DASHBOARD ================= -->
         <div class="page-view active" id="page-dashboard">
           <!-- METRIC STATS -->
           <div class="metric-grid">
             <div class="metric-card metric-card--accent">
               <div class="metric-label">TOTAL ASSIGNMENTS</div>
               <div class="metric-value" id="statTotalAssignments">0</div>
-              <div class="metric-delta">REGISTERED IN DB</div>
+              <div class="metric-delta">MYSQL DATABASE</div>
             </div>
             <div class="metric-card metric-card--warning">
-              <div class="metric-label">PENDING SUBMISSIONS</div>
+              <div class="metric-label">PENDING</div>
               <div class="metric-value" id="statPendingAssignments">0</div>
-              <div class="metric-delta">ACTIVE DEADLINES</div>
+              <div class="metric-delta">NEEDS SUBMISSION</div>
             </div>
             <div class="metric-card metric-card--success">
-              <div class="metric-label">SUBMITTED TASKS</div>
+              <div class="metric-label">SUBMITTED</div>
               <div class="metric-value" id="statSubmittedAssignments">0</div>
-              <div class="metric-delta">VERIFIED ON VOLP</div>
+              <div class="metric-delta">COMPLETED ON VOLP</div>
             </div>
             <div class="metric-card metric-card--danger">
-              <div class="metric-label">BLOCKED / MUTED</div>
+              <div class="metric-label">BLOCKED ITEMS</div>
               <div class="metric-value" id="statBlockedAssignments">0</div>
-              <div class="metric-delta">OMITTED FROM CRON</div>
+              <div class="metric-delta">COURSES & TASKS</div>
             </div>
           </div>
           
-          <!-- PROJECTS / COURSE GRID -->
+          <!-- ENROLLED COURSES -->
           <div class="page-header">
-            <div class="section-title">ACTIVE COURSE MODULES</div>
+            <div class="section-title">ENROLLED COURSES</div>
             <div class="meta-text" id="lastSyncStatusLabel">INITIALIZING...</div>
           </div>
           
@@ -143,10 +137,10 @@
             <!-- Dynamically populated from backend -->
           </div>
           
-          <!-- RECENT PENDING ASSIGNMENTS TABLE -->
-          <div class="page-header" style="margin-top: 12px;">
-            <div class="section-title">URGENT DEADLINES</div>
-            <button class="btn btn--ghost btn--sm" onclick="navigateTo('tasks')">VIEW ALL ASSIGNMENTS →</button>
+          <!-- RECENT PENDING ASSIGNMENTS -->
+          <div class="page-header" style="margin-top: 16px;">
+            <div class="section-title">PENDING ASSIGNMENTS</div>
+            <button class="btn btn--ghost btn--sm" onclick="navigateTo('assignments')">VIEW ALL ASSIGNMENTS →</button>
           </div>
           
           <div class="table-container">
@@ -168,98 +162,56 @@
           </div>
         </div>
 
-        <!-- ================= PAGE 2: TASKS & ASSIGNMENTS ================= -->
-        <div class="page-view" id="page-tasks">
-          <!-- SUB-NAVIGATION TABS -->
-          <div class="sub-nav-tabs">
-            <button class="sub-nav-tab active" onclick="setTasksSubTab('tasks')">TASKS</button>
-            <button class="sub-nav-tab" onclick="setTasksSubTab('overview')">OVERVIEW</button>
-            <button class="sub-nav-tab" onclick="setTasksSubTab('milestones')">MILESTONES</button>
+        <!-- ================= 2. ASSIGNMENTS ================= -->
+        <div class="page-view" id="page-assignments">
+          <div class="page-header">
+            <div class="section-title">ALL ASSIGNMENTS</div>
+            <div class="meta-text" id="assignmentsCountMeta">0 ITEMS</div>
           </div>
-          
-          <!-- TOOLBAR & VIEW TOGGLE -->
+
+          <!-- TOOLBAR: SEARCH + REAL DATA FILTERS -->
           <div class="toolbar">
             <div class="search-input-wrapper">
               <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input type="text" class="search-input" id="taskSearchInput" placeholder="SEARCH ASSIGNMENTS..." oninput="filterTasks()">
             </div>
             
+            <!-- Real Status Filters from Backend: is_submitted (true / false) -->
             <div class="filter-group" id="statusFilterGroup">
               <button class="filter-btn active" data-filter="all" onclick="setStatusFilter('all', this)">ALL</button>
               <button class="filter-btn" data-filter="pending" onclick="setStatusFilter('pending', this)">PENDING</button>
               <button class="filter-btn" data-filter="submitted" onclick="setStatusFilter('submitted', this)">SUBMITTED</button>
-              <button class="filter-btn" data-filter="overdue" onclick="setStatusFilter('overdue', this)">OVERDUE</button>
             </div>
             
+            <!-- Real Type Filters from Backend: assignment_type (SUBJECTIVE / HANDS_ON) -->
             <div class="filter-group" id="typeFilterGroup">
               <button class="filter-btn active" data-filter="all" onclick="setTypeFilter('all', this)">ALL TYPES</button>
-              <button class="filter-btn" data-filter="subjective" onclick="setTypeFilter('subjective', this)">SUBJECTIVE</button>
-              <button class="filter-btn" data-filter="handson" onclick="setTypeFilter('handson', this)">HANDS-ON</button>
-            </div>
-
-            <div style="flex: 1"></div>
-
-            <div class="view-toggle">
-              <button class="view-toggle-btn active" id="viewToggleKanban" onclick="switchTaskView('kanban')" title="Kanban Board View">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="10"/></svg>
-              </button>
-              <button class="view-toggle-btn" id="viewToggleTable" onclick="switchTaskView('table')" title="Data Table View">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-              </button>
+              <button class="filter-btn" data-filter="SUBJECTIVE" onclick="setTypeFilter('SUBJECTIVE', this)">SUBJECTIVE</button>
+              <button class="filter-btn" data-filter="HANDS_ON" onclick="setTypeFilter('HANDS_ON', this)">HANDS-ON</button>
             </div>
           </div>
           
-          <!-- KANBAN BOARD VIEW -->
-          <div class="kanban-board" id="tasksKanbanView">
-            <!-- TO DO COLUMN -->
-            <div class="kanban-column">
-              <div class="kanban-column-header">
-                <span class="status-dot status-dot--todo"></span>
-                <span class="kanban-column-title">TO DO / OVERDUE</span>
-              </div>
-              <div id="kanbanColTodo" style="display:flex;flex-direction:column;gap:12px;"></div>
-            </div>
-            
-            <!-- IN PROGRESS COLUMN -->
-            <div class="kanban-column">
-              <div class="kanban-column-header">
-                <span class="status-dot status-dot--progress"></span>
-                <span class="kanban-column-title">IN PROGRESS / PENDING</span>
-              </div>
-              <div id="kanbanColProgress" style="display:flex;flex-direction:column;gap:12px;"></div>
-            </div>
-            
-            <!-- DONE COLUMN -->
-            <div class="kanban-column">
-              <div class="kanban-column-header">
-                <span class="status-dot status-dot--done"></span>
-                <span class="kanban-column-title">DONE / SUBMITTED</span>
-              </div>
-              <div id="kanbanColDone" style="display:flex;flex-direction:column;gap:12px;"></div>
-            </div>
-          </div>
-          
-          <!-- DATA TABLE VIEW -->
-          <div class="table-container" id="tasksTableView" style="display:none;">
+          <!-- DATA TABLE -->
+          <div class="table-container">
             <table class="data-table">
               <thead>
                 <tr>
                   <th>TYPE</th>
                   <th>COURSE</th>
-                  <th>ASSIGNMENT TITLE</th>
+                  <th>ASSIGNMENT QUESTION / TITLE</th>
                   <th>DUE DATE</th>
                   <th>STATUS</th>
-                  <th style="text-align:right">ACTIONS</th>
+                  <th style="text-align:right">ACTION</th>
                 </tr>
               </thead>
-              <tbody id="tasksFullTableBody">
+              <tbody id="assignmentsTableBody">
                 <!-- Dynamically populated from backend -->
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- ================= PAGE 3: MY COURSES ================= -->
+        <!-- ================= 3. MY COURSES ================= -->
         <div class="page-view" id="page-courses">
           <div class="page-header">
             <div class="section-title">ENROLLED COURSES</div>
@@ -271,22 +223,22 @@
           </div>
         </div>
 
-        <!-- ================= PAGE 4: BLOCK MANAGER ================= -->
+        <!-- ================= 4. BLOCK MANAGER ================= -->
         <div class="page-view" id="page-blocked">
           <div class="page-header">
             <div class="section-title">BLOCK & MUTE MANAGER</div>
-            <div class="meta-text">SUPPRESS NOTIFICATIONS FOR COURSES OR INDIVIDUAL ASSIGNMENTS</div>
+            <div class="meta-text">SUPPRESS NOTIFICATIONS FOR SPECIFIC COURSES OR ASSIGNMENTS</div>
           </div>
 
           <div style="margin-bottom: 32px;">
             <div class="section-title" style="font-size: 11px; margin-bottom: 12px; color: var(--accent);">
-              BLOCKED COURSES (NO REMINDERS SENT)
+              BLOCKED COURSES
             </div>
             <div class="table-container">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>COURSE COLID</th>
+                    <th>COLID</th>
                     <th>COURSE NAME</th>
                     <th>BLOCKED TIMESTAMP</th>
                     <th style="text-align:right">ACTION</th>
@@ -301,7 +253,7 @@
 
           <div>
             <div class="section-title" style="font-size: 11px; margin-bottom: 12px; color: var(--accent);">
-              BLOCKED INDIVIDUAL ASSIGNMENTS
+              BLOCKED ASSIGNMENTS
             </div>
             <div class="table-container">
               <table class="data-table">
@@ -322,76 +274,31 @@
           </div>
         </div>
 
-        <!-- ================= PAGE 5: REMINDERS & NOTES ================= -->
+        <!-- ================= 5. REMINDERS ================= -->
         <div class="page-view" id="page-reminders">
           <div class="page-header">
             <div>
-              <div class="section-title">REMINDERS & CRON SERVICE</div>
-              <div class="meta-text" style="margin-top:4px;">AUTOMATIC 8 PM DAILY EMAIL DISPATCH VIA NODE-CRON & NODEMAILER</div>
+              <div class="section-title">8 PM DAILY EMAIL REMINDER SERVICE</div>
+              <div class="meta-text" style="margin-top:4px;">AUTOMATIC CONSOLIDATED ASSIGNMENT DIGEST</div>
             </div>
             <button class="btn btn--primary" onclick="triggerReminder()">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
-              TRIGGER 8 PM DISPATCH NOW
+              TRIGGER REMINDER NOW
             </button>
           </div>
 
           <div class="notes-list" id="remindersTimelineList">
             <div class="note-card">
               <div class="note-card-header">
-                <span>SCHEDULED CRON NOTIFICATION DISPATCH</span>
+                <span>NODE-CRON 8 PM SERVICE</span>
                 <span class="badge badge--submitted">ACTIVE</span>
               </div>
               <div class="note-card-body">
-                The Node.js cron service is active. Daily at 8:00 PM, pending non-blocked assignments from all active courses are consolidated and emailed to your registered address.
+                The backend service runs on cron schedule. Daily at 8:00 PM, all pending and non-blocked assignments across active enrolled courses are emailed to your registered VOLP address.
               </div>
               <div class="note-card-footer">
-                TRIGGER ROUTE: POST /api/assignments/trigger-8pm-reminder
+                TRIGGER ENDPOINT: POST /api/assignments/trigger-8pm-reminder
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ================= PAGE 6: SETTINGS ================= -->
-        <div class="page-view" id="page-settings">
-          <div class="page-header">
-            <div class="section-title">SETTINGS - PROFILE & CONFIG</div>
-            <div class="meta-text">VOLP AUTHENTICATED SESSION</div>
-          </div>
-
-          <div class="settings-layout">
-            <ul class="settings-nav">
-              <li class="settings-nav-item active" onclick="setSettingsTab('profile', this)">PROFILE</li>
-              <li class="settings-nav-item" onclick="setSettingsTab('notifications', this)">NOTIFICATIONS</li>
-              <li class="settings-nav-item" onclick="setSettingsTab('sync', this)">SYNC CONFIG</li>
-            </ul>
-
-            <div class="settings-card" id="settingsContentCard">
-              <div class="profile-card-header">
-                <div class="profile-avatar-large" id="settingsLargeAvatar">VO</div>
-                <div>
-                  <div class="profile-title" id="settingsProfileTitle">USER PROFILE</div>
-                  <div class="profile-id">VOLP PORTAL INTEGRATION</div>
-                </div>
-              </div>
-
-              <form onsubmit="handleSaveSettings(event)">
-                <div class="settings-row">
-                  <div class="form-group">
-                    <label class="form-label">USERNAME / HANDLE</label>
-                    <input type="text" class="form-input" id="settingsUsername" value="" readonly>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">EMAIL ADDRESS</label>
-                    <input type="email" class="form-input" id="settingsEmail" value="" readonly>
-                  </div>
-                </div>
-
-                <div class="settings-footer-actions">
-                  <button type="button" class="btn btn--danger" onclick="handleSignOut()">
-                    LOGOUT / SIGN OUT
-                  </button>
-                </div>
-              </form>
             </div>
           </div>
         </div>
