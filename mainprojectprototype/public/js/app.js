@@ -498,8 +498,8 @@ function renderDashboardRecentTable() {
         </span>
       </td>
       <td style="text-align:right">
-        <button class="btn btn--ghost btn--sm" onclick="quickToggleSubmit(${item.assignment_id})">
-          COMPLETE
+        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type)}', '${escapeHtml(item.course_name)}', '${escapeHtml(cleanTitle)}', ${Boolean(item.is_blocked)})">
+          ${item.is_blocked ? 'RESTORE' : 'BLOCK'}
         </button>
       </td>
     `;
@@ -568,9 +568,6 @@ function renderKanbanBoard(items) {
         </span>
       </div>
       <div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;justify-content:flex-end;">
-        <button class="btn btn--ghost btn--sm" onclick="quickToggleSubmit(${item.assignment_id})">
-          ${submitted ? 'REOPEN' : 'COMPLETE'}
-        </button>
         <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type)}', '${escapeHtml(item.course_name)}', '${escapeHtml(cleanTitle)}', ${Boolean(item.is_blocked)})">
           ${item.is_blocked ? 'RESTORE' : 'BLOCK'}
         </button>
@@ -630,7 +627,6 @@ function renderTasksTable(items) {
         </span>
       </td>
       <td style="text-align:right">
-        <button class="btn btn--ghost btn--sm" onclick="quickToggleSubmit(${item.assignment_id})">${submitted ? 'REOPEN' : 'DONE'}</button>
         <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeHtml(item.assignment_type)}', '${escapeHtml(item.course_name)}', '${escapeHtml(cleanTitle)}', ${Boolean(item.is_blocked)})">
           ${item.is_blocked ? 'RESTORE' : 'BLOCK'}
         </button>
@@ -840,15 +836,6 @@ async function triggerReminder() {
   } finally {
     if (btn) btn.disabled = false;
     if (pageBtn) pageBtn.disabled = false;
-  }
-}
-
-function quickToggleSubmit(assignmentId) {
-  const item = rawAssignments.find(a => Number(a.assignment_id) === Number(assignmentId));
-  if (item) {
-    item.is_submitted = !isSubmitted(item);
-    showToast(`Assignment #${assignmentId} marked as ${item.is_submitted ? 'SUBMITTED' : 'PENDING'}`, 'success');
-    renderAllViews();
   }
 }
 
