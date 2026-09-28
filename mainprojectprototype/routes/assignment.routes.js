@@ -96,7 +96,7 @@ router.post('/my-assignments', requireUser, async (request, response) => {
     const blockedCourseRows = await coursesCollection
       .find({ user_email: email, is_blocked: true }, { projection: { colid: 1 } })
       .toArray();
-    const blockedCourseColids = new Set(blockedCourseRows.map(courseRow => courseRow.colid));
+    const blockedCourseColids = new Set(blockedCourseRows.map(courseRow => Number(courseRow.colid)));
 
     // 2. Check if assignments exist in MongoDB assignments collection
     const cachedAssignmentsFromDb = await assignmentsCollection
@@ -185,7 +185,7 @@ router.post('/my-assignments', requireUser, async (request, response) => {
 
     // Filter out assignments belonging to blocked courses
     const nonBlockedAssignments = currentAssignments.filter(
-      assignment => !blockedCourseColids.has(assignment.colid)
+      assignment => !blockedCourseColids.has(Number(assignment.colid))
     );
 
     response.json({

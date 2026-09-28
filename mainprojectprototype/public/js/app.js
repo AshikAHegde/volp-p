@@ -329,6 +329,39 @@ function closeSidebar() {
   if (overlay) overlay.classList.remove('active');
 }
 
+// Helper: Set of blocked course IDs and assignment keys
+function getBlockedCourseIds() {
+  const set = new Set();
+  rawCourses.forEach(c => {
+    if (c.is_blocked) set.add(Number(c.colid));
+  });
+  blockedCoursesList.forEach(c => {
+    if (c.colid !== undefined && c.colid !== null) set.add(Number(c.colid));
+  });
+  return set;
+}
+
+function getBlockedAssignmentKeys() {
+  const set = new Set();
+  rawAssignments.forEach(a => {
+    if (a.is_blocked) set.add(`${a.assignment_id}:${a.assignment_type}`);
+  });
+  blockedAssignmentsList.forEach(a => {
+    if (a.assignment_id) set.add(`${a.assignment_id}:${a.assignment_type}`);
+  });
+  return set;
+}
+
+function isAssignmentBlocked(item) {
+  if (!item) return false;
+  if (item.is_blocked) return true;
+  const blockedCourseIds = getBlockedCourseIds();
+  if (item.colid && blockedCourseIds.has(Number(item.colid))) return true;
+  const blockedAssignmentKeys = getBlockedAssignmentKeys();
+  if (blockedAssignmentKeys.has(`${item.assignment_id}:${item.assignment_type}`)) return true;
+  return false;
+}
+
 // 6. Comprehensive Filtering & Search Engine
 function filterTasks() {
   const input = document.getElementById('taskSearchInput');
@@ -351,7 +384,14 @@ function setTypeFilter(filter, el) {
 }
 
 function getFilteredAssignments() {
+  const blockedCourseIds = getBlockedCourseIds();
+
   return rawAssignments.filter(item => {
+    // 0. Course Block Filter: Hide assignments of blocked courses from UI
+    if (item.colid && blockedCourseIds.has(Number(item.colid))) {
+      return false;
+    }
+
     // 1. Search Query Filter
     if (currentSearchQuery) {
       const q = currentSearchQuery;
@@ -384,7 +424,7 @@ function getFilteredAssignments() {
     const overdue = isAssignmentOverdue(item);
 
     if (currentStatusFilter === 'pending') {
-      if (submitted || item.is_blocked) return false;
+      if (submitted || isAssignmentBlocked(item)) return false;
     } else if (currentStatusFilter === 'submitted') {
       if (!submitted) return false;
     } else if (currentStatusFilter === 'overdue') {
@@ -408,9 +448,12 @@ function renderAllViews() {
 
 // Render Dashboard Metrics (Real computed data)
 function renderDashboardStats() {
-  const total = rawAssignments.length;
-  const pending = rawAssignments.filter(a => !isSubmitted(a) && !a.is_blocked).length;
-  const submitted = rawAssignments.filter(a => isSubmitted(a)).length;
+  const blockedCourseIds = getBlockedCourseIds();
+  const activeAssignments = rawAssignments.filter(a => !blockedCourseIds.has(Number(a.colid)));
+
+  const total = activeAssignments.length;
+  const pending = activeAssignments.filter(a => !isSubmitted(a) && !isAssignmentBlocked(a)).length;
+  const submitted = activeAssignments.filter(a => isSubmitted(a)).length;
   const blocked = blockedCoursesList.length + blockedAssignmentsList.length;
 
   const totalEl = document.getElementById('statTotalAssignments');
@@ -428,9 +471,10 @@ function renderDashboardStats() {
   const submittedSub = document.getElementById('statSubmittedAssignmentsSub');
   const blockedSub = document.getElementById('statBlockedAssignmentsSub');
 
-  if (totalSub) totalSub.textContent = `${rawCourses.length} ACTIVE COURSES`;
+  const activeCoursesCount = rawCourses.filter(c => !c.is_blocked).length;
+  if (totalSub) totalSub.textContent = `${activeCoursesCount} ACTIVE COURSES`;
   if (pendingSub) {
-    const overdueCount = rawAssignments.filter(a => isAssignmentOverdue(a)).length;
+    const overdueCount = activeAssignments.filter(a => isAssignmentOverdue(a)).length;
     pendingSub.textContent = overdueCount > 0 ? `${overdueCount} OVERDUE` : 'ALL ON SCHEDULE';
   }
   if (submittedSub) submittedSub.textContent = `${Math.round(total > 0 ? (submitted / total) * 100 : 0)}% COMPLETION`;
@@ -484,8 +528,9 @@ function renderDashboardRecentTable() {
   if (!tbody) return;
 
   tbody.innerHTML = '';
+  const blockedCourseIds = getBlockedCourseIds();
   const pendingItems = rawAssignments
-    .filter(a => !isSubmitted(a) && !a.is_blocked)
+    .filter(a => !blockedCourseIds.has(Number(a.colid)) && !isSubmitted(a) && !isAssignmentBlocked(a))
     .slice(0, 5);
 
   if (pendingItems.length === 0) {
@@ -757,7 +802,10 @@ function renderRemindersView() {
   const list = document.getElementById('remindersTimelineList');
   if (!list) return;
 
-  const pendingUnblocked = rawAssignments.filter(a => !isSubmitted(a) && !a.is_blocked).length;
+  const blockedCourseIds = getBlockedCourseIds();
+  const pendingUnblocked = rawAssignments.filter(
+    a => !blockedCourseIds.has(Number(a.colid)) && !isSubmitted(a) && !isAssignmentBlocked(a)
+  ).length;
   const blockedCount = blockedCoursesList.length + blockedAssignmentsList.length;
 
   let html = `
@@ -894,6 +942,22 @@ async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
       if (c) c.is_blocked = !currentlyBlocked;
       await loadBlockedData();
       
+      if (!isOfflineMode && currentUser?.token) {
+        try {
+          const assignRes = await fetch('/api/assignments/my-assignments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+            body: JSON.stringify({ email: currentUser.email, token: currentUser.token, refresh: false })
+          });
+          if (assignRes.ok) {
+            const assignData = await assignRes.json();
+            rawAssignments = assignData.assignments || [];
+          }
+        } catch (e) {
+          console.warn('Could not re-sync assignments after toggling course block:', e.message);
+        }
+      }
+
       showToast(`Course "${courseName}" ${actionText}ed successfully`, 'success');
       renderAllViews();
     }
