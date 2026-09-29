@@ -198,6 +198,13 @@
               <button class="filter-btn" data-filter="HANDS_ON" onclick="setTypeFilter('HANDS_ON', this)">HANDS-ON</button>
             </div>
 
+            <label class="subject-filter" for="subjectFilterSelect">
+              <span class="subject-filter-label">SUBJECT</span>
+              <select id="subjectFilterSelect" class="subject-filter-select" onchange="setSubjectFilter(this.value)">
+                <option value="all">ALL SUBJECTS</option>
+              </select>
+            </label>
+
             <div style="flex: 1"></div>
 
             <div class="view-toggle">
@@ -400,6 +407,24 @@
         <button class="btn btn--ghost" onclick="closeModal()">CANCEL</button>
         <button class="btn btn--danger" id="modalConfirmBtn" onclick="confirmModal()">CONFIRM</button>
       </div>
+    </div>
+  </div>
+
+  <!-- LIVE SYNC PROGRESS -->
+  <div class="sync-overlay" id="syncOverlay" role="status" aria-live="polite" aria-hidden="true">
+    <div class="sync-progress-card">
+      <div class="sync-icon-wrap" aria-hidden="true">
+        <svg class="sync-progress-icon" viewBox="0 0 64 64" fill="none">
+          <circle class="sync-icon-track" cx="32" cy="32" r="24" />
+          <path class="sync-icon-arrow" d="M32 8a24 24 0 0 1 21.1 12.6M53 20v-9m0 9h-9M32 56A24 24 0 0 1 10.9 43.4M11 44v9m0-9h9" />
+        </svg>
+      </div>
+      <div class="sync-progress-kicker">LIVE VOLP SYNC</div>
+      <div class="sync-progress-title">UPDATING YOUR COURSES</div>
+      <p class="sync-progress-message">We are fetching the latest courses and assignments.</p>
+      <p class="sync-progress-duration">The browser may wait for 2–5 minutes while syncing.</p>
+      <p class="sync-progress-refresh">If it has not updated after 5 minutes, refresh the page and try again.</p>
+      <div class="sync-progress-dots" aria-hidden="true"><span></span><span></span><span></span></div>
     </div>
   </div>
 

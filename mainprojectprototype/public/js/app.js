@@ -14,6 +14,7 @@ let currentTab = 'dashboard';
 let currentTaskView = 'kanban'; // 'kanban' | 'table'
 let currentStatusFilter = 'all'; // 'all' | 'pending' | 'submitted' | 'overdue'
 let currentTypeFilter = 'all';   // 'all' | 'SUBJECTIVE' | 'HANDS_ON'
+let currentSubjectFilter = 'all';
 let currentSearchQuery = '';
 let isOfflineMode = false;
 let pendingModalAction = null;
@@ -383,6 +384,36 @@ function setTypeFilter(filter, el) {
   renderTasksView();
 }
 
+/** Updates the assignment subject filter and refreshes the visible assignments. */
+function setSubjectFilter(filter) {
+  currentSubjectFilter = filter || 'all';
+  renderTasksView();
+}
+
+/** Renders subject options from courses that are currently unblocked in the frontend. */
+function renderSubjectFilter() {
+  const select = document.getElementById('subjectFilterSelect');
+  if (!select) return;
+
+  const blockedCourseIds = getBlockedCourseIds();
+  const activeCourses = rawCourses
+    .filter(course => !blockedCourseIds.has(Number(course.colid)))
+    .sort((first, second) => String(first.course_name || '').localeCompare(String(second.course_name || '')));
+
+  if (!activeCourses.some(course => String(course.colid) === String(currentSubjectFilter))) {
+    currentSubjectFilter = 'all';
+  }
+
+  select.innerHTML = '<option value="all">ALL SUBJECTS</option>';
+  activeCourses.forEach(course => {
+    const option = document.createElement('option');
+    option.value = String(course.colid);
+    option.textContent = course.course_name || course.crsid || `COURSE ${course.colid}`;
+    select.appendChild(option);
+  });
+  select.value = currentSubjectFilter;
+}
+
 function getFilteredAssignments() {
   const blockedCourseIds = getBlockedCourseIds();
 
@@ -392,7 +423,12 @@ function getFilteredAssignments() {
       return false;
     }
 
-    // 1. Search Query Filter
+    // 1. Subject Filter: match the selected non-blocked course by ID.
+    if (currentSubjectFilter !== 'all' && String(item.colid) !== String(currentSubjectFilter)) {
+      return false;
+    }
+
+    // 2. Search Query Filter
     if (currentSearchQuery) {
       const q = currentSearchQuery;
       const rawTitle = item.title_html || '';
@@ -410,7 +446,7 @@ function getFilteredAssignments() {
       }
     }
 
-    // 2. Type Filter ('all', 'SUBJECTIVE', 'HANDS_ON')
+    // 3. Type Filter ('all', 'SUBJECTIVE', 'HANDS_ON')
     if (currentTypeFilter !== 'all') {
       const itemTypeNorm = normalizeType(item.assignment_type);
       const filterTypeNorm = normalizeType(currentTypeFilter);
@@ -419,7 +455,7 @@ function getFilteredAssignments() {
       }
     }
 
-    // 3. Status Filter ('all', 'pending', 'submitted', 'overdue')
+    // 4. Status Filter ('all', 'pending', 'submitted', 'overdue')
     const submitted = isSubmitted(item);
     const overdue = isAssignmentOverdue(item);
 
@@ -440,6 +476,7 @@ function renderAllViews() {
   renderDashboardStats();
   renderDashboardProjectsGrid();
   renderDashboardRecentTable();
+  renderSubjectFilter();
   renderTasksView();
   renderCoursesView();
   renderBlockManagerView();
@@ -842,23 +879,52 @@ function renderRemindersView() {
 }
 
 // 12. Actions: Sync, Trigger Reminders, Blocks, and Submission toggles
+/** Shows the full-screen progress state while live VOLP data is being fetched. */
+function showSyncProgress() {
+  const overlay = document.getElementById('syncOverlay');
+  if (!overlay) return;
+  overlay.classList.add('active');
+  overlay.setAttribute('aria-hidden', 'false');
+}
+
+/** Hides the live sync progress state after the data refresh has settled. */
+function hideSyncProgress() {
+  const overlay = document.getElementById('syncOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('active');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+/** Rejects a sync attempt when it exceeds the user-facing five-minute wait limit. */
+function createSyncTimeout() {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => reject(new Error('SYNC_TIMEOUT')), 5 * 60 * 1000);
+  });
+}
+
 async function syncNow() {
   const btn = document.getElementById('syncBtn');
   const label = document.getElementById('syncBtnLabel');
   
   if (btn) btn.disabled = true;
   if (label) label.textContent = 'SYNCING VOLP...';
+  showSyncProgress();
 
   try {
-    await loadAppData(true);
+    await Promise.race([loadAppData(true), createSyncTimeout()]);
     showToast('VOLP Live Sync completed successfully', 'success');
     const syncStatusLabel = document.getElementById('lastSyncStatusLabel');
     if (syncStatusLabel) {
       syncStatusLabel.textContent = `LAST SYNC: JUST NOW (${new Date().toLocaleTimeString()})`;
     }
   } catch (err) {
-    showToast('Sync updated from cached state', 'warning');
+    if (err.message === 'SYNC_TIMEOUT') {
+      showToast('Sync is taking longer than expected. Refresh the page after 5 minutes and try again.', 'warning');
+    } else {
+      showToast('Sync updated from cached state', 'warning');
+    }
   } finally {
+    hideSyncProgress();
     if (btn) btn.disabled = false;
     if (label) label.textContent = 'SYNC VOLP';
   }
