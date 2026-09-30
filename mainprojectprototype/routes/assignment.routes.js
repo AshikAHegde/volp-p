@@ -26,8 +26,8 @@ router.post('/my-courses', requireUser, async (request, response) => {
 
     let coursesList = cachedCoursesFromDb;
 
-    // If refresh requested OR no cached courses in DB, fetch from live VOLP and update DB
-    if (refresh || cachedCoursesFromDb.length === 0) {
+    // Initial dashboard loads are database-only; live fetching is explicit via Sync.
+    if (refresh) {
       const liveCourses = await fetchUserCourses(token, email);
 
       if (liveCourses.length > 0) {
@@ -75,7 +75,7 @@ router.post('/my-courses', requireUser, async (request, response) => {
     response.json({
       success: true,
       email,
-      source: (refresh || cachedCoursesFromDb.length === 0) ? 'VOLP_LIVE_SYNCED' : 'MONGODB_DATABASE',
+      source: refresh ? 'VOLP_LIVE_SYNCED' : 'MONGODB_DATABASE',
       courses: coursesWithStatus
     });
   } catch (coursesError) {
@@ -98,7 +98,7 @@ router.post('/my-assignments', requireUser, async (request, response) => {
       .toArray();
     const blockedCourseColids = new Set(blockedCourseRows.map(courseRow => Number(courseRow.colid)));
 
-    // 2. Check if assignments exist in MongoDB assignments collection
+    // 2. Read assignments from MongoDB; live discovery is explicit via Sync.
     const cachedAssignmentsFromDb = await assignmentsCollection
       .find(
         { user_email: email },
@@ -123,8 +123,8 @@ router.post('/my-assignments', requireUser, async (request, response) => {
 
     let currentAssignments = cachedAssignmentsFromDb;
 
-    // 3. If refresh requested OR no cached assignments in DB, fetch live from VOLP and update DB
-    if (refresh || cachedAssignmentsFromDb.length === 0) {
+    // Live discovery is reserved for an explicit refresh/sync request.
+    if (refresh) {
       const liveAssignments = await fetchUserAssignments(token, email, blockedCourseColids);
 
       // Cache/sync discovered assignments into assignments table
@@ -191,7 +191,7 @@ router.post('/my-assignments', requireUser, async (request, response) => {
     response.json({
       success: true,
       email,
-      source: (refresh || cachedAssignmentsFromDb.length === 0) ? 'VOLP_LIVE_SYNCED' : 'MONGODB_DATABASE',
+      source: refresh ? 'VOLP_LIVE_SYNCED' : 'MONGODB_DATABASE',
       count: nonBlockedAssignments.length,
       assignments: nonBlockedAssignments
     });

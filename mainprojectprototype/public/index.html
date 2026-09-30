@@ -24,6 +24,9 @@
           <h1><span class="accent">VOLP</span> REMINDER</h1>
           <div class="brand-sub">ASSIGNMENT CONSOLE</div>
         </div>
+        <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" onclick="toggleSidebarCollapse()" aria-label="Collapse sidebar" title="Collapse sidebar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
         <button class="sidebar-close-btn" onclick="closeSidebar()" aria-label="Close navigation">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
@@ -47,6 +50,12 @@
             <a href="#" onclick="navigateTo('courses', event)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
               COURSES
+            </a>
+          </li>
+          <li class="sidebar-nav-item" data-page="calendar">
+            <a href="#" onclick="navigateTo('calendar', event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+              CALENDAR
             </a>
           </li>
           <li class="sidebar-nav-item" data-page="blocked">
@@ -279,7 +288,48 @@
           </div>
         </div>
 
-        <!-- ================= PAGE 4: BLOCK MANAGER ================= -->
+        <!-- ================= PAGE 4: COURSE CALENDAR ================= -->
+        <div class="page-view" id="page-calendar">
+          <div class="calendar-hero">
+            <div>
+              <div class="eyebrow">LEARNING RHYTHM · LIVE COURSE DATA</div>
+              <h1 class="calendar-title">Your learning calendar</h1>
+              <p class="calendar-subtitle">A focused view of your assignments, due dates, and learning workload.</p>
+            </div>
+            <div class="calendar-summary" id="calendarSummary">-- AVAILABLE COURSES</div>
+          </div>
+
+          <div class="calendar-toolbar">
+            <div class="calendar-navigation">
+              <button class="btn btn--icon" onclick="shiftCalendar(-1)" aria-label="Previous period">←</button>
+              <button class="btn btn--ghost" onclick="goToCalendarToday()">TODAY</button>
+              <button class="btn btn--icon" onclick="shiftCalendar(1)" aria-label="Next period">→</button>
+              <div class="calendar-period-label" id="calendarPeriodLabel">--</div>
+            </div>
+            <div class="calendar-filters">
+              <label class="subject-filter" for="calendarCourseFilter"><span class="subject-filter-label">COURSE</span><select id="calendarCourseFilter" class="subject-filter-select" onchange="setCalendarFilter(this.value)"><option value="all">ALL COURSES</option></select></label>
+              <div class="filter-group" id="calendarStatusFilter">
+                <button class="filter-btn active" onclick="setCalendarStatusFilter('all', this)">ALL</button>
+                <button class="filter-btn" onclick="setCalendarStatusFilter('not-done', this)">NOT DONE</button>
+                <button class="filter-btn" onclick="setCalendarStatusFilter('done', this)">DONE</button>
+              </div>
+              <div class="view-toggle" aria-label="Calendar view">
+                <button class="view-toggle-btn active" id="calendarViewMonth" onclick="setCalendarView('month')">MONTH</button>
+                <button class="view-toggle-btn" id="calendarViewWeek" onclick="setCalendarView('week')">WEEK</button>
+                <button class="view-toggle-btn" id="calendarViewDay" onclick="setCalendarView('day')">DAY</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="calendar-legend">
+            <span><i class="legend-dot legend-dot--active"></i>Not done</span><span><i class="legend-dot legend-dot--completed"></i>Done</span>
+          </div>
+          <div class="calendar-upcoming" id="calendarUpcoming"></div>
+          <div class="calendar-shell" id="calendarShell"><div class="calendar-loading">Preparing your schedule…</div></div>
+          <section class="unscheduled-section" id="unscheduledSection"></section>
+        </div>
+
+        <!-- ================= PAGE 5: BLOCK MANAGER ================= -->
         <div class="page-view" id="page-blocked">
           <div class="page-header">
             <div class="section-title">BLOCKED COURSES & ASSIGNMENTS</div>
@@ -395,6 +445,10 @@
         </div>
 
       </main>
+      <footer class="app-footer">
+        <span>VOLP REMINDER</span>
+        <span>ASSIGNMENT CONSOLE · <span id="appFooterYear">2026</span></span>
+      </footer>
     </div>
   </div>
 
@@ -408,6 +462,14 @@
         <button class="btn btn--danger" id="modalConfirmBtn" onclick="confirmModal()">CONFIRM</button>
       </div>
     </div>
+  </div>
+
+  <!-- COURSE DETAILS DRAWER -->
+  <div class="course-details-overlay" id="courseDetailsOverlay" onclick="closeCourseDetails(event)">
+    <aside class="course-details-drawer" role="dialog" aria-modal="true" aria-labelledby="courseDetailsTitle">
+      <button class="course-details-close" onclick="closeCourseDetails()" aria-label="Close course details">×</button>
+      <div id="courseDetailsContent"></div>
+    </aside>
   </div>
 
   <!-- LIVE SYNC PROGRESS -->
@@ -431,6 +493,6 @@
   <!-- TOAST ALERTS -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=20260930-calendar2"></script>
 </body>
 </html>
