@@ -22,8 +22,8 @@ flowchart TD
             direction LR
             R_Auth["<b>auth.routes.js</b><br/>───────────────<br/>POST /api/auth/login"]
             R_Assign["<b>assignment.routes.js</b><br/>───────────────<br/>POST /api/assignments/my-courses<br/>POST /api/assignments/my-assignments<br/>POST /api/assignments/trigger-8pm-reminder"]
-            R_Block["<b>blocked_courses.routes.js</b><br/>───────────────<br/>GET    /api/blocked<br/>POST   /api/blocked<br/>DELETE /api/blocked"]
-            R_BlockAss["<b>blocked_assignments.routes.js</b><br/>───────────────<br/>GET    /api/blocked-assignments<br/>POST   /api/blocked-assignments<br/>DELETE /api/blocked-assignments"]
+            R_Block["<b>blocked_courses.routes.js</b><br/>───────────────<br/>GET    /api/blocked<br/>POST   /api/blocked<br/>(is_blocked: true/false)"]
+            R_BlockAss["<b>blocked_assignments.routes.js</b><br/>───────────────<br/>GET    /api/blocked-assignments<br/>POST   /api/blocked-assignments<br/>(is_blocked: true/false)"]
         end
 
         subgraph ServiceLayer["⚙️ Services Layer"]
@@ -243,7 +243,7 @@ flowchart TD
   User (Browser)          blocked_courses.routes.js  MongoDB (courses)
        │                        │                             │
        │  Click "✅ Unblock"    │                             │
-       │  DELETE /api/blocked   │                             │
+      │  POST /api/blocked     │                             │
        │  { email, colid }      │                             │
        │───────────────────────▶│                             │
        │                        │  UPDATE courses             │
@@ -395,8 +395,8 @@ mainprojectprototype/
 │   ├── assignment.routes.js      # POST /api/assignments/my-courses
 │   │                             # POST /api/assignments/my-assignments
 │   │                             # POST /api/assignments/trigger-8pm-reminder
-│   ├── blocked_courses.routes.js # GET/POST/DELETE /api/blocked
-│   └── blocked_assignments.routes.js # GET/POST/DELETE /api/blocked-assignments
+│   ├── blocked_courses.routes.js # GET/POST /api/blocked (is_blocked true/false)
+│   └── blocked_assignments.routes.js # GET/POST /api/blocked-assignments (is_blocked true/false)
 └── public/
     └── index.html                # Tabbed dark-mode web dashboard
 ```
@@ -457,23 +457,21 @@ mainprojectprototype/
 ### Assignments & Courses
 | Method | Route | Body | Description |
 |--------|-------|------|-------------|
-| `POST` | `/api/assignments/my-courses` | `{ email, token }` | Fetch enrolled courses with active/blocked status |
-| `POST` | `/api/assignments/my-assignments` | `{ email, token }` | Fetch assignments (respects course & assignment blocks) |
+| `POST` | `/api/assignments/my-courses` | `{ email, token, refresh }` | Read courses from DB; sync VOLP when `refresh: true` |
+| `POST` | `/api/assignments/my-assignments` | `{ email, token, refresh }` | Read assignments from DB; sync VOLP when `refresh: true` |
 | `POST` | `/api/assignments/trigger-8pm-reminder` | `{ email, token }` | Manually trigger reminder email simulation |
 
 ### Blocked Courses
 | Method | Route | Params / Body | Description |
 |--------|-------|---------------|-------------|
 | `GET` | `/api/blocked` | `?email=...` | List all blocked courses for a user |
-| `POST` | `/api/blocked` | `{ email, colid, course_name }` | Block a course |
-| `DELETE` | `/api/blocked` | `{ email, colid }` | Unblock a course |
+| `POST` | `/api/blocked` | `{ email, colid, course_name, is_blocked }` | Set course block state; `true` blocks, `false` unblocks |
 
 ### Blocked Assignments
 | Method | Route | Params / Body | Description |
 |--------|-------|---------------|-------------|
 | `GET` | `/api/blocked-assignments` | `?email=...` | List all blocked assignments for a user |
-| `POST` | `/api/blocked-assignments` | `{ email, assignment_id, assignment_type, course_name, title_hint }` | Block a single assignment |
-| `DELETE` | `/api/blocked-assignments` | `{ email, assignment_id, assignment_type }` | Unblock a single assignment |
+| `POST` | `/api/blocked-assignments` | `{ email, assignment_id, assignment_type, course_name, title_hint, is_blocked }` | Set assignment block state; `true` blocks, `false` unblocks |
 
 ---
 

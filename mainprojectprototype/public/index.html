@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/styles.css?v=2.3">
+  <link rel="stylesheet" href="css/styles.css?v=20261001-nontech">
 </head>
 <body>
   <div class="noise-overlay"></div>
@@ -76,8 +76,32 @@
               ACCOUNT
             </a>
           </li>
+          <li class="sidebar-nav-item sidebar-nav-tour-item" data-page="howtouse">
+            <a href="#" onclick="navigateTo('howtouse', event)" title="How to Use & System Tour">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>HOW IT WORKS</span>
+              <span class="nav-tour-pill">GUIDE</span>
+            </a>
+          </li>
         </ul>
       </nav>
+
+      <!-- SIDEBAR HOW TO USE TOUR CALLOUT -->
+      <div class="sidebar-tour-card" id="sidebarTourCard">
+        <div class="tour-card-header">
+          <div class="tour-chip">
+            <span class="pulse-beacon"></span>
+            <span>SIMPLE GUIDE</span>
+          </div>
+          <span class="tour-step-count">5 STEPS</span>
+        </div>
+        <div class="tour-card-title">How This App Helps You</div>
+        <p class="tour-card-desc">A quick 2-minute visual guide: automatic homework fetching, tracking deadlines & daily 8 PM email reminders.</p>
+        <button type="button" class="btn btn--accent-sm btn--full tour-start-btn" onclick="startInteractiveTour()" title="Start Interactive Visual Tour">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>TAKE A 2-MIN TOUR</span>
+        </button>
+      </div>
       
       <!-- USER BADGE FOOTER -->
       <div class="sidebar-footer">
@@ -444,6 +468,251 @@
           </div>
         </div>
 
+        <!-- ================= PAGE 7: HOW TO USE (NON-TECHNICAL USER GUIDE) ================= -->
+        <div class="page-view" id="page-howtouse">
+          <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+            <div>
+              <div class="section-title">HOW THIS APP WORKS (SIMPLE GUIDE)</div>
+              <div class="meta-text">EVERYTHING YOU NEED TO KNOW — IN SIMPLE, EVERYDAY WORDS</div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn btn--primary" onclick="startInteractiveTour(0)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                START VISUAL TOUR
+              </button>
+            </div>
+          </div>
+
+          <!-- HERO INTERACTIVE BANNER -->
+          <div class="guide-hero-banner">
+            <div class="guide-hero-badge">
+              <span class="pulse-beacon"></span>
+              <span>STUDENT TIME-SAVER</span>
+            </div>
+            <h2 class="guide-hero-title">Never Miss Homework or an Assignment Again</h2>
+            <p class="guide-hero-sub">Logging into the college website every day and clicking into 16 separate subjects just to check if something is due takes forever. This tool does the boring work for you: it gathers all your tasks into one clean screen and emails you every evening at 8:00 PM with what's due!</p>
+            
+            <div class="guide-step-strip">
+              <div class="guide-step-chip" onclick="startInteractiveTour(0)">
+                <span class="step-num">01</span>
+                <span class="step-title">Safe 1-Time Login</span>
+              </div>
+              <div class="guide-step-chip" onclick="startInteractiveTour(1)">
+                <span class="step-num">02</span>
+                <span class="step-title">1-Click Auto-Fetch</span>
+              </div>
+              <div class="guide-step-chip" onclick="startInteractiveTour(2)">
+                <span class="step-num">03</span>
+                <span class="step-title">Track Deadlines</span>
+              </div>
+              <div class="guide-step-chip" onclick="startInteractiveTour(3)">
+                <span class="step-num">04</span>
+                <span class="step-title">Mute Old Subjects</span>
+              </div>
+              <div class="guide-step-chip" onclick="startInteractiveTour(4)">
+                <span class="step-num">05</span>
+                <span class="step-title">Daily 8 PM Email</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- VISUAL WORKFLOW MODULES GRID -->
+          <div class="guide-modules-grid">
+            <!-- MODULE 1 -->
+            <div class="guide-card">
+              <div class="guide-card-top">
+                <span class="guide-tag">STEP 01</span>
+                <span class="guide-tech-badge">100% PRIVATE & SAFE</span>
+              </div>
+              <h3 class="guide-card-title">1. Safe & Simple Sign-In</h3>
+              <p class="guide-card-desc">Log in using your existing college portal username and password. You only have to log in once! The app connects directly with the official university portal and securely remembers you so you stay signed in.</p>
+              
+              <!-- VISUAL DIAGRAM 1 -->
+              <div class="visual-diagram visual-diagram--auth">
+                <div class="vnode vnode--user">
+                  <span class="vnode-icon">👤</span>
+                  <span class="vnode-label">You Sign In Once</span>
+                  <span class="vnode-sub">Normal College Login</span>
+                </div>
+                <div class="vflow-arrow">➔</div>
+                <div class="vnode vnode--volp">
+                  <span class="vnode-icon">🏫</span>
+                  <span class="vnode-label">College Portal</span>
+                  <span class="vnode-sub">Checks Your Account</span>
+                </div>
+                <div class="vflow-arrow">➔</div>
+                <div class="vnode vnode--db">
+                  <span class="vnode-icon">🔒</span>
+                  <span class="vnode-label">Safe & Remembered</span>
+                  <span class="vnode-sub">Zero Password Storage</span>
+                </div>
+              </div>
+
+              <ul class="guide-bullets">
+                <li>Your password is never saved anywhere — complete security and privacy.</li>
+                <li>You don't need to re-enter your credentials every time you open the app.</li>
+                <li>Works smoothly even if the college portal is temporarily slow.</li>
+              </ul>
+
+              <div class="guide-card-footer">
+                <button class="btn btn--sm btn--ghost" onclick="startInteractiveTour(0)">SEE STEP 1 TOUR</button>
+              </div>
+            </div>
+
+            <!-- MODULE 2 -->
+            <div class="guide-card">
+              <div class="guide-card-top">
+                <span class="guide-tag">STEP 02</span>
+                <span class="guide-tech-badge">SAVES 20-30 MIN DAILY</span>
+              </div>
+              <h3 class="guide-card-title">2. Gathers All Subjects in 1 Click</h3>
+              <p class="guide-card-desc">Normally, you must click through every subject, unit, and chapter to check for new work. Clicking <strong>SYNC VOLP</strong> automatically checks all your 16+ courses in the background and brings every assignment into one unified list.</p>
+              
+              <!-- VISUAL DIAGRAM 2 -->
+              <div class="visual-diagram visual-diagram--sync">
+                <div class="vsplit-root">
+                  <div class="vnode vnode--sync-root">
+                    <span class="vnode-icon">🔄</span>
+                    <span class="vnode-label">One Button Checks All 16+ Subjects</span>
+                  </div>
+                  <div class="vsplit-branches">
+                    <div class="vbranch-item">
+                      <span class="vbranch-tag">THEORY HOMEWORK</span>
+                      <span class="vbranch-title">Written Questions</span>
+                      <span class="vbranch-detail">Prompts, theory answers & questions</span>
+                    </div>
+                    <div class="vbranch-item">
+                      <span class="vbranch-tag">LAB PRACTICALS</span>
+                      <span class="vbranch-title">Projects & Lab Files</span>
+                      <span class="vbranch-detail">Code uploads, slide decks & presentations</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <ul class="guide-bullets">
+                <li>Collects both written assignments and lab/practical submissions.</li>
+                <li>Knows automatically if you already submitted your answer or if it's pending.</li>
+                <li>Shows the exact deadline and marks for every single task.</li>
+              </ul>
+
+              <div class="guide-card-footer">
+                <button class="btn btn--sm btn--primary" onclick="syncNow()">CLICK TO REFRESH WORK</button>
+              </div>
+            </div>
+
+            <!-- MODULE 3 -->
+            <div class="guide-card">
+              <div class="guide-card-top">
+                <span class="guide-tag">STEP 03</span>
+                <span class="guide-tech-badge">EASY COLOR CODING</span>
+              </div>
+              <h3 class="guide-card-title">3. Track Deadlines at a Glance</h3>
+              <p class="guide-card-desc">No more writing deadlines on scraps of paper. See everything laid out neatly with clear color labels: pending homework, what's due soon, and what's already completed. You can also view them on a monthly calendar!</p>
+              
+              <!-- VISUAL PREVIEW 3 -->
+              <div class="visual-diagram visual-diagram--tasks">
+                <div class="mock-task-card">
+                  <div class="mock-task-header">
+                    <span class="mock-badge mock-badge--course">Operating Systems</span>
+                    <span class="mock-badge mock-badge--pending">NEEDS ACTION</span>
+                  </div>
+                  <div class="mock-task-body">Unit 3: Process Scheduling Analysis & Report</div>
+                  <div class="mock-task-meta">
+                    <span>📅 Due in 2 Days (Thursday)</span>
+                    <span>⚖️ 10 Marks</span>
+                  </div>
+                </div>
+              </div>
+
+              <ul class="guide-bullets">
+                <li>Green tags for work you already finished; yellow/red for work coming up.</li>
+                <li>Filter by any subject or search by keyword in one second.</li>
+                <li>Click the Calendar tab to see your entire month scheduled like a personal planner.</li>
+              </ul>
+
+              <div class="guide-card-footer">
+                <button class="btn btn--sm btn--ghost" onclick="navigateTo('tasks')">VIEW MY ASSIGNMENTS</button>
+                <button class="btn btn--sm btn--ghost" onclick="navigateTo('calendar')">VIEW CALENDAR</button>
+              </div>
+            </div>
+
+            <!-- MODULE 4 -->
+            <div class="guide-card">
+              <div class="guide-card-top">
+                <span class="guide-tag">STEP 04</span>
+                <span class="guide-tech-badge">NO CLUTTER</span>
+              </div>
+              <h3 class="guide-card-title">4. Silence Finished or Extra Subjects</h3>
+              <p class="guide-card-desc">Enrolled in an elective or lab that's already over, or a subject you don't need reminders for? Just click "Block" to mute it. It stays safely on your college portal, but stops cluttering your screen and inbox.</p>
+              
+              <!-- VISUAL DIAGRAM 4 -->
+              <div class="visual-diagram visual-diagram--block">
+                <div class="mock-block-switch">
+                  <div class="mock-switch-state active">
+                    <span class="mock-switch-dot">🔇</span>
+                    <span>SUBJECT MUTED</span>
+                  </div>
+                  <div class="mock-block-arrow">➔</div>
+                  <div class="mock-block-result">
+                    <span class="result-item">✓ Removed from your daily view</span>
+                    <span class="result-item">✓ Silenced from evening email reminders</span>
+                  </div>
+                </div>
+              </div>
+
+              <ul class="guide-bullets">
+                <li>Mute whole subjects or individual tasks with one click.</li>
+                <li>Keeps your daily view focused only on subjects that actually matter right now.</li>
+                <li>You can un-mute any subject at any time under the "BLOCKED ITEMS" tab.</li>
+              </ul>
+
+              <div class="guide-card-footer">
+                <button class="btn btn--sm btn--ghost" onclick="navigateTo('blocked')">SEE MUTED SUBJECTS</button>
+              </div>
+            </div>
+
+            <!-- MODULE 5 -->
+            <div class="guide-card" style="grid-column: 1 / -1;">
+              <div class="guide-card-top">
+                <span class="guide-tag">STEP 05</span>
+                <span class="guide-tech-badge">AUTOMATIC EVENING REMINDER</span>
+              </div>
+              <h3 class="guide-card-title">5. Daily 8:00 PM Email Directly to Your Inbox</h3>
+              <p class="guide-card-desc">You don't even have to open this website every day! Every evening at 8:00 PM, the system automatically checks your pending homework across all active subjects and emails you a short, polite summary table with only the tasks you still need to finish.</p>
+              
+              <!-- VISUAL DIAGRAM 5 -->
+              <div class="visual-diagram visual-diagram--email">
+                <div class="email-mock-preview">
+                  <div class="email-mock-bar">
+                    <span class="email-dot red"></span>
+                    <span class="email-dot yellow"></span>
+                    <span class="email-dot green"></span>
+                    <span class="email-title">Subject: 🔔 College Reminder: 2 Pending Assignments Due Soon</span>
+                  </div>
+                  <div class="email-mock-content">
+                    <div class="email-greeting">Hi! Here is your quick evening summary of homework due soon:</div>
+                    <table class="email-mock-table">
+                      <thead>
+                        <tr><th>Subject</th><th>What is Due?</th><th>Due Date</th><th>Action Needed</th></tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>Compiler Design</td><td>Assignment 7: Symbol Table</td><td>Tonight, 11:59 PM</td><td style="color:var(--danger); font-weight:700;">Pending</td></tr>
+                        <tr><td>Operating Systems</td><td>Unit 4: Process Sync Report</td><td>Tomorrow</td><td style="color:var(--warning); font-weight:700;">Due Soon</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="guide-card-footer" style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn--accent-sm" onclick="startInteractiveTour(4)">OPEN STEP 5 IN TOUR</button>
+                <button class="btn btn--ghost btn--sm" onclick="triggerReminder()">SEND ME A SAMPLE EMAIL NOW</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </main>
       <footer class="app-footer">
         <span>VOLP REMINDER</span>
@@ -490,9 +759,51 @@
     </div>
   </div>
 
+  <!-- ================= INTERACTIVE PRODUCT TOUR MODAL ================= -->
+  <div class="tour-modal-overlay" id="interactiveTourOverlay" role="dialog" aria-modal="true" aria-labelledby="tourModalTitle">
+    <div class="tour-modal-card">
+      <!-- HEADER -->
+      <div class="tour-modal-header">
+        <div class="tour-header-meta">
+          <span class="tour-badge-pill">VOLP PRODUCT TOUR</span>
+          <span class="tour-step-counter" id="tourStepCounter">STEP 01 OF 05</span>
+        </div>
+        <button class="tour-modal-close" onclick="closeInteractiveTour()" aria-label="Close Tour" title="Close tour (Esc)">×</button>
+      </div>
+
+      <!-- PROGRESS INDICATOR BAR -->
+      <div class="tour-progress-bar-wrapper">
+        <div class="tour-progress-bar-fill" id="tourProgressFill" style="width: 20%;"></div>
+      </div>
+
+      <!-- INTERACTIVE STEP TABS -->
+      <div class="tour-step-tabs" id="tourStepTabs">
+        <button type="button" class="tour-tab-btn active" onclick="goToTourStep(0)" id="tourTab0">01. Architecture</button>
+        <button type="button" class="tour-tab-btn" onclick="goToTourStep(1)" id="tourTab1">02. Live Sync</button>
+        <button type="button" class="tour-tab-btn" onclick="goToTourStep(2)" id="tourTab2">03. Assignments</button>
+        <button type="button" class="tour-tab-btn" onclick="goToTourStep(3)" id="tourTab3">04. Blocking</button>
+        <button type="button" class="tour-tab-btn" onclick="goToTourStep(4)" id="tourTab4">05. 8 PM Alerts</button>
+      </div>
+
+      <!-- DYNAMIC STEP BODY (Visuals + Content) -->
+      <div class="tour-modal-body" id="tourModalBody">
+        <!-- Rendered by renderTourStep() in app.js -->
+      </div>
+
+      <!-- FOOTER ACTIONS -->
+      <div class="tour-modal-footer">
+        <button type="button" class="btn btn--ghost btn--sm" onclick="closeInteractiveTour()">SKIP TOUR (ESC)</button>
+        <div class="tour-footer-nav">
+          <button type="button" class="btn btn--ghost btn--sm" id="tourPrevBtn" onclick="prevTourStep()" disabled>← PREVIOUS</button>
+          <button type="button" class="btn btn--primary btn--sm" id="tourNextBtn" onclick="nextTourStep()">NEXT STEP →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST ALERTS -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="js/app.js?v=20260930-calendar2"></script>
+  <script src="js/app.js?v=20261001-nontech"></script>
 </body>
 </html>

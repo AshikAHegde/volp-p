@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { initDB } from './services/db.service.js';
 import { startCronJob } from './services/cron.service.js';
+import { projectRateLimiter } from './middleware/rate-limit.middleware.js';
 
 import authRoutes from './routes/auth.routes.js';
 import assignmentRoutes from './routes/assignment.routes.js';
@@ -22,6 +23,7 @@ const PORT = Number(process.env.PORT || 4000);
 // Middleware
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(projectRateLimiter);
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -38,5 +40,6 @@ app.listen(PORT, () => {
   console.log(`🚀 VOLP Reminder Prototype Web UI: http://localhost:${PORT}`);
   console.log(`⏰ Cron Schedule: "${process.env.CRON_SCHEDULE}"`);
   console.log(`⚙️ Environment Mode: ${process.env.NODE_ENV}`);
+  console.log(`🛡️ Rate Limiting: Active (Strict: /api/auth, /api/assignments | Simple: /api/*)`);
   console.log(`====================================================`);
 });

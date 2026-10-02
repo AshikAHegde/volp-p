@@ -164,8 +164,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (footerYear) footerYear.textContent = new Date().getFullYear();
   await loadAppData();
 
-  // Accessibility & UX: Dismiss modal or mobile drawer on Escape key
+  // Accessibility & UX: Dismiss modal, tour, or mobile drawer on Escape key, Arrow keys for tour
   document.addEventListener("keydown", (e) => {
+    const tourModal = document.getElementById("interactiveTourOverlay");
+    if (tourModal && tourModal.classList.contains("active")) {
+      if (e.key === "Escape") { closeInteractiveTour(); return; }
+      if (e.key === "ArrowRight") { nextTourStep(); return; }
+      if (e.key === "ArrowLeft") { prevTourStep(); return; }
+    }
+
     if (e.key === "Escape") {
       const modal = document.getElementById("modalOverlay");
       if (modal && modal.classList.contains("active")) {
@@ -257,6 +264,16 @@ function initUserSession() {
 }
 
 function handleSignOut() {
+  if (currentUser?.token && currentUser.token !== "demo") {
+    fetch("/api/auth/logout", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${currentUser.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token: currentUser.token }),
+    }).catch(() => {});
+  }
   localStorage.removeItem("volp_user");
   showToast("Signed out successfully", "info");
   setTimeout(() => {
@@ -482,6 +499,7 @@ function navigateTo(pageId, event) {
     blocked: "BLOCKED ITEMS",
     reminders: "REMINDERS & NOTIFICATION LOG",
     settings: "ACCOUNT CONFIGURATION",
+    howtouse: "HOW THIS APP WORKS (SIMPLE GUIDE)",
   };
 
   const titleEl = document.getElementById("headerTitle");
@@ -1618,33 +1636,20 @@ async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
     `Are you sure you want to ${actionText} "${courseName}"? ${currentlyBlocked ? "It will reappear in daily reminders." : "All assignments for this course will be omitted from 8 PM email digests."}`,
     async () => {
       try {
-        if (!currentlyBlocked) {
-          const response = await fetch("/api/blocked", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...getAuthHeaders(),
-            },
-            body: JSON.stringify({
-              email: currentUser.email,
-              colid,
-              course_name: courseName,
-            }),
-          });
-          if (!response.ok)
-            throw new Error(`Server returned ${response.status}`);
-        } else {
-          const response = await fetch("/api/blocked", {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              ...getAuthHeaders(),
-            },
-            body: JSON.stringify({ email: currentUser.email, colid }),
-          });
-          if (!response.ok)
-            throw new Error(`Server returned ${response.status}`);
-        }
+        const response = await fetch("/api/blocked", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({
+            email: currentUser.email,
+            colid,
+            course_name: courseName,
+            is_blocked: !currentlyBlocked,
+          }),
+        });
+        if (!response.ok) throw new Error(`Server returned ${response.status}`);
       } catch (e) {
         console.warn("Course block request failed:", e.message);
         showToast(`Course ${actionText} failed: ${e.message}`, "error");
@@ -1705,39 +1710,22 @@ async function toggleAssignmentBlock(
     `Are you sure you want to ${actionText} "${titleHint || "Assignment #" + assignmentId}"?`,
     async () => {
       try {
-        if (!currentlyBlocked) {
-          const response = await fetch("/api/blocked-assignments", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...getAuthHeaders(),
-            },
-            body: JSON.stringify({
-              email: currentUser.email,
-              assignment_id: assignmentId,
-              assignment_type: assignmentType,
-              course_name: courseName,
-              title_hint: titleHint,
-            }),
-          });
-          if (!response.ok)
-            throw new Error(`Server returned ${response.status}`);
-        } else {
-          const response = await fetch("/api/blocked-assignments", {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              ...getAuthHeaders(),
-            },
-            body: JSON.stringify({
-              email: currentUser.email,
-              assignment_id: assignmentId,
-              assignment_type: assignmentType,
-            }),
-          });
-          if (!response.ok)
-            throw new Error(`Server returned ${response.status}`);
-        }
+        const response = await fetch("/api/blocked-assignments", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({
+            email: currentUser.email,
+            assignment_id: assignmentId,
+            assignment_type: assignmentType,
+            course_name: courseName,
+            title_hint: titleHint,
+            is_blocked: !currentlyBlocked,
+          }),
+        });
+        if (!response.ok) throw new Error(`Server returned ${response.status}`);
       } catch (e) {
         console.warn("Assignment block request failed:", e.message);
         showToast(`Assignment ${actionText} failed: ${e.message}`, "error");
@@ -1816,4 +1804,295 @@ function escapeJsString(str) {
   return escapeHtml(str)
     .replace(/\\/g, "\\\\")
     .replace(/&#039;/g, "\\'");
+}
+
+
+// ==========================================================================
+// 15. INTERACTIVE PRODUCT TOUR & VISUAL WALKTHROUGH SYSTEM
+// ==========================================================================
+let currentTourStep = 0;
+
+const TOUR_STEPS = [
+  {
+    step: 0,
+    kicker: "01 / EASY & SAFE SIGN-IN",
+    title: "Log in Safely Once with Your Existing College Account",
+    narrative: "No complicated setup! Just enter your normal university portal email and password. The app connects directly to your college system, verifies your account, and safely remembers your session so you don't have to keep signing in every day.",
+    points: [
+      "100% Private & Safe: Your password is never stored or shared anywhere.",
+      "One-Time Login: Stay signed in across visits without repeatedly typing passwords.",
+      "Always Ready: Even if the college website is slow, your saved assignments remain visible."
+    ],
+    protip: "Helpful Tip: If you ever change your university password, just click 'Sign Out' in the top right and log in once with your new password.",
+    actionLabel: "View Account Info",
+    actionFn: () => { closeInteractiveTour(); navigateTo("settings"); },
+    renderVisual: () => `
+      <div class="pipeline-diagram">
+        <div class="pipeline-node active-glow">
+          <div class="pnode-left">
+            <span class="pnode-icon">👤</span>
+            <div>
+              <div class="pnode-title">You Sign In Once</div>
+              <div class="pnode-sub">Normal College Login</div>
+            </div>
+          </div>
+          <span class="pnode-tag pnode-tag--secure">Fast & Safe</span>
+        </div>
+        <div class="pipeline-arrow">▼ Verifies Directly With</div>
+        <div class="pipeline-node">
+          <div class="pnode-left">
+            <span class="pnode-icon">🏫</span>
+            <div>
+              <div class="pnode-title">College Portal</div>
+              <div class="pnode-sub">Official University Website</div>
+            </div>
+          </div>
+          <span class="pnode-tag pnode-tag--secure">Verified</span>
+        </div>
+        <div class="pipeline-arrow">▼ Safely Remembers Session</div>
+        <div class="pipeline-node">
+          <div class="pnode-left">
+            <span class="pnode-icon">🔒</span>
+            <div>
+              <div class="pnode-title">Ready on Your Device</div>
+              <div class="pnode-sub">Zero Password Storage</div>
+            </div>
+          </div>
+          <span class="pnode-tag pnode-tag--cron">Private</span>
+        </div>
+      </div>
+    `
+  },
+  {
+    step: 1,
+    kicker: "02 / 1-CLICK AUTO REFRESH",
+    title: "Gathers Homework from All 16+ Subjects in 1 Click",
+    narrative: "In the college portal, finding homework requires clicking into every single subject, chapter, and unit one by one. Clicking the green 'SYNC VOLP' button checks all your subjects automatically and brings all your assignments together into one tidy place.",
+    points: [
+      "Finds Everything: Gathers written questions, lab assignments, coding practicals & presentation uploads.",
+      "Knows What's Done: Automatically recognizes whether you already submitted your file or if it's still pending.",
+      "Clear Deadlines: Shows the exact due date and maximum marks for every task."
+    ],
+    protip: "Helpful Tip: Click 'SYNC VOLP' in the top right anytime your teacher assigns new homework or after you upload your work on the college site.",
+    actionLabel: "Click to Refresh Work Now",
+    actionFn: () => { closeInteractiveTour(); syncNow(); },
+    renderVisual: () => `
+      <div class="discovery-branches-box">
+        <div class="discovery-root-pill">
+          <span>🔄 Checks All 16+ Subjects at Once</span>
+        </div>
+        <div class="discovery-branches-grid">
+          <div class="branch-card branch-card--subj">
+            <div class="branch-badge branch-badge--subj">THEORY HOMEWORK</div>
+            <div class="branch-name">Written Questions</div>
+            <div class="branch-desc">Essay prompts, unit homework, and short answer submissions.</div>
+          </div>
+          <div class="branch-card branch-card--hands">
+            <div class="branch-badge branch-badge--hands">LAB & PRACTICALS</div>
+            <div class="branch-name">Projects & Files</div>
+            <div class="branch-desc">Lab code, practical uploads, slide decks & presentations.</div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    step: 2,
+    kicker: "03 / TRACK YOUR WORK",
+    title: "See Pending Homework, Done Tasks & Calendar View",
+    narrative: "Stop keeping messy notebook reminders. Every assignment is clearly color-coded so you know what requires urgent attention, what can wait, and what you've already completed. You can also view all deadlines on a monthly calendar!",
+    points: [
+      "Color-Coded Status: Green for completed work, yellow/red for pending work with close deadlines.",
+      "Quick Filters: Filter by any subject or search by keyword in under a second.",
+      "Visual Calendar: See your entire month laid out like a personal study planner."
+    ],
+    protip: "Helpful Tip: Click on any assignment card to view the teacher's full prompt, your uploaded file name, and submission time.",
+    actionLabel: "Open Assignments Page",
+    actionFn: () => { closeInteractiveTour(); navigateTo("tasks"); },
+    renderVisual: () => `
+      <div class="mock-assignment-preview">
+        <div class="preview-tags-row">
+          <span class="preview-course-tag">Operating Systems</span>
+          <span class="preview-status-tag">NEEDS ACTION</span>
+        </div>
+        <div class="preview-title">Unit 3: Process Scheduling Analysis & Lab Report</div>
+        <div class="preview-meta-row">
+          <span>📅 Due in 2 Days (Thursday)</span>
+          <span>⚖️ 10 Marks</span>
+          <span>🗂️ Unit 3</span>
+        </div>
+      </div>
+    `
+  },
+  {
+    step: 3,
+    kicker: "04 / ZERO CLUTTER",
+    title: "Silence Old Semesters or Extra Subjects (Muting)",
+    narrative: "Have subjects from an earlier semester or elective labs you don't need alerts for? Click 'Block' to silence them. They stay safely on your official college portal, but won't clutter your dashboard or spam your email inbox.",
+    points: [
+      "Declutter Your View: Muted subjects disappear from your daily homework board.",
+      "Silence Email Alerts: Muted subjects won't generate daily reminder emails.",
+      "Easy to Un-mute: Review or restore any muted subject anytime in the 'BLOCKED ITEMS' tab."
+    ],
+    protip: "Helpful Tip: Go to the 'COURSES' tab to mute any past courses you've already passed so your active view stays clean.",
+    actionLabel: "View Blocked Items Tab",
+    actionFn: () => { closeInteractiveTour(); navigateTo("blocked"); },
+    renderVisual: () => `
+      <div class="mock-block-interactive">
+        <div class="mock-course-row">
+          <div class="mock-row-left">
+            <div class="mock-row-title">Active Semester Subjects</div>
+            <div class="mock-row-sub">Current Subjects • Reminders Active</div>
+          </div>
+          <span class="mock-block-pill mock-block-pill--ok">ACTIVE IN DAILY LIST</span>
+        </div>
+        <div class="mock-course-row is-muted">
+          <div class="mock-row-left">
+            <div class="mock-row-title">Previous Finished Lab</div>
+            <div class="mock-row-sub">Already Done • Muted from Screen</div>
+          </div>
+          <span class="mock-block-pill mock-block-pill--active">🔇 MUTED</span>
+        </div>
+      </div>
+    `
+  },
+  {
+    step: 4,
+    kicker: "05 / EVENING REMINDERS",
+    title: "Automatic 8:00 PM Email Directly to Your Inbox",
+    narrative: "You don't even need to open this app every single day! Every evening at 8:00 PM, the system automatically checks your active subjects and sends a polite summary email with only the tasks you still need to finish.",
+    points: [
+      "Arrives Daily at 8:00 PM: Sent straight to your email so you never miss tomorrow's submission.",
+      "Clean & Short: Lists only pending tasks with subject names and exact deadlines.",
+      "Test Anytime: Click the button below to send yourself a test reminder right now!"
+    ],
+    protip: "Helpful Tip: Click 'Send Me a Sample Email Now' below to test your email notification right away!",
+    actionLabel: "Send Me a Sample Email Now",
+    actionFn: () => { closeInteractiveTour(); triggerReminder(); },
+    renderVisual: () => `
+      <div class="email-mock-card">
+        <div class="email-mock-header">
+          <span class="email-dot red"></span>
+          <span class="email-dot yellow"></span>
+          <span class="email-dot green"></span>
+          <span class="email-subject-line">🔔 College Reminder: 2 Pending Assignments Due Soon</span>
+        </div>
+        <div class="email-mock-table-wrap">
+          <table class="email-mock-table">
+            <thead>
+              <tr><th>Subject</th><th>What is Due?</th><th>Due Date</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Compiler Design</td><td>Assignment 7: Symbol Table</td><td>Tonight, 11:59 PM</td></tr>
+              <tr><td>Operating Systems</td><td>Unit 4: Process Sync Report</td><td>Tomorrow</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `
+  }
+];
+
+function startInteractiveTour(stepIndex = 0) {
+  const overlay = document.getElementById("interactiveTourOverlay");
+  if (!overlay) return;
+  overlay.classList.add("active");
+  goToTourStep(stepIndex);
+}
+
+function closeInteractiveTour() {
+  const overlay = document.getElementById("interactiveTourOverlay");
+  if (!overlay) return;
+  overlay.classList.remove("active");
+}
+
+function goToTourStep(index) {
+  if (index < 0 || index >= TOUR_STEPS.length) return;
+  currentTourStep = index;
+  renderTourStep();
+}
+
+function nextTourStep() {
+  if (currentTourStep < TOUR_STEPS.length - 1) {
+    goToTourStep(currentTourStep + 1);
+  } else {
+    closeInteractiveTour();
+    showToast("Tour completed! Explore your dashboard.", "success");
+  }
+}
+
+function prevTourStep() {
+  if (currentTourStep > 0) {
+    goToTourStep(currentTourStep - 1);
+  }
+}
+
+function renderTourStep() {
+  const stepData = TOUR_STEPS[currentTourStep];
+  if (!stepData) return;
+
+  const counterEl = document.getElementById("tourStepCounter");
+  if (counterEl) {
+    counterEl.textContent = `STEP 0${currentTourStep + 1} OF 0${TOUR_STEPS.length}`;
+  }
+
+  const fillEl = document.getElementById("tourProgressFill");
+  if (fillEl) {
+    const percent = ((currentTourStep + 1) / TOUR_STEPS.length) * 100;
+    fillEl.style.width = `${percent}%`;
+  }
+
+  for (let i = 0; i < TOUR_STEPS.length; i++) {
+    const tab = document.getElementById(`tourTab${i}`);
+    if (tab) {
+      tab.classList.toggle("active", i === currentTourStep);
+    }
+  }
+
+  const prevBtn = document.getElementById("tourPrevBtn");
+  if (prevBtn) {
+    prevBtn.disabled = currentTourStep === 0;
+  }
+
+  const nextBtn = document.getElementById("tourNextBtn");
+  if (nextBtn) {
+    nextBtn.textContent = currentTourStep === TOUR_STEPS.length - 1 ? "FINISH & EXPLORE 🚀" : "NEXT STEP →";
+  }
+
+  const bodyEl = document.getElementById("tourModalBody");
+  if (bodyEl) {
+    bodyEl.innerHTML = `
+      <div class="tour-step-container">
+        <div class="tour-step-visual">
+          ${stepData.renderVisual()}
+        </div>
+        <div class="tour-step-info">
+          <div>
+            <div class="tour-step-kicker">
+              <span class="pulse-beacon"></span>
+              <span>${stepData.kicker}</span>
+            </div>
+            <h3 class="tour-step-heading">${stepData.title}</h3>
+            <p class="tour-step-narrative">${stepData.narrative}</p>
+            <ul class="tour-feature-points">
+              ${stepData.points.map(pt => `
+                <li>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>${escapeHtml(pt)}</span>
+                </li>
+              `).join('')}
+            </ul>
+            <div class="tour-protip-box">
+              <strong>${stepData.protip.split(':')[0]}:</strong> ${stepData.protip.split(':').slice(1).join(':')}
+            </div>
+          </div>
+          <div style="margin-top: 12px;">
+            <button type="button" class="btn btn--accent-sm" onclick="TOUR_STEPS[${currentTourStep}].actionFn()">
+              ${stepData.actionLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
 }
