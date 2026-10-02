@@ -7,7 +7,13 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "tt": "node  thirdparty_api_testing/main.js"
+    "tt": "node  thirdparty_api_testing/main.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "jest": {
+    "transform": {},
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": ["/node_modules/"]
   },
   "dependencies": {
     "dotenv": "^16.6.1",
@@ -20,6 +26,7 @@
   },
   "devDependencies": {
     "autocannon": "^8.0.0",
+    "jest": "^30.5.2",
     "nodemon": "^3.1.10"
   }
 }
