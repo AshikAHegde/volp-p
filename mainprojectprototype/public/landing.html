@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VOLP Reminder — Academic Assignment & Coursework Automation Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="landing-body">
+  <div class="noise-overlay"></div>
+
+  <!-- NAVIGATION -->
+  <header class="landing-nav">
+    <div class="landing-nav-inner">
+      <a href="index.html" class="landing-brand">
+        <span class="brand-logo-pill">VOLP</span>
+        <span>REMINDER</span>
+      </a>
+
+      <nav>
+        <ul class="landing-nav-links">
+          <li><a href="#why-volp" class="landing-nav-link">Why VOLP?</a></li>
+          <li><a href="#features" class="landing-nav-link">Features</a></li>
+          <li><a href="#workflow" class="landing-nav-link">How It Works</a></li>
+          <li><a href="#architecture" class="landing-nav-link">Architecture</a></li>
+          <li><a href="#faq" class="landing-nav-link">FAQ</a></li>
+        </ul>
+      </nav>
+
+      <div class="landing-nav-actions">
+        <button class="btn btn--icon" id="themeToggleBtn" onclick="toggleTheme()" aria-label="Toggle theme">☼</button>
+        <a href="login.html" class="landing-nav-link" style="font-family: var(--font-mono); font-size: 13px; font-weight: 600;">Sign In</a>
+        <a href="login.html" class="landing-cta-btn" id="navUseProjectBtn">
+          <span>USE PROJECT</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="landing-hero">
+    <div class="hero-chip">
+      <span class="pulse-beacon"></span>
+      <span>AUTONOMOUS ACADEMIC DEADLINE ENGINE · VOLP v2.0</span>
+    </div>
+
+    <h1 class="hero-title">
+      Automate Your University Deadlines.<br>
+      <span class="hero-title-accent">Zero Forgotten Assignments.</span>
+    </h1>
+
+    <p class="hero-subtitle">
+      Tired of clicking into 16 separate course units every single day on the slow university portal? VOLP Reminder scrapes your homework automatically, organizes urgent tasks into a clean matrix, and emails you every evening at 8:00 PM with what's due!
+    </p>
+
+    <div class="hero-actions">
+      <a href="login.html" class="btn-hero-primary" id="heroUseProjectBtn">
+        <span>USE PROJECT NOW</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </a>
+      <a href="#features" class="btn-hero-secondary">
+        <span>EXPLORE FEATURES</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+      </a>
+    </div>
+
+    <div class="hero-badges-row">
+      <div class="hero-badge-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>1-Click Live Portal Sync</span>
+      </div>
+      <div class="hero-badge-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>Dual-Tier Rate Protection</span>
+      </div>
+      <div class="hero-badge-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>Nightly 8:00 PM Email Digest</span>
+      </div>
+      <div class="hero-badge-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>Mute Unwanted Courses</span>
+      </div>
+    </div>
+
+    <!-- HERO SHOWCASE MOCKUP WINDOW -->
+    <div class="hero-mockup-wrapper">
+      <div class="mockup-header-bar">
+        <div class="mockup-traffic-lights">
+          <span class="traffic-dot red"></span>
+          <span class="traffic-dot yellow"></span>
+          <span class="traffic-dot green"></span>
+        </div>
+        <div class="mockup-url-pill">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>volp-reminder.internal/dashboard — live sync connected</span>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 10px; color: var(--accent); font-weight: 700;">
+          STATUS: 100% OPERATIONAL
+        </div>
+      </div>
+
+      <div class="mockup-content">
+        <!-- 4 Quick Stats -->
+        <div class="mockup-metrics-grid">
+          <div class="mockup-metric-card" style="border-left: 3px solid var(--accent);">
+            <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted); font-weight: 700;">TOTAL ASSIGNMENTS</div>
+            <div class="mockup-metric-val">14</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Enrolled across 5 courses</div>
+          </div>
+          <div class="mockup-metric-card" style="border-left: 3px solid var(--warning);">
+            <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted); font-weight: 700;">PENDING SUBMISSIONS</div>
+            <div class="mockup-metric-val" style="color: var(--warning);">4</div>
+            <div style="font-size: 11px; color: var(--warning); margin-top: 2px;">2 due within 24 hours</div>
+          </div>
+          <div class="mockup-metric-card" style="border-left: 3px solid var(--success);">
+            <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted); font-weight: 700;">SUBMITTED / DONE</div>
+            <div class="mockup-metric-val" style="color: var(--success);">10</div>
+            <div style="font-size: 11px; color: var(--success); margin-top: 2px;">Verified on portal</div>
+          </div>
+          <div class="mockup-metric-card" style="border-left: 3px solid var(--danger);">
+            <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted); font-weight: 700;">MUTED COURSES</div>
+            <div class="mockup-metric-val" style="color: var(--muted);">1</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Excluded from digests</div>
+          </div>
+        </div>
+
+        <!-- Dual Pane: Urgency Matrix & Email Digest Mockup -->
+        <div class="mockup-dual-pane">
+          <!-- Urgency List Pane -->
+          <div class="mockup-card-pane">
+            <div class="mockup-pane-title">
+              <span>Urgent Submissions Requiring Action</span>
+              <span class="badge badge--danger" style="font-size: 9px;">ACTION NEEDED</span>
+            </div>
+
+            <div class="mockup-task-item">
+              <div>
+                <div style="font-weight: 600; color: var(--text);">Compiler Design — Assignment 7: Lexical Analyzer</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Unit 3 · Mandatory Practical</div>
+              </div>
+              <span class="badge badge--danger" style="font-size: 10px; font-weight: 700;">TONIGHT 11:59 PM</span>
+            </div>
+
+            <div class="mockup-task-item">
+              <div>
+                <div style="font-weight: 600; color: var(--text);">Operating Systems — Unit 4: Process Sync Report</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Lab Assignment · 50 Pts</div>
+              </div>
+              <span class="badge badge--warning" style="font-size: 10px; font-weight: 700;">TOMORROW</span>
+            </div>
+
+            <div class="mockup-task-item">
+              <div>
+                <div style="font-weight: 600; color: var(--text);">Computer Networks — Wireshark Packet Analysis</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Unit 2 Exercise</div>
+              </div>
+              <span class="badge badge--neutral" style="font-size: 10px;">IN 3 DAYS</span>
+            </div>
+          </div>
+
+          <!-- Email Digest Mockup Pane -->
+          <div class="mockup-card-pane">
+            <div class="mockup-pane-title">
+              <span>Nightly 8:00 PM Email Digest</span>
+              <span class="badge badge--accent" style="font-size: 9px;">AUTOMATED CRON</span>
+            </div>
+
+            <div class="mockup-email-box">
+              <div class="mockup-email-meta">
+                <div><strong>FROM:</strong> VOLP Reminder Bot &lt;notifier@univ.edu&gt;</div>
+                <div><strong>TO:</strong> student@university.edu</div>
+                <div><strong>SUBJECT:</strong> 🔔 Reminder: 2 Coursework Deadlines Due Soon!</div>
+              </div>
+              <div style="color: var(--text-secondary); line-height: 1.5;">
+                Hello Student,<br>
+                Here is your nightly 8:00 PM coursework digest:<br>
+                <div style="margin: 8px 0; padding: 6px 10px; background: rgba(255, 92, 92, 0.1); border-left: 2px solid var(--danger); font-size: 11px;">
+                  ⚠️ <strong>Compiler Design</strong> — Assignment 7 due tonight at 11:59 PM!
+                </div>
+                <div style="margin: 6px 0; padding: 6px 10px; background: rgba(240, 187, 65, 0.1); border-left: 2px solid var(--warning); font-size: 11px;">
+                  ⏳ <strong>Operating Systems</strong> — Unit 4 Report due tomorrow.
+                </div>
+                <div style="color: var(--muted); font-size: 10px; margin-top: 6px;">Next automated check: Tomorrow at 8:00 PM.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: WHY VOLP? (PROBLEM VS SOLUTION) -->
+  <section class="landing-section" id="why-volp">
+    <div class="landing-section-header">
+      <div class="landing-section-kicker">BUILT FOR REAL STUDENTS</div>
+      <h2 class="landing-section-title">Why Struggle With The Portal?</h2>
+      <p class="landing-section-sub">
+        University portals are notorious for confusing navigation, hidden submission menus, and slow loading times. See how VOLP Reminder transforms your academic workflow.
+      </p>
+    </div>
+
+    <div class="comparison-grid">
+      <!-- The Old Manual Way -->
+      <div class="comparison-card bad">
+        <div class="comparison-card-title" style="color: var(--danger);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          <span>THE OLD MANUAL STRUGGLE</span>
+        </div>
+        <ul class="comparison-list">
+          <li class="comparison-item">
+            <span style="color: var(--danger); font-weight: 700;">✕</span>
+            <div><strong>Endless clicking:</strong> You must log in every day and click into 16 separate course units one by one just to check for new assignments.</div>
+          </li>
+          <li class="comparison-item">
+            <span style="color: var(--danger); font-weight: 700;">✕</span>
+            <div><strong>Surprise midnight deadlines:</strong> Homework quietly posted on Wednesday evening with a Thursday midnight deadline gets missed completely.</div>
+          </li>
+          <li class="comparison-item">
+            <span style="color: var(--danger); font-weight: 700;">✕</span>
+            <div><strong>Portal timeouts & rate limit bans:</strong> Rapidly opening multiple course tabs crashes your session or triggers IP blocks.</div>
+          </li>
+          <li class="comparison-item">
+            <span style="color: var(--danger); font-weight: 700;">✕</span>
+            <div><strong>Cluttered course lists:</strong> Old subjects, finished labs, and irrelevant units clutter your screen with no way to hide them.</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- The VOLP Reminder Way -->
+      <div class="comparison-card good">
+        <div class="comparison-card-title" style="color: var(--accent);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <span>THE VOLP REMINDER WAY</span>
+        </div>
+        <ul class="comparison-list">
+          <li class="comparison-item">
+            <span style="color: var(--accent); font-weight: 700;">✓</span>
+            <div><strong>One-click auto fetch:</strong> Scrapes all registered subjects, modules, and assignment tables simultaneously in the background.</div>
+          </li>
+          <li class="comparison-item">
+            <span style="color: var(--accent); font-weight: 700;">✓</span>
+            <div><strong>Nightly 8:00 PM email summary:</strong> Automatic background cron checks deadlines and emails you a clean summary before you go to sleep.</div>
+          </li>
+          <li class="comparison-item">
+            <span style="color: var(--accent); font-weight: 700;">✓</span>
+            <div><strong>Dual-tier rate protection:</strong> Safe 10 req/15m limiter protects the portal from bans, while MongoDB cache serves UI reads in &lt;100ms.</div>
+          </li>
+          <li class="comparison-item">
+            <span style="color: var(--accent); font-weight: 700;">✓</span>
+            <div><strong>Full course & homework muting:</strong> One click to mute completed electives or individual tasks so you only see what matters.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: FEATURES -->
+  <section class="landing-section" id="features">
+    <div class="landing-section-header">
+      <div class="landing-section-kicker">ENGINEERED FOR EXCELLENCE</div>
+      <h2 class="landing-section-title">Everything You Need To Stay On Top</h2>
+      <p class="landing-section-sub">
+        Crafted with modern Node.js, MongoDB, and high-performance frontend architecture.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <!-- Feature 1 -->
+      <div class="feature-box">
+        <div class="feature-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        </div>
+        <div class="feature-title">One-Click Background Sync</div>
+        <p class="feature-desc">
+          Automated Cheerio-powered DOM extraction navigates through your authenticated session to pull down courses, units, and assignment deadlines in parallel.
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="feature-box">
+        <div class="feature-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        </div>
+        <div class="feature-title">Smart Deadline Matrix</div>
+        <p class="feature-desc">
+          Deadlines are parsed, normalized, and categorized into Overdue, Due Today, Tomorrow, and Next 7 Days with instant Kanban and Calendar visualizers.
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="feature-box">
+        <div class="feature-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        </div>
+        <div class="feature-title">Scheduled 8:00 PM Email Digest</div>
+        <p class="feature-desc">
+          An automated cron daemon queries pending tasks and sends an HTML formatted email via Nodemailer every evening at 8:00 PM sharp.
+        </p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="feature-box">
+        <div class="feature-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+        </div>
+        <div class="feature-title">Course & Homework Muting</div>
+        <p class="feature-desc">
+          Completed electives or irrelevant units can be muted with one click. Muted items are filtered out from your dashboard metrics and email notifications.
+        </p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="feature-box">
+        <div class="feature-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <div class="feature-title">Dual-Tier Rate Protection</div>
+        <p class="feature-desc">
+          Strict rate limiting (10 req / 15m) safeguards portal sync routes from DDoS triggers, while Simple rate limiting (100 req / min) powers instant cached UI queries.
+        </p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="feature-box">
+        <div class="feature-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <div class="feature-title">Multi-User Session Isolation</div>
+        <p class="feature-desc">
+          Bearer token authentication and isolated MongoDB collections ensure each student's credentials, courses, and blocked lists remain 100% private.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: WORKFLOW -->
+  <section class="landing-section" id="workflow">
+    <div class="landing-section-header">
+      <div class="landing-section-kicker">HOW IT WORKS</div>
+      <h2 class="landing-section-title">4 Simple Steps to Complete Peace of Mind</h2>
+      <p class="landing-section-sub">
+        Set it up once, and let the system handle the tedious tracking for you.
+      </p>
+    </div>
+
+    <div class="workflow-grid">
+      <div class="workflow-card">
+        <div class="workflow-num">01</div>
+        <div class="workflow-step-title">Connect Account</div>
+        <div class="workflow-step-desc">Enter your university portal credentials. A secure bearer token is generated with credentials kept local and private.</div>
+      </div>
+
+      <div class="workflow-card">
+        <div class="workflow-num">02</div>
+        <div class="workflow-step-title">Automated Fetch</div>
+        <div class="workflow-step-desc">Click "Sync VOLP" to trigger parallel portal scraping. All registered courses and homework are captured into MongoDB.</div>
+      </div>
+
+      <div class="workflow-card">
+        <div class="workflow-num">03</div>
+        <div class="workflow-step-title">Organize & Mute</div>
+        <div class="workflow-step-desc">View tasks in Kanban, Calendar, or Table mode. Mute finished electives or submitted units to declutter your dashboard.</div>
+      </div>
+
+      <div class="workflow-card">
+        <div class="workflow-num">04</div>
+        <div class="workflow-step-title">Nightly 8 PM Email</div>
+        <div class="workflow-step-desc">Relax! Every night at 8:00 PM, the automated dispatcher checks for tomorrow's deadlines and delivers an email to your inbox.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: ARCHITECTURE & RATE LIMITING -->
+  <section class="landing-section" id="architecture">
+    <div class="landing-section-header">
+      <div class="landing-section-kicker">ROBUST ENGINEERING</div>
+      <h2 class="landing-section-title">Architecture & Rate Limit Shield</h2>
+      <p class="landing-section-sub">
+        Designed to protect both your college portal from overload and provide instant, sub-100ms dashboard responsiveness.
+      </p>
+    </div>
+
+    <div class="arch-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+        <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--accent);">
+          🛡️ DUAL-TIER EXPRESS RATE LIMITER ARCHITECTURE
+        </div>
+        <div class="badge badge--success" style="font-family: var(--font-mono); font-size: 10px;">EXPRESS-RATE-LIMIT VERIFIED</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <div style="background: var(--surface-raised); border: 1px solid var(--border); padding: 18px; border-radius: var(--radius-md);">
+          <div style="display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--danger); margin-bottom: 8px;">
+            <span>STRICT LIMITER (10 req / 15 min)</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 10px;">
+            Applied to live portal scraping endpoints and authentication routes. Prevents university portal server overload and protects student accounts from rate-limit bans.
+          </p>
+          <div style="font-family: var(--font-mono); font-size: 11px; color: var(--muted);">
+            <code>POST /api/assignments/sync-courses</code><br>
+            <code>POST /api/assignments/sync-assignments</code><br>
+            <code>POST /api/auth/login</code>
+          </div>
+        </div>
+
+        <div style="background: var(--surface-raised); border: 1px solid var(--border); padding: 18px; border-radius: var(--radius-md);">
+          <div style="display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--success); margin-bottom: 8px;">
+            <span>SIMPLE LIMITER (100 req / 1 min)</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 10px;">
+            Applied to fast database cache read endpoints and static dashboard queries. Delivers lightning-fast page navigation without scraping the portal on every reload.
+          </p>
+          <div style="font-family: var(--font-mono); font-size: 11px; color: var(--muted);">
+            <code>GET /api/assignments/my-courses</code><br>
+            <code>GET /api/assignments/my-assignments</code><br>
+            <code>GET /api/blocked/*</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-pills-row">
+        <span class="arch-pill">🟢 Node.js v20+ ES Modules</span>
+        <span class="arch-pill">🍃 MongoDB Persistent Store</span>
+        <span class="arch-pill">⚡ Express 4.x REST Backend</span>
+        <span class="arch-pill">🕷️ Cheerio Scraper Engine</span>
+        <span class="arch-pill">✉️ Nodemailer SMTP Service</span>
+        <span class="arch-pill">⏰ Node-Cron Scheduler</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: FAQ -->
+  <section class="landing-section" id="faq">
+    <div class="landing-section-header">
+      <div class="landing-section-kicker">ANSWERS TO COMMON QUESTIONS</div>
+      <h2 class="landing-section-title">Frequently Asked Questions</h2>
+      <p class="landing-section-sub">Everything you need to know about security, scraping, and notifications.</p>
+    </div>
+
+    <div class="faq-grid">
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Does this share my university login password with anyone?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-answer">
+          No. Your authentication is isolated to your local instance and session. When you log in, session tokens are securely handled and passwords are never exposed or transmitted to external third parties.
+        </div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Will using this tool cause my university portal account to be banned?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-answer">
+          No. VOLP Reminder includes a dedicated Strict Rate Limiter (capped at 10 sync calls per 15 minutes) and uses MongoDB caching. Browsing your assignments reads directly from the fast local database cache, eliminating excessive portal requests.
+        </div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>What time does the automated email reminder arrive?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-answer">
+          The built-in cron scheduler triggers every evening at 8:00 PM. It filters for assignments due tonight or tomorrow and dispatches an HTML email. You can also manually trigger a reminder anytime from the dashboard.
+        </div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Can I hide or mute courses that I have already finished?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-answer">
+          Yes! You can mute entire courses or individual homework items from the "Courses" or "Assignments" tab. Muted items are excluded from your pending counts and will not trigger 8:00 PM email notifications.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM CALL TO ACTION BANNER -->
+  <div class="landing-cta-banner">
+    <h2 class="landing-cta-title">Ready to Automate Your Homework Tracking?</h2>
+    <p class="landing-cta-sub">
+      Launch the project now, connect your courses in 30 seconds, and never scramble to finish a midnight assignment again.
+    </p>
+    <a href="login.html" class="btn-hero-primary" id="bottomUseProjectBtn" style="padding: 16px 36px; font-size: 15px;">
+      <span>USE PROJECT NOW</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </a>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="landing-footer">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-weight: 700; color: var(--text);">VOLP REMINDER</span>
+      <span>— AUTOMATED ACADEMIC WORKFLOW CONSOLE</span>
+    </div>
+
+    <div class="landing-footer-links">
+      <a href="login.html">Login</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="#features">Features</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#faq">FAQ</a>
+    </div>
+
+    <div>
+      <span>© <span id="footerYear">2026</span> VOLP Systems</span>
+    </div>
+  </footer>
+
+  <script>
+    // Set Year
+    document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+    // Theme Toggle
+    const themeBtn = document.getElementById('themeToggleBtn');
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (themeBtn) themeBtn.textContent = savedTheme === 'dark' ? '☼' : '◐';
+
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      if (themeBtn) themeBtn.textContent = next === 'dark' ? '☼' : '◐';
+    }
+
+    // FAQ Accordion
+    function toggleFaq(el) {
+      el.classList.toggle('active');
+    }
+
+    // Check if user is already logged in: if so, customize CTA text
+    try {
+      const existingUser = localStorage.getItem('volp_user');
+      if (existingUser) {
+        const navBtn = document.getElementById('navUseProjectBtn');
+        const heroBtn = document.getElementById('heroUseProjectBtn');
+        const btmBtn = document.getElementById('bottomUseProjectBtn');
+        
+        // Keep destination as login.html or offer direct dashboard launch
+        if (navBtn) navBtn.innerHTML = '<span>LAUNCH DASHBOARD</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+        if (heroBtn) heroBtn.href = 'dashboard.html';
+        if (navBtn) navBtn.href = 'dashboard.html';
+        if (btmBtn) btmBtn.href = 'dashboard.html';
+      }
+    } catch (_) {}
+  </script>
+</body>
+</html>

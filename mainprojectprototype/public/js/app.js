@@ -159,6 +159,7 @@ const DEFAULT_FALLBACK_ASSIGNMENTS = [
 document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   initSidebarState();
+  initSidebarTourState();
   initUserSession();
   const footerYear = document.getElementById("appFooterYear");
   if (footerYear) footerYear.textContent = new Date().getFullYear();
@@ -191,6 +192,43 @@ function initSidebarState() {
   sidebar.classList.toggle("is-collapsed", collapsed);
   updateSidebarCollapseButton(collapsed);
 }
+
+function initSidebarTourState() {
+  const dismissed = localStorage.getItem("volp_sidebar_tour_dismissed") === "true";
+  const card = document.getElementById("sidebarTourCard");
+  if (card && dismissed) {
+    card.style.display = "none";
+  }
+}
+
+function dismissSidebarTour(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const card = document.getElementById("sidebarTourCard");
+  if (card) {
+    card.style.display = "none";
+  }
+  localStorage.setItem("volp_sidebar_tour_dismissed", "true");
+  if (typeof showToast === "function") {
+    showToast("Tour card dismissed. You can restore it anytime in 'How to Use'!", "info");
+  }
+}
+
+function restoreSidebarTour() {
+  localStorage.removeItem("volp_sidebar_tour_dismissed");
+  const card = document.getElementById("sidebarTourCard");
+  if (card) {
+    card.style.display = "";
+  }
+  if (typeof showToast === "function") {
+    showToast("Tour card restored in left sidebar!", "success");
+  }
+}
+
+window.dismissSidebarTour = dismissSidebarTour;
+window.restoreSidebarTour = restoreSidebarTour;
 
 function updateSidebarCollapseButton(collapsed) {
   const button = document.getElementById("sidebarCollapseBtn");

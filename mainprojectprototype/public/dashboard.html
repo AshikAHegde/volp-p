@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VOLP Reminder — Assignment Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="stylesheet" href="css/styles.css?v=20261001-nontech">
+</head>
+<body>
+  <div class="noise-overlay"></div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  
+  <div class="app-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <h1><span class="accent">VOLP</span> REMINDER</h1>
+          <div class="brand-sub">ASSIGNMENT CONSOLE</div>
+        </div>
+        <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" onclick="toggleSidebarCollapse()" aria-label="Collapse sidebar" title="Collapse sidebar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button class="sidebar-close-btn" onclick="closeSidebar()" aria-label="Close navigation">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      
+      <nav>
+        <ul class="sidebar-nav" id="sidebarNav">
+          <li class="sidebar-nav-item active" data-page="dashboard">
+            <a href="#" onclick="navigateTo('dashboard', event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              DASHBOARD
+            </a>
+          </li>
+          <li class="sidebar-nav-item" data-page="tasks">
+            <a href="#" onclick="navigateTo('tasks', event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              ASSIGNMENTS
+            </a>
+          </li>
+          <li class="sidebar-nav-item" data-page="courses">
+            <a href="#" onclick="navigateTo('courses', event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+              COURSES
+            </a>
+          </li>
+          <li class="sidebar-nav-item" data-page="calendar">
+            <a href="#" onclick="navigateTo('calendar', event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+              CALENDAR
+            </a>
+          </li>
+          <li class="sidebar-nav-item" data-page="blocked">
+            <a href="#" onclick="navigateTo('blocked', event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              BLOCKED ITEMS
+            </a>
+          </li>
+          <li class="sidebar-nav-item" data-page="reminders">
+            <a href="#" onclick="navigateTo('reminders', event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              REMINDERS / NOTES
+            </a>
+          </li>
+          <li class="sidebar-nav-item" data-page="settings">
+            <a href="#" onclick="navigateTo('settings', event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              ACCOUNT
+            </a>
+          </li>
+          <li class="sidebar-nav-item sidebar-nav-tour-item" data-page="howtouse">
+            <a href="#" onclick="navigateTo('howtouse', event)" title="How to Use & System Tour">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>HOW IT WORKS</span>
+              <span class="nav-tour-pill">GUIDE</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- SIDEBAR HOW TO USE TOUR CALLOUT -->
+      <div class="sidebar-tour-card" id="sidebarTourCard" style="position: relative;">
+        <!-- CROSS DISMISS BUTTON -->
+        <button type="button" class="sidebar-tour-close-btn" onclick="dismissSidebarTour(event)" aria-label="Dismiss tour" title="Dismiss" style="position: absolute; top: 10px; right: 10px; width: 22px; height: 22px; background: rgba(255, 255, 255, 0.1); border: 1px solid var(--border-strong); border-radius: 4px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 14px; font-weight: 700; line-height: 1; transition: all 0.2s ease;">
+          ✕
+        </button>
+        <div class="tour-card-header" style="padding-right: 28px;">
+          <div class="tour-chip">
+            <span class="pulse-beacon"></span>
+            <span>SIMPLE GUIDE</span>
+          </div>
+          <span class="tour-step-count">5 STEPS</span>
+        </div>
+        <div class="tour-card-title">How This App Helps You</div>
+        <p class="tour-card-desc">A quick 2-minute visual guide: automatic homework fetching, tracking deadlines & daily 8 PM email reminders.</p>
+        <button type="button" class="btn btn--accent-sm btn--full tour-start-btn" onclick="startInteractiveTour()" title="Start Interactive Visual Tour">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>TAKE A 2-MIN TOUR</span>
+        </button>
+      </div>
+      
+      <!-- USER BADGE FOOTER -->
+      <div class="sidebar-footer">
+        <div class="user-profile-badge">
+          <div class="user-avatar-circle" id="sidebarAvatar">--</div>
+          <div class="user-profile-info">
+            <div class="user-name" id="sidebarUserName">Loading...</div>
+            <div class="user-role-tag">VOLP LEARNER</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+    
+    <!-- MAIN CONTENT WRAPPER -->
+    <div class="main-wrapper">
+      <!-- TOP HEADER -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="header-title-group">
+            <div class="header-title-text" id="headerTitle">PROJECTS DASHBOARD</div>
+            <div class="header-meta" id="headerSubMeta">VOLP ASSIGNMENT SYSTEM / LIVE SYNC ACTIVE</div>
+          </div>
+        </div>
+        
+        <div class="header-actions">
+          <a href="/" class="btn btn--ghost btn--sm" title="Go to Home / Landing Page">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span class="btn-text">HOME</span>
+          </a>
+
+          <button class="btn btn--primary" id="syncBtn" onclick="syncNow()" title="Sync VOLP">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            <span id="syncBtnLabel" class="btn-text">SYNC VOLP</span>
+          </button>
+          
+          <button class="btn btn--icon" id="themeToggleBtn" onclick="toggleTheme()" aria-label="Toggle theme">☼</button>
+          <button class="btn btn--ghost btn--sm header-action-signout" onclick="handleSignOut()" title="Sign Out">
+            <span class="btn-text">SIGN OUT</span>
+          </button>
+        </div>
+      </header>
+      
+      <!-- MAIN BODY PAGES -->
+      <main class="main-content" id="mainContent">
+        
+        <!-- ================= PAGE 1: PROJECTS DASHBOARD ================= -->
+        <div class="page-view active" id="page-dashboard">
+          <!-- METRIC STATS -->
+          <div class="metric-grid">
+            <div class="metric-card metric-card--accent">
+              <div class="metric-label">TOTAL ASSIGNMENTS</div>
+              <div class="metric-value" id="statTotalAssignments">--</div>
+              <div class="metric-delta" id="statTotalAssignmentsSub">ALL ENROLLED COURSES</div>
+            </div>
+            <div class="metric-card metric-card--warning">
+              <div class="metric-label">PENDING SUBMISSIONS</div>
+              <div class="metric-value" id="statPendingAssignments">--</div>
+              <div class="metric-delta" id="statPendingAssignmentsSub">REQUIRING ACTION</div>
+            </div>
+            <div class="metric-card metric-card--success">
+              <div class="metric-label">SUBMITTED TASKS</div>
+              <div class="metric-value" id="statSubmittedAssignments">--</div>
+              <div class="metric-delta" id="statSubmittedAssignmentsSub">COMPLETED</div>
+            </div>
+            <div class="metric-card metric-card--danger">
+              <div class="metric-label">BLOCKED / MUTED</div>
+              <div class="metric-value" id="statBlockedAssignments">--</div>
+              <div class="metric-delta" id="statBlockedAssignmentsSub">EXCLUDED FROM DIGEST</div>
+            </div>
+          </div>
+          
+          <!-- PROJECTS / COURSE GRID -->
+          <div class="page-header">
+            <div>
+              <div class="section-title">ACTIVE COURSE MODULES</div>
+              <div class="meta-text" id="lastSyncStatusLabel">SYNC STATUS: READY</div>
+            </div>
+            <button class="btn btn--ghost btn--sm" onclick="navigateTo('courses')">VIEW ALL COURSES →</button>
+          </div>
+          
+          <div class="projects-grid" id="dashboardProjectsGrid">
+            <!-- Rendered dynamically by JS -->
+          </div>
+          
+          <!-- RECENT PENDING ASSIGNMENTS TABLE -->
+          <div class="page-header" style="margin-top: 16px;">
+            <div class="section-title">URGENT DEADLINES</div>
+            <button class="btn btn--ghost btn--sm" onclick="navigateTo('tasks')">VIEW ALL ASSIGNMENTS →</button>
+          </div>
+          
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>TYPE</th>
+                  <th>COURSE</th>
+                  <th>ASSIGNMENT</th>
+                  <th>DUE DATE</th>
+                  <th>STATUS</th>
+                  <th style="text-align:right">ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardRecentTableBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================= PAGE 2: MY ASSIGNMENTS ================= -->
+        <div class="page-view" id="page-tasks">
+          <!-- TOOLBAR & VIEW TOGGLE -->
+          <div class="toolbar">
+            <div class="search-input-wrapper">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" class="search-input" id="taskSearchInput" placeholder="SEARCH ASSIGNMENTS..." oninput="filterTasks()" onkeyup="filterTasks()">
+            </div>
+            
+            <div class="filter-group" id="statusFilterGroup">
+              <button class="filter-btn active" data-filter="all" onclick="setStatusFilter('all', this)">ALL</button>
+              <button class="filter-btn" data-filter="pending" onclick="setStatusFilter('pending', this)">PENDING</button>
+              <button class="filter-btn" data-filter="submitted" onclick="setStatusFilter('submitted', this)">SUBMITTED</button>
+              <button class="filter-btn" data-filter="overdue" onclick="setStatusFilter('overdue', this)">OVERDUE</button>
+            </div>
+            
+            <div class="filter-group" id="typeFilterGroup">
+              <button class="filter-btn active" data-filter="all" onclick="setTypeFilter('all', this)">ALL TYPES</button>
+              <button class="filter-btn" data-filter="SUBJECTIVE" onclick="setTypeFilter('SUBJECTIVE', this)">SUBJECTIVE</button>
+              <button class="filter-btn" data-filter="HANDS_ON" onclick="setTypeFilter('HANDS_ON', this)">HANDS-ON</button>
+            </div>
+
+            <label class="subject-filter" for="subjectFilterSelect">
+              <span class="subject-filter-label">SUBJECT</span>
+              <select id="subjectFilterSelect" class="subject-filter-select" onchange="setSubjectFilter(this.value)">
+                <option value="all">ALL SUBJECTS</option>
+              </select>
+            </label>
+
+            <div style="flex: 1"></div>
+
+            <div class="view-toggle">
+              <button class="view-toggle-btn active" id="viewToggleKanban" onclick="switchTaskView('kanban')" title="Kanban Board View">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="10"/></svg>
+              </button>
+              <button class="view-toggle-btn" id="viewToggleTable" onclick="switchTaskView('table')" title="Data Table View">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          
+          <!-- KANBAN BOARD VIEW -->
+          <div class="kanban-board" id="tasksKanbanView">
+            <!-- TO DO / OVERDUE COLUMN -->
+            <div class="kanban-column">
+              <div class="kanban-column-header">
+                <span class="status-dot status-dot--todo"></span>
+                <span class="kanban-column-title">TO DO / OVERDUE</span>
+              </div>
+              <div id="kanbanColTodo" style="display:flex;flex-direction:column;gap:12px;"></div>
+            </div>
+            
+            <!-- IN PROGRESS / PENDING COLUMN -->
+            <div class="kanban-column">
+              <div class="kanban-column-header">
+                <span class="status-dot status-dot--progress"></span>
+                <span class="kanban-column-title">IN PROGRESS / PENDING</span>
+              </div>
+              <div id="kanbanColProgress" style="display:flex;flex-direction:column;gap:12px;"></div>
+            </div>
+            
+            <!-- DONE / SUBMITTED COLUMN -->
+            <div class="kanban-column">
+              <div class="kanban-column-header">
+                <span class="status-dot status-dot--done"></span>
+                <span class="kanban-column-title">DONE / SUBMITTED</span>
+              </div>
+              <div id="kanbanColDone" style="display:flex;flex-direction:column;gap:12px;"></div>
+            </div>
+          </div>
+          
+          <!-- DATA TABLE VIEW -->
+          <div class="table-container" id="tasksTableView" style="display:none;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>TYPE</th>
+                  <th>COURSE</th>
+                  <th>ASSIGNMENT TITLE</th>
+                  <th>DUE DATE</th>
+                  <th>STATUS</th>
+                  <th style="text-align:right">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="tasksFullTableBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================= PAGE 3: MY COURSES ================= -->
+        <div class="page-view" id="page-courses">
+          <div class="page-header">
+            <div class="section-title">ENROLLED COURSES</div>
+            <div class="meta-text" id="coursesCountMeta">-- ENROLLED COURSES</div>
+          </div>
+          
+          <div class="projects-grid" id="allCoursesGrid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- ================= PAGE 4: COURSE CALENDAR ================= -->
+        <div class="page-view" id="page-calendar">
+          <div class="calendar-hero">
+            <div>
+              <div class="eyebrow">LEARNING RHYTHM · LIVE COURSE DATA</div>
+              <h1 class="calendar-title">Your learning calendar</h1>
+              <p class="calendar-subtitle">A focused view of your assignments, due dates, and learning workload.</p>
+            </div>
+            <div class="calendar-summary" id="calendarSummary">-- AVAILABLE COURSES</div>
+          </div>
+
+          <div class="calendar-toolbar">
+            <div class="calendar-navigation">
+              <button class="btn btn--icon" onclick="shiftCalendar(-1)" aria-label="Previous period">←</button>
+              <button class="btn btn--ghost" onclick="goToCalendarToday()">TODAY</button>
+              <button class="btn btn--icon" onclick="shiftCalendar(1)" aria-label="Next period">→</button>
+              <div class="calendar-period-label" id="calendarPeriodLabel">--</div>
+            </div>
+            <div class="calendar-filters">
+              <label class="subject-filter" for="calendarCourseFilter"><span class="subject-filter-label">COURSE</span><select id="calendarCourseFilter" class="subject-filter-select" onchange="setCalendarFilter(this.value)"><option value="all">ALL COURSES</option></select></label>
+              <div class="filter-group" id="calendarStatusFilter">
+                <button class="filter-btn active" onclick="setCalendarStatusFilter('all', this)">ALL</button>
+                <button class="filter-btn" onclick="setCalendarStatusFilter('not-done', this)">NOT DONE</button>
+                <button class="filter-btn" onclick="setCalendarStatusFilter('done', this)">DONE</button>
+              </div>
+              <div class="view-toggle" aria-label="Calendar view">
+                <button class="view-toggle-btn active" id="calendarViewMonth" onclick="setCalendarView('month')">MONTH</button>
+                <button class="view-toggle-btn" id="calendarViewWeek" onclick="setCalendarView('week')">WEEK</button>
+                <button class="view-toggle-btn" id="calendarViewDay" onclick="setCalendarView('day')">DAY</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="calendar-legend">
+            <span><i class="legend-dot legend-dot--active"></i>Not done</span><span><i class="legend-dot legend-dot--completed"></i>Done</span>
+          </div>
+          <div class="calendar-upcoming" id="calendarUpcoming"></div>
+          <div class="calendar-shell" id="calendarShell"><div class="calendar-loading">Preparing your schedule…</div></div>
+          <section class="unscheduled-section" id="unscheduledSection"></section>
+        </div>
+
+        <!-- ================= PAGE 5: BLOCK MANAGER ================= -->
+        <div class="page-view" id="page-blocked">
+          <div class="page-header">
+            <div class="section-title">BLOCKED COURSES & ASSIGNMENTS</div>
+              <div class="meta-text">MANAGE BLOCKED COURSES AND ASSIGNMENTS</div>
+          </div>
+
+          <div style="margin-bottom: 32px;">
+            <div class="section-title" style="font-size: 11px; margin-bottom: 12px; color: var(--accent);">
+              BLOCKED COURSES (NO REMINDERS SENT)
+            </div>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>COURSE CODE</th>
+                    <th>COURSE NAME</th>
+                    <th>BLOCKED TIMESTAMP</th>
+                    <th style="text-align:right">ACTION</th>
+                  </tr>
+                </thead>
+                <tbody id="blockedCoursesTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title" style="font-size: 11px; margin-bottom: 12px; color: var(--accent);">
+              BLOCKED ASSIGNMENTS
+            </div>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>COURSE</th>
+                    <th>ASSIGNMENT TITLE</th>
+                    <th>BLOCKED DATE</th>
+                    <th style="text-align:right">ACTION</th>
+                  </tr>
+                </thead>
+                <tbody id="blockedAssignmentsTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= PAGE 5: REMINDERS & NOTIFICATION LOG ================= -->
+        <div class="page-view" id="page-reminders">
+          <div class="page-header">
+            <div>
+              <div class="section-title">REMINDERS & NOTIFICATION LOG</div>
+              <div class="meta-text" style="margin-top:4px;">AUTOMATIC 8 PM DAILY DIGEST STATUS & DISPATCH</div>
+            </div>
+            <button class="btn btn--primary" id="triggerReminderPageBtn" onclick="triggerReminder()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+              TRIGGER 8 PM DISPATCH NOW
+            </button>
+          </div>
+
+          <div class="notes-list" id="remindersTimelineList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- ================= PAGE 6: ACCOUNT & SETTINGS ================= -->
+        <div class="page-view" id="page-settings">
+          <div class="page-header">
+            <div class="section-title">ACCOUNT CONFIGURATION</div>
+            <div class="meta-text">CONNECTED VOLP PORTAL SESSION & CREDENTIALS</div>
+          </div>
+
+          <div class="settings-layout">
+            <div class="settings-card" id="settingsContentCard" style="max-width: 680px;">
+              <div class="profile-card-header">
+                <div class="profile-avatar-large" id="settingsLargeAvatar">--</div>
+                <div>
+                  <div class="profile-title" id="settingsProfileTitle">VOLP LEARNER</div>
+                  <div class="profile-id">AUTHENTICATED USER SESSION</div>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 24px;">
+                <div class="form-group">
+                  <label class="form-label">CONNECTED EMAIL</label>
+                  <input type="email" class="form-input" id="settingsEmail" readonly>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">SESSION STATUS</label>
+                  <input type="text" class="form-input" id="settingsSessionStatus" value="ACTIVE / TOKEN VALID" readonly style="color: var(--accent);">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">SYNC DATA SOURCE</label>
+                  <input type="text" class="form-input" id="settingsDataSource" value="MONGODB DATABASE CACHED / LIVE SYNC READY" readonly>
+                </div>
+
+                <div class="settings-footer-actions" style="margin-top: 16px;">
+                  <button type="button" class="btn btn--primary" onclick="syncNow()">
+                    SYNC FROM VOLP NOW
+                  </button>
+                  <button type="button" class="btn btn--danger" onclick="handleSignOut()">
+                    SIGN OUT / LOGOUT
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= PAGE 7: HOW TO USE (NON-TECHNICAL USER GUIDE) ================= -->
+        <div class="page-view" id="page-howtouse">
+          <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+            <div>
+              <div class="section-title">HOW THIS APP WORKS (SIMPLE GUIDE)</div>
+              <div class="meta-text">EVERYTHING YOU NEED TO KNOW — IN SIMPLE, EVERYDAY WORDS</div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button type="button" class="btn btn--ghost btn--sm" id="restoreTourBtn" onclick="restoreSidebarTour()" title="Re-enable Tour Badge in Sidebar">
+                ↻ SHOW TOUR IN SIDEBAR
+              </button>
+              <button type="button" class="btn btn--primary" onclick="startInteractiveTour(0)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                START VISUAL TOUR
+              </button>
+            </div>
+          </div>
+
+          <!-- HERO INTERACTIVE BANNER -->
+          <div class="guide-hero-banner">
+            <div class="guide-hero-badge">
+              <span class="pulse-beacon"></span>
+              <span>STUDENT TIME-SAVER</span>
+            </div>
+            <h2 class="guide-hero-title">Never Miss Homework or an Assignment Again</h2>
+            <p class="guide-hero-sub">Logging into the college website every day and clicking into 16 separate subjects just to check if something is due takes forever. This tool does the boring work for you: it gathers all your tasks into one clean screen and emails you every evening at 8:00 PM with what's due!</p>
+            
+            <div class="guide-step-strip">
+              <div class="guide-step-chip" onclick="startInteractiveTour(0)">
+                <span class="step-num">01</span>
+                <span class="step-title">Safe 1-Time Login</span>
+              </div>
+              <div class="guide-step-chip" onclick="startInteractiveTour(1)">
+                <span class="step-num">02</span>
+                <span class="step-title">1-Click Auto-Fetch</span>
+              </div>
+              <div class="guide-step-chip" onclick="startInteractiveTour(2)">
+                <span class="step-num">03</span>
+                <span class="step-title">Track Deadlines</span>
+              </div>
+              <div class="guide-step-chip" onclick="startInteractiveTour(3)">
+                <span class="step-num">04</span>
+                <span class="step-title">Mute Old Subjects</span>
+              </div>
+              <div class="guide-step-chip" onclick="startInteractiveTour(4)">
+                <span class="step-num">05</span>
+                <span class="step-title">Daily 8 PM Email</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- VISUAL WORKFLOW MODULES GRID -->
+          <div class="guide-modules-grid">
+            <!-- MODULE 1 -->
+            <div class="guide-card">
+              <div class="guide-card-top">
+                <span class="guide-tag">STEP 01</span>
+                <span class="guide-tech-badge">100% PRIVATE & SAFE</span>
+              </div>
+              <h3 class="guide-card-title">1. Safe & Simple Sign-In</h3>
+              <p class="guide-card-desc">Log in using your existing college portal username and password. You only have to log in once! The app connects directly with the official university portal and securely remembers you so you stay signed in.</p>
+              
+              <!-- VISUAL DIAGRAM 1 -->
+              <div class="visual-diagram visual-diagram--auth">
+                <div class="vnode vnode--user">
+                  <span class="vnode-icon">👤</span>
+                  <span class="vnode-label">You Sign In Once</span>
+                  <span class="vnode-sub">Normal College Login</span>
+                </div>
+                <div class="vflow-arrow">➔</div>
+                <div class="vnode vnode--volp">
+                  <span class="vnode-icon">🏫</span>
+                  <span class="vnode-label">College Portal</span>
+                  <span class="vnode-sub">Checks Your Account</span>
+                </div>
+                <div class="vflow-arrow">➔</div>
+                <div class="vnode vnode--db">
+                  <span class="vnode-icon">🔒</span>
+                  <span class="vnode-label">Safe & Remembered</span>
+                  <span class="vnode-sub">Zero Password Storage</span>
+                </div>
+              </div>
+
+              <ul class="guide-bullets">
+                <li>Your password is never saved anywhere — complete security and privacy.</li>
+                <li>You don't need to re-enter your credentials every time you open the app.</li>
+                <li>Works smoothly even if the college portal is temporarily slow.</li>
+              </ul>
+
+              <div class="guide-card-footer">
+                <button class="btn btn--sm btn--ghost" onclick="startInteractiveTour(0)">SEE STEP 1 TOUR</button>
+              </div>
+            </div>
+
+            <!-- MODULE 2 -->
+            <div class="guide-card">
+              <div class="guide-card-top">
+                <span class="guide-tag">STEP 02</span>
+                <span class="guide-tech-badge">SAVES 20-30 MIN DAILY</span>
+              </div>
+              <h3 class="guide-card-title">2. Gathers All Subjects in 1 Click</h3>
+              <p class="guide-card-desc">Normally, you must click through every subject, unit, and chapter to check for new work. Clicking <strong>SYNC VOLP</strong> automatically checks all your 16+ courses in the background and brings every assignment into one unified list.</p>
+              
+              <!-- VISUAL DIAGRAM 2 -->
+              <div class="visual-diagram visual-diagram--sync">
+                <div class="vsplit-root">
+                  <div class="vnode vnode--sync-root">
+                    <span class="vnode-icon">🔄</span>
+                    <span class="vnode-label">One Button Checks All 16+ Subjects</span>
+                  </div>
+                  <div class="vsplit-branches">
+                    <div class="vbranch-item">
+                      <span class="vbranch-tag">THEORY HOMEWORK</span>
+                      <span class="vbranch-title">Written Questions</span>
+                      <span class="vbranch-detail">Prompts, theory answers & questions</span>
+                    </div>
+                    <div class="vbranch-item">
+                      <span class="vbranch-tag">LAB PRACTICALS</span>
+                      <span class="vbranch-title">Projects & Lab Files</span>
+                      <span class="vbranch-detail">Code uploads, slide decks & presentations</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <ul class="guide-bullets">
+                <li>Collects both written assignments and lab/practical submissions.</li>
+                <li>Knows automatically if you already submitted your answer or if it's pending.</li>
+                <li>Shows the exact deadline and marks for every single task.</li>
+              </ul>
+
+              <div class="guide-card-footer">
+                <button class="btn btn--sm btn--primary" onclick="syncNow()">CLICK TO REFRESH WORK</button>
+              </div>
+            </div>
+
+            <!-- MODULE 3 -->
+            <div class="guide-card">
+              <div class="guide-card-top">
+                <span class="guide-tag">STEP 03</span>
+                <span class="guide-tech-badge">EASY COLOR CODING</span>
+              </div>
+              <h3 class="guide-card-title">3. Track Deadlines at a Glance</h3>
+              <p class="guide-card-desc">No more writing deadlines on scraps of paper. See everything laid out neatly with clear color labels: pending homework, what's due soon, and what's already completed. You can also view them on a monthly calendar!</p>
+              
+              <!-- VISUAL PREVIEW 3 -->
+              <div class="visual-diagram visual-diagram--tasks">
+                <div class="mock-task-card">
+                  <div class="mock-task-header">
+                    <span class="mock-badge mock-badge--course">Operating Systems</span>
+                    <span class="mock-badge mock-badge--pending">NEEDS ACTION</span>
+                  </div>
+                  <div class="mock-task-body">Unit 3: Process Scheduling Analysis & Report</div>
+                  <div class="mock-task-meta">
+                    <span>📅 Due in 2 Days (Thursday)</span>
+                    <span>⚖️ 10 Marks</span>
+                  </div>
+                </div>
+              </div>
+
+              <ul class="guide-bullets">
+                <li>Green tags for work you already finished; yellow/red for work coming up.</li>
+                <li>Filter by any subject or search by keyword in one second.</li>
+                <li>Click the Calendar tab to see your entire month scheduled like a personal planner.</li>
+              </ul>
+
+              <div class="guide-card-footer">
+                <button class="btn btn--sm btn--ghost" onclick="navigateTo('tasks')">VIEW MY ASSIGNMENTS</button>
+                <button class="btn btn--sm btn--ghost" onclick="navigateTo('calendar')">VIEW CALENDAR</button>
+              </div>
+            </div>
+
+            <!-- MODULE 4 -->
+            <div class="guide-card">
+              <div class="guide-card-top">
+                <span class="guide-tag">STEP 04</span>
+                <span class="guide-tech-badge">NO CLUTTER</span>
+              </div>
+              <h3 class="guide-card-title">4. Silence Finished or Extra Subjects</h3>
+              <p class="guide-card-desc">Enrolled in an elective or lab that's already over, or a subject you don't need reminders for? Just click "Block" to mute it. It stays safely on your college portal, but stops cluttering your screen and inbox.</p>
+              
+              <!-- VISUAL DIAGRAM 4 -->
+              <div class="visual-diagram visual-diagram--block">
+                <div class="mock-block-switch">
+                  <div class="mock-switch-state active">
+                    <span class="mock-switch-dot">🔇</span>
+                    <span>SUBJECT MUTED</span>
+                  </div>
+                  <div class="mock-block-arrow">➔</div>
+                  <div class="mock-block-result">
+                    <span class="result-item">✓ Removed from your daily view</span>
+                    <span class="result-item">✓ Silenced from evening email reminders</span>
+                  </div>
+                </div>
+              </div>
+
+              <ul class="guide-bullets">
+                <li>Mute whole subjects or individual tasks with one click.</li>
+                <li>Keeps your daily view focused only on subjects that actually matter right now.</li>
+                <li>You can un-mute any subject at any time under the "BLOCKED ITEMS" tab.</li>
+              </ul>
+
+              <div class="guide-card-footer">
+                <button class="btn btn--sm btn--ghost" onclick="navigateTo('blocked')">SEE MUTED SUBJECTS</button>
+              </div>
+            </div>
+
+            <!-- MODULE 5 -->
+            <div class="guide-card" style="grid-column: 1 / -1;">
+              <div class="guide-card-top">
+                <span class="guide-tag">STEP 05</span>
+                <span class="guide-tech-badge">AUTOMATIC EVENING REMINDER</span>
+              </div>
+              <h3 class="guide-card-title">5. Daily 8:00 PM Email Directly to Your Inbox</h3>
+              <p class="guide-card-desc">You don't even have to open this website every day! Every evening at 8:00 PM, the system automatically checks your pending homework across all active subjects and emails you a short, polite summary table with only the tasks you still need to finish.</p>
+              
+              <!-- VISUAL DIAGRAM 5 -->
+              <div class="visual-diagram visual-diagram--email">
+                <div class="email-mock-preview">
+                  <div class="email-mock-bar">
+                    <span class="email-dot red"></span>
+                    <span class="email-dot yellow"></span>
+                    <span class="email-dot green"></span>
+                    <span class="email-title">Subject: 🔔 College Reminder: 2 Pending Assignments Due Soon</span>
+                  </div>
+                  <div class="email-mock-content">
+                    <div class="email-greeting">Hi! Here is your quick evening summary of homework due soon:</div>
+                    <table class="email-mock-table">
+                      <thead>
+                        <tr><th>Subject</th><th>What is Due?</th><th>Due Date</th><th>Action Needed</th></tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>Compiler Design</td><td>Assignment 7: Symbol Table</td><td>Tonight, 11:59 PM</td><td style="color:var(--danger); font-weight:700;">Pending</td></tr>
+                        <tr><td>Operating Systems</td><td>Unit 4: Process Sync Report</td><td>Tomorrow</td><td style="color:var(--warning); font-weight:700;">Due Soon</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="guide-card-footer" style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn--accent-sm" onclick="startInteractiveTour(4)">OPEN STEP 5 IN TOUR</button>
+                <button class="btn btn--ghost btn--sm" onclick="triggerReminder()">SEND ME A SAMPLE EMAIL NOW</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+      <footer class="app-footer">
+        <span>VOLP REMINDER</span>
+        <span>ASSIGNMENT CONSOLE · <span id="appFooterYear">2026</span></span>
+      </footer>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+      <div class="modal-title" id="modalTitle">CONFIRM ACTION</div>
+      <div class="modal-body" id="modalBody">Are you sure you want to proceed?</div>
+      <div class="modal-actions">
+        <button class="btn btn--ghost" onclick="closeModal()">CANCEL</button>
+        <button class="btn btn--danger" id="modalConfirmBtn" onclick="confirmModal()">CONFIRM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE DETAILS DRAWER -->
+  <div class="course-details-overlay" id="courseDetailsOverlay" onclick="closeCourseDetails(event)">
+    <aside class="course-details-drawer" role="dialog" aria-modal="true" aria-labelledby="courseDetailsTitle">
+      <button class="course-details-close" onclick="closeCourseDetails()" aria-label="Close course details">×</button>
+      <div id="courseDetailsContent"></div>
+    </aside>
+  </div>
+
+  <!-- LIVE SYNC PROGRESS -->
+  <div class="sync-overlay" id="syncOverlay" role="status" aria-live="polite" aria-hidden="true">
+    <div class="sync-progress-card">
+      <div class="sync-icon-wrap" aria-hidden="true">
+        <svg class="sync-progress-icon" viewBox="0 0 64 64" fill="none">
+          <circle class="sync-icon-track" cx="32" cy="32" r="24" />
+          <path class="sync-icon-arrow" d="M32 8a24 24 0 0 1 21.1 12.6M53 20v-9m0 9h-9M32 56A24 24 0 0 1 10.9 43.4M11 44v9m0-9h9" />
+        </svg>
+      </div>
+      <div class="sync-progress-kicker">LIVE VOLP SYNC</div>
+      <div class="sync-progress-title">UPDATING YOUR COURSES</div>
+      <p class="sync-progress-message">We are fetching the latest courses and assignments.</p>
+      <p class="sync-progress-duration">The browser may wait for 2–5 minutes while syncing.</p>
+      <p class="sync-progress-refresh">If it has not updated after 5 minutes, refresh the page and try again.</p>
+      <div class="sync-progress-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- ================= INTERACTIVE PRODUCT TOUR MODAL ================= -->
+  <div class="tour-modal-overlay" id="interactiveTourOverlay" role="dialog" aria-modal="true" aria-labelledby="tourModalTitle">
+    <div class="tour-modal-card">
+      <!-- HEADER -->
+      <div class="tour-modal-header">
+        <div class="tour-header-meta">
+          <span class="tour-badge-pill">VOLP PRODUCT TOUR</span>
+          <span class="tour-step-counter" id="tourStepCounter">STEP 01 OF 05</span>
+        </div>
+        <button class="tour-modal-close" onclick="closeInteractiveTour()" aria-label="Close Tour" title="Close tour (Esc)">×</button>
+      </div>
+
+      <!-- PROGRESS INDICATOR BAR -->
+      <div class="tour-progress-bar-wrapper">
+        <div class="tour-progress-bar-fill" id="tourProgressFill" style="width: 20%;"></div>
+      </div>
+
+      <!-- INTERACTIVE STEP TABS -->
+      <div class="tour-step-tabs" id="tourStepTabs">
+        <button type="button" class="tour-tab-btn active" onclick="goToTourStep(0)" id="tourTab0">01. Architecture</button>
+        <button type="button" class="tour-tab-btn" onclick="goToTourStep(1)" id="tourTab1">02. Live Sync</button>
+        <button type="button" class="tour-tab-btn" onclick="goToTourStep(2)" id="tourTab2">03. Assignments</button>
+        <button type="button" class="tour-tab-btn" onclick="goToTourStep(3)" id="tourTab3">04. Blocking</button>
+        <button type="button" class="tour-tab-btn" onclick="goToTourStep(4)" id="tourTab4">05. 8 PM Alerts</button>
+      </div>
+
+      <!-- DYNAMIC STEP BODY (Visuals + Content) -->
+      <div class="tour-modal-body" id="tourModalBody">
+        <!-- Rendered by renderTourStep() in app.js -->
+      </div>
+
+      <!-- FOOTER ACTIONS -->
+      <div class="tour-modal-footer">
+        <button type="button" class="btn btn--ghost btn--sm" onclick="closeInteractiveTour()">SKIP TOUR (ESC)</button>
+        <div class="tour-footer-nav">
+          <button type="button" class="btn btn--ghost btn--sm" id="tourPrevBtn" onclick="prevTourStep()" disabled>← PREVIOUS</button>
+          <button type="button" class="btn btn--primary btn--sm" id="tourNextBtn" onclick="nextTourStep()">NEXT STEP →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST ALERTS -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/app.js?v=20261001-nontech"></script>
+</body>
+</html>
