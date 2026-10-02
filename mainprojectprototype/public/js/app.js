@@ -16,151 +16,18 @@ let currentStatusFilter = "all"; // 'all' | 'pending' | 'submitted' | 'overdue'
 let currentTypeFilter = "all"; // 'all' | 'SUBJECTIVE' | 'HANDS_ON'
 let currentSubjectFilter = "all";
 let currentSearchQuery = "";
-let isOfflineMode = false;
 let pendingModalAction = null;
 let calendarView = "month";
 let calendarDate = new Date();
 let calendarCourseFilter = "all";
 let calendarStatusFilter = "all";
 
-// Initial Fallback Dataset (Conforming strictly to real backend API schema)
-const DEFAULT_FALLBACK_COURSES = [
-  {
-    colid: 1,
-    crsid: "CS301",
-    course_name: "Operating Systems",
-    semester: "Sem 5",
-    academic_year: "2025-2026",
-    is_blocked: false,
-  },
-  {
-    colid: 2,
-    crsid: "CS302",
-    course_name: "Database Management Systems",
-    semester: "Sem 5",
-    academic_year: "2025-2026",
-    is_blocked: false,
-  },
-  {
-    colid: 3,
-    crsid: "CS303",
-    course_name: "Computer Networks",
-    semester: "Sem 5",
-    academic_year: "2025-2026",
-    is_blocked: false,
-  },
-  {
-    colid: 4,
-    crsid: "CS304",
-    course_name: "Software Engineering",
-    semester: "Sem 5",
-    academic_year: "2025-2026",
-    is_blocked: false,
-  },
-  {
-    colid: 5,
-    crsid: "CS305",
-    course_name: "Artificial Intelligence",
-    semester: "Sem 5",
-    academic_year: "2025-2026",
-    is_blocked: true,
-  },
-  {
-    colid: 6,
-    crsid: "CS306",
-    course_name: "Web Technologies",
-    semester: "Sem 5",
-    academic_year: "2025-2026",
-    is_blocked: false,
-  },
-];
-
-const DEFAULT_FALLBACK_ASSIGNMENTS = [
-  {
-    assignment_id: 101,
-    assignment_type: "SUBJECTIVE",
-    colid: 1,
-    course_name: "Operating Systems",
-    unit_name: null,
-    title_html: "Process Scheduling Analysis (Round Robin & Priority)",
-    due_date_raw: "Today, 11:59 PM",
-    is_submitted: false,
-    is_blocked: false,
-  },
-  {
-    assignment_id: 102,
-    assignment_type: "HANDS_ON",
-    colid: 2,
-    course_name: "Database Management Systems",
-    unit_name: "Unit 2: Relational Models",
-    title_html: "Build REST API Integration with PostgreSQL CRUD",
-    due_date_raw: "In 2 Days",
-    is_submitted: false,
-    is_blocked: false,
-  },
-  {
-    assignment_id: 103,
-    assignment_type: "SUBJECTIVE",
-    colid: 3,
-    course_name: "Computer Networks",
-    unit_name: null,
-    title_html: "Setup development environment & TCP/IP Stack Report",
-    due_date_raw: "In 5 Days",
-    is_submitted: true,
-    is_blocked: false,
-  },
-  {
-    assignment_id: 104,
-    assignment_type: "HANDS_ON",
-    colid: 4,
-    course_name: "Software Engineering",
-    unit_name: "Unit 1: Agile Planning",
-    title_html: "Define user personas & Sprint Jira Board",
-    due_date_raw: "In 3 Days",
-    is_submitted: true,
-    is_blocked: false,
-  },
-  {
-    assignment_id: 105,
-    assignment_type: "SUBJECTIVE",
-    colid: 2,
-    course_name: "Database Management Systems",
-    unit_name: null,
-    title_html: "Create style guide & 3NF / BCNF Proofs",
-    due_date_raw: "Tomorrow",
-    is_submitted: false,
-    is_blocked: false,
-  },
-  {
-    assignment_id: 106,
-    assignment_type: "HANDS_ON",
-    colid: 6,
-    course_name: "Web Technologies",
-    unit_name: "Unit 4: Modern Frontends",
-    title_html: "Implement responsive brutalist UI framework",
-    due_date_raw: "In 6 Days",
-    is_submitted: false,
-    is_blocked: false,
-  },
-  {
-    assignment_id: 107,
-    assignment_type: "SUBJECTIVE",
-    colid: 1,
-    course_name: "Operating Systems",
-    unit_name: null,
-    title_html: "Virtual Memory Paging & Replacement Simulation",
-    due_date_raw: "Overdue (Yesterday)",
-    is_submitted: false,
-    is_blocked: false,
-  },
-];
-
 // Document Ready Initialization
 document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   initSidebarState();
   initSidebarTourState();
-  initUserSession();
+  if (!initUserSession()) return;
   const footerYear = document.getElementById("appFooterYear");
   if (footerYear) footerYear.textContent = new Date().getFullYear();
   await loadAppData();
@@ -275,14 +142,22 @@ function initUserSession() {
   if (stored) {
     try {
       currentUser = JSON.parse(stored);
+      if (!currentUser?.email || !currentUser?.token) {
+        currentUser = null;
+      }
     } catch (e) {
-      currentUser = { email: "student@university.edu", token: "demo" };
+      currentUser = null;
     }
   } else {
-    currentUser = { email: "student@university.edu", token: "demo" };
+    currentUser = null;
   }
 
-  const userEmail = currentUser.email || "student@university.edu";
+  if (!currentUser) {
+    window.location.href = "login.html";
+    return false;
+  }
+
+  const userEmail = currentUser.email;
   const nameDisplay = userEmail.split("@")[0].toUpperCase();
   const avatarText = (
     nameDisplay.length >= 2 ? nameDisplay.substring(0, 2) : nameDisplay
@@ -299,10 +174,11 @@ function initUserSession() {
   if (settingsEmail) settingsEmail.value = userEmail;
   if (settingsLargeAvatar) settingsLargeAvatar.textContent = avatarText;
   if (settingsProfileTitle) settingsProfileTitle.textContent = nameDisplay;
+  return true;
 }
 
 function handleSignOut() {
-  if (currentUser?.token && currentUser.token !== "demo") {
+  if (currentUser?.token) {
     fetch("/api/auth/logout", {
       method: "POST",
       headers: {
@@ -432,7 +308,6 @@ async function loadAppData(refresh = false) {
     if (courseRes.ok) {
       const courseData = await courseRes.json();
       rawCourses = courseData.courses || [];
-      isOfflineMode = false;
       const statusEl = document.getElementById("settingsDataSource");
       if (statusEl)
         statusEl.value = `Source: ${courseData.source || "MONGODB_DATABASE"} (Live Connected)`;
@@ -460,17 +335,26 @@ async function loadAppData(refresh = false) {
 
     // 3. Fetch Blocked Items
     await loadBlockedData();
+
+    // 4. Auto-sync from VOLP if DB is empty (first login / no cached data yet)
+    //    Do not recurse if we are already in a refresh/sync call.
+    if (!refresh && rawCourses.length === 0) {
+      showToast("No cached data found — syncing from VOLP for the first time…", "info");
+      showSyncProgress();
+      try {
+        await loadAppData(true); // live sync, then re-render inside that call
+      } finally {
+        hideSyncProgress();
+      }
+      return; // re-render already happened inside the recursive call
+    }
   } catch (err) {
-    console.warn(
-      "Backend API unavailable. Using fallback dataset:",
-      err.message,
-    );
-    isOfflineMode = true;
-    if (rawCourses.length === 0) rawCourses = [...DEFAULT_FALLBACK_COURSES];
-    if (rawAssignments.length === 0)
-      rawAssignments = [...DEFAULT_FALLBACK_ASSIGNMENTS];
+    console.error("Backend API unavailable:", err.message);
+    rawCourses = [];
+    rawAssignments = [];
     const statusEl = document.getElementById("settingsDataSource");
-    if (statusEl) statusEl.value = "Offline / Fallback Local Storage Mode";
+    if (statusEl) statusEl.value = "Backend unavailable – no data loaded";
+    showToast("Could not connect to the backend. Please check your connection and try again.", "error");
   }
 
   renderAllViews();
@@ -1698,7 +1582,7 @@ async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
       if (c) c.is_blocked = !currentlyBlocked;
       await loadBlockedData();
 
-      if (!isOfflineMode && currentUser?.token) {
+      if (currentUser?.token) {
         try {
           const assignRes = await fetch("/api/assignments/my-assignments", {
             method: "POST",

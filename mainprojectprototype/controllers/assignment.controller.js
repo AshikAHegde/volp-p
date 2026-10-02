@@ -13,9 +13,10 @@ import { coursesCollection, assignmentsCollection } from '../services/db.service
 // ==========================================
 
 export const getMyCourses = async (request, response) => {
-  const { email } = request.user; 
+  const { email } = request.user;
+  const refresh = Boolean(request.body?.refresh || request.query?.refresh);
 
-  // If a legacy client passed refresh: true to this endpoint, delegate to sync handler
+  // If client passed refresh: true, delegate to live sync handler
   if (refresh) {
     return syncMyCourses(request, response);
   }
@@ -119,7 +120,7 @@ export const syncMyCourses = async (request, response) => {
 
 export const getMyAssignments = async (request, response) => {
   const { email } = request.user;
-  const refresh = Boolean(request.body?.refresh);
+  const refresh = Boolean(request.body?.refresh || request.query?.refresh);
 
   // If a legacy client passed refresh: true to this endpoint, delegate to sync handler
   if (refresh) {

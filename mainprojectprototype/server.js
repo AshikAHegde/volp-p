@@ -21,16 +21,13 @@ const app = express();
 const PORT = Number(process.env.PORT || 4000);
 
 // Frontend Page Routes
-app.get('/', (req, res) => {
+app.get(['/', '/landing', '/landing.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'landing.html'));
 });
-app.get('/landing', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'landing.html'));
-});
-app.get('/dashboard', (req, res) => {
+app.get(['/dashboard', '/dashboard.html', '/index', '/index.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
-app.get('/login', (req, res) => {
+app.get(['/login', '/login.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" class="login-page">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,12 +12,19 @@
 <body class="login-wrapper">
   <div class="noise-overlay"></div>
   
+  <a href="landing.html" class="btn btn--ghost btn--sm back-to-home-btn" title="Back to Home / Landing Page">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    <span>BACK TO HOME</span>
+  </a>
+
   <button class="btn btn--icon theme-toggle-fixed" id="themeToggleBtn" aria-label="Toggle Theme">☼</button>
 
   <div class="login-card">
-    <div class="login-header-title">
-      <span class="accent">VOLP</span> REMINDER
-    </div>
+    <a href="landing.html" style="text-decoration: none; color: inherit;" title="VOLP Reminder Home">
+      <div class="login-header-title">
+        <span class="accent">VOLP</span> REMINDER
+      </div>
+    </a>
 
     <div class="auth-error-banner" id="errorBanner"></div>
 
@@ -28,7 +35,7 @@
           type="text" 
           id="username" 
           class="form-input" 
-          placeholder="student@university.edu" 
+          placeholder="Enter your email or username" 
           required 
           autocomplete="username"
         >
@@ -51,13 +58,8 @@
       </button>
     </form>
 
-    <div class="demo-creds-box">
-      <div><strong>VOLP SECURE GATEWAY</strong></div>
-      <div style="margin-top: 4px;">Click to auto-fill test login: <code onclick="fillDemo()">student@university.edu</code></div>
-    </div>
-
     <div class="login-footer-info">
-      VOLP REMINDER — CONSOLE V1.0
+      <a href="landing.html" style="color: var(--muted); text-decoration: underline;">Home</a> · <span>VOLP REMINDER — CONSOLE V1.0</span>
     </div>
   </div>
 
@@ -76,11 +78,6 @@
       themeBtn.textContent = next === 'dark' ? '☼' : '◐';
     });
 
-    function fillDemo() {
-      document.getElementById('username').value = 'student@university.edu';
-      document.getElementById('password').value = 'password123';
-    }
-
     async function handleLogin(e) {
       e.preventDefault();
       const username = document.getElementById('username').value.trim();
@@ -93,7 +90,6 @@
       btn.textContent = 'AUTHENTICATING...';
 
       try {
-        // Attempt backend login first
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -102,27 +98,22 @@
 
         if (response.ok) {
           const data = await response.json();
+          if (!data.token) {
+            showError('Authentication succeeded but no session token was received.');
+            return;
+          }
           localStorage.setItem('volp_user', JSON.stringify({
             email: data.email || username,
-            token: data.token || 'demo_token_' + Date.now()
+            token: data.token
           }));
-          window.location.href = 'index.html';
+          window.location.href = 'dashboard.html';
           return;
         } else {
-          // If server responded with error, check if offline / fallback
-          const errorData = await response.json().catch(() => ({ error: 'Auth failed' }));
-          showError(errorData.error || 'Authentication error.');
+          const errorData = await response.json().catch(() => ({ error: 'Authentication failed' }));
+          showError(errorData.error || 'Invalid credentials or login failed.');
         }
       } catch (networkErr) {
-        // Backend offline or running purely as static HTML: fallback to mock session
-        console.warn('Backend unavailable, entering offline demo mode:', networkErr);
-        localStorage.setItem('volp_user', JSON.stringify({
-          email: username || 'student@university.edu',
-          token: 'offline_token_' + Date.now()
-        }));
-        setTimeout(() => {
-          window.location.href = 'index.html';
-        }, 600);
+        showError('Unable to connect to authentication server. Please check your network connection.');
       } finally {
         btn.disabled = false;
         btn.textContent = 'LOGIN';

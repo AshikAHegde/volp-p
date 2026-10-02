@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" class="dashboard-page">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +12,7 @@
   <meta http-equiv="Expires" content="0">
   <link rel="stylesheet" href="css/styles.css?v=20261001-nontech">
 </head>
-<body>
+<body class="dashboard-body">
   <div class="noise-overlay"></div>
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
   
@@ -21,8 +21,10 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-brand">
-          <h1><span class="accent">VOLP</span> REMINDER</h1>
-          <div class="brand-sub">ASSIGNMENT CONSOLE</div>
+          <a href="landing.html" style="text-decoration: none; color: inherit;" title="Go to Home / Landing Page">
+            <h1><span class="accent">VOLP</span> REMINDER</h1>
+            <div class="brand-sub">ASSIGNMENT CONSOLE</div>
+          </a>
         </div>
         <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" onclick="toggleSidebarCollapse()" aria-label="Collapse sidebar" title="Collapse sidebar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -134,6 +136,11 @@
         </div>
         
         <div class="header-actions">
+          <a href="landing.html" class="btn btn--ghost btn--sm" title="Go to Home / Landing Page">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span class="btn-text">HOME</span>
+          </a>
+
           <button class="btn btn--primary" id="syncBtn" onclick="syncNow()" title="Sync VOLP">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
             <span id="syncBtnLabel" class="btn-text">SYNC VOLP</span>
@@ -459,10 +466,13 @@
                   <input type="text" class="form-input" id="settingsDataSource" value="MONGODB DATABASE CACHED / LIVE SYNC READY" readonly>
                 </div>
 
-                <div class="settings-footer-actions" style="margin-top: 16px;">
+                <div class="settings-footer-actions" style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
                   <button type="button" class="btn btn--primary" onclick="syncNow()">
                     SYNC FROM VOLP NOW
                   </button>
+                  <a href="landing.html" class="btn btn--ghost">
+                    VIEW LANDING PAGE
+                  </a>
                   <button type="button" class="btn btn--danger" onclick="handleSignOut()">
                     SIGN OUT / LOGOUT
                   </button>
@@ -479,7 +489,10 @@
               <div class="section-title">HOW THIS APP WORKS (SIMPLE GUIDE)</div>
               <div class="meta-text">EVERYTHING YOU NEED TO KNOW — IN SIMPLE, EVERYDAY WORDS</div>
             </div>
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button type="button" class="btn btn--ghost btn--sm" id="restoreTourBtn" onclick="restoreSidebarTour()" title="Re-enable Tour Badge in Sidebar">
+                ↻ SHOW TOUR IN SIDEBAR
+              </button>
               <button type="button" class="btn btn--primary" onclick="startInteractiveTour(0)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
                 START VISUAL TOUR
@@ -719,7 +732,7 @@
 
       </main>
       <footer class="app-footer">
-        <span>VOLP REMINDER</span>
+        <span>VOLP REMINDER · <a href="landing.html" style="color: var(--muted); text-decoration: underline;">Home</a> · <a href="login.html" onclick="handleSignOut()" style="color: var(--muted); text-decoration: underline;">Sign Out</a></span>
         <span>ASSIGNMENT CONSOLE · <span id="appFooterYear">2026</span></span>
       </footer>
     </div>

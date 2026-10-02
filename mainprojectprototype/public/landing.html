@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" class="landing-page">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,13 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="landing-body">
+<body class="landing-body" id="top">
   <div class="noise-overlay"></div>
 
   <!-- NAVIGATION -->
   <header class="landing-nav">
     <div class="landing-nav-inner">
-      <a href="index.html" class="landing-brand">
+      <a href="landing.html" class="landing-brand" title="VOLP Reminder">
         <span class="brand-logo-pill">VOLP</span>
         <span>REMINDER</span>
       </a>
@@ -32,7 +32,7 @@
 
       <div class="landing-nav-actions">
         <button class="btn btn--icon" id="themeToggleBtn" onclick="toggleTheme()" aria-label="Toggle theme">☼</button>
-        <a href="login.html" class="landing-nav-link" style="font-family: var(--font-mono); font-size: 13px; font-weight: 600;">Sign In</a>
+        <a href="login.html" class="landing-nav-link" id="navSignInLink" style="font-family: var(--font-mono); font-size: 13px; font-weight: 600;">Sign In</a>
         <a href="login.html" class="landing-cta-btn" id="navUseProjectBtn">
           <span>USE PROJECT</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -173,7 +173,7 @@
             <div class="mockup-email-box">
               <div class="mockup-email-meta">
                 <div><strong>FROM:</strong> VOLP Reminder Bot &lt;notifier@univ.edu&gt;</div>
-                <div><strong>TO:</strong> student@university.edu</div>
+                <div><strong>TO:</strong> your@email.edu</div>
                 <div><strong>SUBJECT:</strong> 🔔 Reminder: 2 Coursework Deadlines Due Soon!</div>
               </div>
               <div style="color: var(--text-secondary); line-height: 1.5;">
@@ -547,12 +547,25 @@
         const navBtn = document.getElementById('navUseProjectBtn');
         const heroBtn = document.getElementById('heroUseProjectBtn');
         const btmBtn = document.getElementById('bottomUseProjectBtn');
+        const signInLink = document.getElementById('navSignInLink');
         
-        // Keep destination as login.html or offer direct dashboard launch
-        if (navBtn) navBtn.innerHTML = '<span>LAUNCH DASHBOARD</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-        if (heroBtn) heroBtn.href = 'dashboard.html';
-        if (navBtn) navBtn.href = 'dashboard.html';
-        if (btmBtn) btmBtn.href = 'dashboard.html';
+        // Connect direct dashboard launch
+        if (navBtn) {
+          navBtn.innerHTML = '<span>LAUNCH DASHBOARD</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+          navBtn.href = 'dashboard.html';
+        }
+        if (heroBtn) {
+          heroBtn.innerHTML = '<span>LAUNCH DASHBOARD</span> <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
+          heroBtn.href = 'dashboard.html';
+        }
+        if (btmBtn) {
+          btmBtn.innerHTML = '<span>LAUNCH DASHBOARD</span> <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+          btmBtn.href = 'dashboard.html';
+        }
+        if (signInLink) {
+          signInLink.textContent = 'Dashboard';
+          signInLink.href = 'dashboard.html';
+        }
       }
     } catch (_) {}
   </script>

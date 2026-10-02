@@ -15,11 +15,14 @@ import {
 const router = express.Router();
 
 // ==========================================
-// 1. NON-REFRESH (DB-Only) - GET (Simple Rate Limit)
+// 1. NON-REFRESH (DB-Only) - GET and POST (Simple Rate Limit)
 // Fast find from MongoDB without calling college portal.
+// POST aliases allow frontend to send email/token/refresh in body.
 // ==========================================
 router.get('/my-courses', requireUser, getMyCourses);
+router.post('/my-courses', requireUser, getMyCourses);
 router.get('/my-assignments', requireUser, getMyAssignments);
+router.post('/my-assignments', requireUser, getMyAssignments);
 
 // ==========================================
 // Live VOLP Sync Endpoints: Strict Rate Limiter
