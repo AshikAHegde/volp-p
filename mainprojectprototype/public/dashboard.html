@@ -17,7 +17,7 @@
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
   
   <div class="app-container">
-    <!-- SIDEBAR -->
+    
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-brand">
@@ -88,9 +88,9 @@
         </ul>
       </nav>
 
-      <!-- SIDEBAR HOW TO USE TOUR CALLOUT -->
+      
       <div class="sidebar-tour-card" id="sidebarTourCard" style="position: relative;">
-        <!-- CROSS DISMISS BUTTON -->
+        
         <button type="button" class="sidebar-tour-close-btn" onclick="dismissSidebarTour(event)" aria-label="Dismiss tour" title="Dismiss" style="position: absolute; top: 10px; right: 10px; width: 22px; height: 22px; background: rgba(255, 255, 255, 0.1); border: 1px solid var(--border-strong); border-radius: 4px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 14px; font-weight: 700; line-height: 1; transition: all 0.2s ease;">
           ✕
         </button>
@@ -109,7 +109,7 @@
         </button>
       </div>
       
-      <!-- USER BADGE FOOTER -->
+      
       <div class="sidebar-footer">
         <div class="user-profile-badge">
           <div class="user-avatar-circle" id="sidebarAvatar">--</div>
@@ -121,9 +121,9 @@
       </div>
     </aside>
     
-    <!-- MAIN CONTENT WRAPPER -->
+    
     <div class="main-wrapper">
-      <!-- TOP HEADER -->
+      
       <header class="top-header">
         <div class="header-left">
           <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
@@ -153,12 +153,12 @@
         </div>
       </header>
       
-      <!-- MAIN BODY PAGES -->
+      
       <main class="main-content" id="mainContent">
         
-        <!-- ================= PAGE 1: PROJECTS DASHBOARD ================= -->
+        
         <div class="page-view active" id="page-dashboard">
-          <!-- METRIC STATS -->
+          
           <div class="metric-grid">
             <div class="metric-card metric-card--accent">
               <div class="metric-label">TOTAL ASSIGNMENTS</div>
@@ -182,7 +182,7 @@
             </div>
           </div>
           
-          <!-- PROJECTS / COURSE GRID -->
+          
           <div class="page-header">
             <div>
               <div class="section-title">ACTIVE COURSE MODULES</div>
@@ -192,10 +192,10 @@
           </div>
           
           <div class="projects-grid" id="dashboardProjectsGrid">
-            <!-- Rendered dynamically by JS -->
+            
           </div>
           
-          <!-- RECENT PENDING ASSIGNMENTS TABLE -->
+          
           <div class="page-header" style="margin-top: 16px;">
             <div class="section-title">URGENT DEADLINES</div>
             <button class="btn btn--ghost btn--sm" onclick="navigateTo('tasks')">VIEW ALL ASSIGNMENTS →</button>
@@ -214,15 +214,15 @@
                 </tr>
               </thead>
               <tbody id="dashboardRecentTableBody">
-                <!-- Populated by JS -->
+                
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- ================= PAGE 2: MY ASSIGNMENTS ================= -->
+        
         <div class="page-view" id="page-tasks">
-          <!-- TOOLBAR & VIEW TOGGLE -->
+          
           <div class="toolbar">
             <div class="search-input-wrapper">
               <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -261,9 +261,9 @@
             </div>
           </div>
           
-          <!-- KANBAN BOARD VIEW -->
+          
           <div class="kanban-board" id="tasksKanbanView">
-            <!-- TO DO / OVERDUE COLUMN -->
+            
             <div class="kanban-column">
               <div class="kanban-column-header">
                 <span class="status-dot status-dot--todo"></span>
@@ -272,7 +272,7 @@
               <div id="kanbanColTodo" style="display:flex;flex-direction:column;gap:12px;"></div>
             </div>
             
-            <!-- IN PROGRESS / PENDING COLUMN -->
+            
             <div class="kanban-column">
               <div class="kanban-column-header">
                 <span class="status-dot status-dot--progress"></span>
@@ -281,7 +281,7 @@
               <div id="kanbanColProgress" style="display:flex;flex-direction:column;gap:12px;"></div>
             </div>
             
-            <!-- DONE / SUBMITTED COLUMN -->
+            
             <div class="kanban-column">
               <div class="kanban-column-header">
                 <span class="status-dot status-dot--done"></span>
@@ -291,7 +291,7 @@
             </div>
           </div>
           
-          <!-- DATA TABLE VIEW -->
+          
           <div class="table-container" id="tasksTableView" style="display:none;">
             <table class="data-table">
               <thead>
@@ -305,13 +305,13 @@
                 </tr>
               </thead>
               <tbody id="tasksFullTableBody">
-                <!-- Populated by JS -->
+                
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- ================= PAGE 3: MY COURSES ================= -->
+        
         <div class="page-view" id="page-courses">
           <div class="page-header">
             <div class="section-title">ENROLLED COURSES</div>
@@ -319,11 +319,11 @@
           </div>
           
           <div class="projects-grid" id="allCoursesGrid">
-            <!-- Populated by JS -->
+            
           </div>
         </div>
 
-        <!-- ================= PAGE 4: COURSE CALENDAR ================= -->
+        
         <div class="page-view" id="page-calendar">
           <div class="calendar-hero">
             <div>
@@ -364,7 +364,7 @@
           <section class="unscheduled-section" id="unscheduledSection"></section>
         </div>
 
-        <!-- ================= PAGE 5: BLOCK MANAGER ================= -->
+        
         <div class="page-view" id="page-blocked">
           <div class="page-header">
             <div class="section-title">BLOCKED COURSES & ASSIGNMENTS</div>
@@ -386,7 +386,7 @@
                   </tr>
                 </thead>
                 <tbody id="blockedCoursesTableBody">
-                  <!-- Populated by JS -->
+                  
                 </tbody>
               </table>
             </div>
@@ -408,14 +408,14 @@
                   </tr>
                 </thead>
                 <tbody id="blockedAssignmentsTableBody">
-                  <!-- Populated by JS -->
+                  
                 </tbody>
               </table>
             </div>
           </div>
         </div>
 
-        <!-- ================= PAGE 5: REMINDERS & NOTIFICATION LOG ================= -->
+        
         <div class="page-view" id="page-reminders">
           <div class="page-header">
             <div>
@@ -429,11 +429,11 @@
           </div>
 
           <div class="notes-list" id="remindersTimelineList">
-            <!-- Populated by JS -->
+            
           </div>
         </div>
 
-        <!-- ================= PAGE 6: ACCOUNT & SETTINGS ================= -->
+        
         <div class="page-view" id="page-settings">
           <div class="page-header">
             <div class="section-title">ACCOUNT CONFIGURATION</div>
@@ -482,7 +482,7 @@
           </div>
         </div>
 
-        <!-- ================= PAGE 7: HOW TO USE (NON-TECHNICAL USER GUIDE) ================= -->
+        
         <div class="page-view" id="page-howtouse">
           <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
             <div>
@@ -490,6 +490,9 @@
               <div class="meta-text">EVERYTHING YOU NEED TO KNOW — IN SIMPLE, EVERYDAY WORDS</div>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button type="button" class="btn btn--ghost btn--sm" id="restoreTourBtn" onclick="restoreSidebarTour()" title="Re-enable Tour Badge in Sidebar">
+                ↻ SHOW TOUR IN SIDEBAR
+              </button>
 
               <button type="button" class="btn btn--primary" onclick="startInteractiveTour(0)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
@@ -498,7 +501,7 @@
             </div>
           </div>
 
-          <!-- HERO INTERACTIVE BANNER -->
+          
           <div class="guide-hero-banner">
             <div class="guide-hero-badge">
               <span class="pulse-beacon"></span>
@@ -531,9 +534,9 @@
             </div>
           </div>
 
-          <!-- VISUAL WORKFLOW MODULES GRID -->
+          
           <div class="guide-modules-grid">
-            <!-- MODULE 1 -->
+            
             <div class="guide-card">
               <div class="guide-card-top">
                 <span class="guide-tag">STEP 01</span>
@@ -542,7 +545,7 @@
               <h3 class="guide-card-title">1. Safe & Simple Sign-In</h3>
               <p class="guide-card-desc">Log in using your existing college portal username and password. You only have to log in once! The app connects directly with the official university portal and securely remembers you so you stay signed in.</p>
               
-              <!-- VISUAL DIAGRAM 1 -->
+              
               <div class="visual-diagram visual-diagram--auth">
                 <div class="vnode vnode--user">
                   <span class="vnode-icon">👤</span>
@@ -574,7 +577,7 @@
               </div>
             </div>
 
-            <!-- MODULE 2 -->
+            
             <div class="guide-card">
               <div class="guide-card-top">
                 <span class="guide-tag">STEP 02</span>
@@ -583,7 +586,7 @@
               <h3 class="guide-card-title">2. Gathers All Subjects in 1 Click</h3>
               <p class="guide-card-desc">Normally, you must click through every subject, unit, and chapter to check for new work. Clicking <strong>SYNC VOLP</strong> automatically checks all your 16+ courses in the background and brings every assignment into one unified list.</p>
               
-              <!-- VISUAL DIAGRAM 2 -->
+              
               <div class="visual-diagram visual-diagram--sync">
                 <div class="vsplit-root">
                   <div class="vnode vnode--sync-root">
@@ -616,7 +619,7 @@
               </div>
             </div>
 
-            <!-- MODULE 3 -->
+            
             <div class="guide-card">
               <div class="guide-card-top">
                 <span class="guide-tag">STEP 03</span>
@@ -625,7 +628,7 @@
               <h3 class="guide-card-title">3. Track Deadlines at a Glance</h3>
               <p class="guide-card-desc">No more writing deadlines on scraps of paper. See everything laid out neatly with clear color labels: pending homework, what's due soon, and what's already completed. You can also view them on a monthly calendar!</p>
               
-              <!-- VISUAL PREVIEW 3 -->
+              
               <div class="visual-diagram visual-diagram--tasks">
                 <div class="mock-task-card">
                   <div class="mock-task-header">
@@ -652,7 +655,7 @@
               </div>
             </div>
 
-            <!-- MODULE 4 -->
+            
             <div class="guide-card">
               <div class="guide-card-top">
                 <span class="guide-tag">STEP 04</span>
@@ -661,7 +664,7 @@
               <h3 class="guide-card-title">4. Silence Finished or Extra Subjects</h3>
               <p class="guide-card-desc">Enrolled in an elective or lab that's already over, or a subject you don't need reminders for? Just click "Block" to mute it. It stays safely on your college portal, but stops cluttering your screen and inbox.</p>
               
-              <!-- VISUAL DIAGRAM 4 -->
+              
               <div class="visual-diagram visual-diagram--block">
                 <div class="mock-block-switch">
                   <div class="mock-switch-state active">
@@ -687,7 +690,7 @@
               </div>
             </div>
 
-            <!-- MODULE 5 -->
+            
             <div class="guide-card" style="grid-column: 1 / -1;">
               <div class="guide-card-top">
                 <span class="guide-tag">STEP 05</span>
@@ -696,7 +699,7 @@
               <h3 class="guide-card-title">5. Daily 8:00 PM Email Directly to Your Inbox</h3>
               <p class="guide-card-desc">You don't even have to open this website every day! Every evening at 8:00 PM, the system automatically checks your pending homework across all active subjects and emails you a short, polite summary table with only the tasks you still need to finish.</p>
               
-              <!-- VISUAL DIAGRAM 5 -->
+              
               <div class="visual-diagram visual-diagram--email">
                 <div class="email-mock-preview">
                   <div class="email-mock-bar">
@@ -736,7 +739,7 @@
     </div>
   </div>
 
-  <!-- CONFIRMATION MODAL -->
+  
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-content">
       <div class="modal-title" id="modalTitle">CONFIRM ACTION</div>
@@ -748,7 +751,7 @@
     </div>
   </div>
 
-  <!-- COURSE DETAILS DRAWER -->
+  
   <div class="course-details-overlay" id="courseDetailsOverlay" onclick="closeCourseDetails(event)">
     <aside class="course-details-drawer" role="dialog" aria-modal="true" aria-labelledby="courseDetailsTitle">
       <button class="course-details-close" onclick="closeCourseDetails()" aria-label="Close course details">×</button>
@@ -756,7 +759,7 @@
     </aside>
   </div>
 
-  <!-- LIVE SYNC PROGRESS -->
+  
   <div class="sync-overlay" id="syncOverlay" role="status" aria-live="polite" aria-hidden="true">
     <div class="sync-progress-card">
       <div class="sync-icon-wrap" aria-hidden="true">
@@ -774,10 +777,10 @@
     </div>
   </div>
 
-  <!-- ================= INTERACTIVE PRODUCT TOUR MODAL ================= -->
+  
   <div class="tour-modal-overlay" id="interactiveTourOverlay" role="dialog" aria-modal="true" aria-labelledby="tourModalTitle">
     <div class="tour-modal-card">
-      <!-- HEADER -->
+      
       <div class="tour-modal-header">
         <div class="tour-header-meta">
           <span class="tour-badge-pill">VOLP PRODUCT TOUR</span>
@@ -786,12 +789,12 @@
         <button class="tour-modal-close" onclick="closeInteractiveTour()" aria-label="Close Tour" title="Close tour (Esc)">×</button>
       </div>
 
-      <!-- PROGRESS INDICATOR BAR -->
+      
       <div class="tour-progress-bar-wrapper">
         <div class="tour-progress-bar-fill" id="tourProgressFill" style="width: 20%;"></div>
       </div>
 
-      <!-- INTERACTIVE STEP TABS -->
+      
       <div class="tour-step-tabs" id="tourStepTabs">
         <button type="button" class="tour-tab-btn active" onclick="goToTourStep(0)" id="tourTab0">01. Architecture</button>
         <button type="button" class="tour-tab-btn" onclick="goToTourStep(1)" id="tourTab1">02. Live Sync</button>
@@ -800,12 +803,12 @@
         <button type="button" class="tour-tab-btn" onclick="goToTourStep(4)" id="tourTab4">05. 8 PM Alerts</button>
       </div>
 
-      <!-- DYNAMIC STEP BODY (Visuals + Content) -->
+      
       <div class="tour-modal-body" id="tourModalBody">
-        <!-- Rendered by renderTourStep() in app.js -->
+        
       </div>
 
-      <!-- FOOTER ACTIONS -->
+      
       <div class="tour-modal-footer">
         <button type="button" class="btn btn--ghost btn--sm" onclick="closeInteractiveTour()">SKIP TOUR (ESC)</button>
         <div class="tour-footer-nav">
@@ -816,7 +819,7 @@
     </div>
   </div>
 
-  <!-- TOAST ALERTS -->
+  
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="js/app.js?v=20261001-nontech"></script>

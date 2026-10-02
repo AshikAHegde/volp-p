@@ -1,22 +1,12 @@
-/**
- * assignment.controller.js - Assignment & Course Management Controller (Modern ES Module)
- * 
- * Separates fast DB-only queries (for smooth, unthrottled UI display)
- * from live VOLP sync calls (strictly rate-limited to protect external college servers).
- */
 import { fetchUserAssignments, fetchUserCourses } from '../services/volp.service.js';
 import { triggerCronNow } from '../services/cron.service.js';
 import { coursesCollection, assignmentsCollection } from '../services/db.service.js';
 
-// ==========================================
-// 1. COURSES: DB-ONLY (Fast, Relaxed Rate Limit)
-// ==========================================
-
+// Retrieves cached courses for the user from the database or triggers a live sync if refresh is requested or cache is empty.
 export const getMyCourses = async (request, response) => {
-  const { email } = request.user;
+  const { email, token } = request.user;
   const refresh = Boolean(request.body?.refresh || request.query?.refresh);
 
-  // If client passed refresh: true, delegate to live sync handler
   if (refresh) {
     return syncMyCourses(request, response);
   }
@@ -26,6 +16,10 @@ export const getMyCourses = async (request, response) => {
       .find({ user_email: email })
       .sort({ colid: 1 })
       .toArray();
+
+    if (cachedCoursesFromDb.length === 0 && token) {
+      return syncMyCourses(request, response);
+    }
 
     const coursesWithStatus = cachedCoursesFromDb.map(courseItem => ({
       colid: courseItem.colid,
@@ -48,15 +42,11 @@ export const getMyCourses = async (request, response) => {
   }
 };
 
-// ==========================================
-// 2. COURSES: LIVE VOLP SYNC (Strict Rate Limit)
-// ==========================================
-
+// Fetches live courses from the VOLP portal and updates the database cache.
 export const syncMyCourses = async (request, response) => {
   const { email, token } = request.user;
 
   try {
-    // 1. Get existing cached courses from DB to preserve user's is_blocked preferences
     const cachedCoursesFromDb = await coursesCollection
       .find({ user_email: email })
       .toArray();
@@ -65,7 +55,6 @@ export const syncMyCourses = async (request, response) => {
       cachedCoursesFromDb.map(c => [Number(c.colid), Boolean(c.is_blocked)])
     );
 
-    // 2. Connect to VOLP portal and fetch fresh courses
     const liveCourses = await fetchUserCourses(token, email);
 
     if (liveCourses.length > 0) {
@@ -92,7 +81,6 @@ export const syncMyCourses = async (request, response) => {
       }
     }
 
-    // 3. Return fresh courses directly in memory (zero redundant second DB query)
     const coursesWithStatus = liveCourses.map(course => ({
       colid: course.colid,
       crsid: course.crsid,
@@ -114,27 +102,21 @@ export const syncMyCourses = async (request, response) => {
   }
 };
 
-// ==========================================
-// 3. ASSIGNMENTS: DB-ONLY (Fast, Relaxed Rate Limit)
-// ==========================================
-
+// Retrieves cached non-blocked assignments for the authenticated user from the database.
 export const getMyAssignments = async (request, response) => {
   const { email } = request.user;
   const refresh = Boolean(request.body?.refresh || request.query?.refresh);
 
-  // If a legacy client passed refresh: true to this endpoint, delegate to sync handler
   if (refresh) {
     return syncMyAssignments(request, response);
   }
 
   try {
-    // 1. Load this user's blocked courses from unified courses table
     const blockedCourseRows = await coursesCollection
       .find({ user_email: email, is_blocked: true }, { projection: { colid: 1 } })
       .toArray();
     const blockedCourseColids = new Set(blockedCourseRows.map(courseRow => Number(courseRow.colid)));
 
-    // 2. Read cached assignments from MongoDB
     const cachedAssignmentsFromDb = await assignmentsCollection
       .find(
         { user_email: email },
@@ -157,7 +139,6 @@ export const getMyAssignments = async (request, response) => {
       .sort({ created_at: 1 })
       .toArray();
 
-    // 3. Filter out assignments belonging to blocked courses
     const nonBlockedAssignments = cachedAssignmentsFromDb.filter(
       assignment => !blockedCourseColids.has(Number(assignment.colid))
     );
@@ -174,21 +155,16 @@ export const getMyAssignments = async (request, response) => {
   }
 };
 
-// ==========================================
-// 4. ASSIGNMENTS: LIVE VOLP SYNC (Strict Rate Limit)
-// ==========================================
-
+// Fetches live assignments from the VOLP portal and updates the database cache.
 export const syncMyAssignments = async (request, response) => {
   const { email, token } = request.user;
 
   try {
-    // 1. Load this user's blocked courses
     const blockedCourseRows = await coursesCollection
       .find({ user_email: email, is_blocked: true }, { projection: { colid: 1 } })
       .toArray();
     const blockedCourseColids = new Set(blockedCourseRows.map(courseRow => Number(courseRow.colid)));
 
-    // 2. Read existing cached assignments to preserve is_blocked flags
     const cachedAssignmentsFromDb = await assignmentsCollection
       .find(
         { user_email: email },
@@ -200,10 +176,8 @@ export const syncMyAssignments = async (request, response) => {
       cachedAssignmentsFromDb.map(a => [`${a.assignment_id}:${a.assignment_type}`, Boolean(a.is_blocked)])
     );
 
-    // 3. Live discovery from VOLP external portal
     const liveAssignments = await fetchUserAssignments(token, email, blockedCourseColids);
 
-    // 4. Upsert discovered assignments into database
     for (const assignmentItem of liveAssignments) {
       await assignmentsCollection.updateOne(
         {
@@ -234,7 +208,6 @@ export const syncMyAssignments = async (request, response) => {
       );
     }
 
-    // 5. Construct fresh list in memory (zero redundant second DB query)
     const freshAssignments = liveAssignments.map(item => ({
       assignment_id: Number(item.assignment_id),
       assignment_type: item.assignment_type,
@@ -264,10 +237,7 @@ export const syncMyAssignments = async (request, response) => {
   }
 };
 
-// ==========================================
-// 5. MANUAL REMINDER SIMULATION
-// ==========================================
-
+// Manually triggers an immediate run of the reminder digest email simulation for a user.
 export const triggerReminderSimulation = async (request, response) => {
   const { email, token } = request.user;
 
@@ -281,4 +251,3 @@ export const triggerReminderSimulation = async (request, response) => {
     response.status(500).json({ error: 'Cron trigger failed: ' + cronError.message });
   }
 };
-

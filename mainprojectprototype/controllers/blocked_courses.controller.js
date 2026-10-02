@@ -1,9 +1,6 @@
-/**
- * blocked_courses.controller.js - Blocked Courses Management Controller (Modern ES Module)
- */
 import { coursesCollection } from '../services/db.service.js';
 
-// GET /api/blocked?email=xxx — list all blocked courses for a user
+// Retrieves all blocked courses for a specific user from the database.
 export const getBlockedCourses = async (req, res) => {
   const { email } = req.query;
   if (!email) return res.status(400).json({ error: 'email query param is required.' });
@@ -22,7 +19,7 @@ export const getBlockedCourses = async (req, res) => {
   }
 };
 
-// POST /api/blocked — set a course block state for a user
+// Updates or toggles the blocked status of a course for a user.
 export const updateCourseBlockStatus = async (req, res) => {
   const { email, colid, course_name, is_blocked } = req.body;
   if (!email || !colid || typeof is_blocked !== 'boolean') {

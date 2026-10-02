@@ -1,6 +1,3 @@
-/**
- * db.service.js - MongoDB Database Service (Modern ES Module with Dotenv)
- */
 import 'dotenv/config';
 import { MongoClient } from 'mongodb';
 
@@ -13,6 +10,7 @@ export let usersCollection;
 export let coursesCollection;
 export let assignmentsCollection;
 
+// Connects to MongoDB and sets up database collections and unique indexes.
 export const initDB = async () => {
   try {
     await client.connect();

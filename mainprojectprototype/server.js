@@ -1,6 +1,3 @@
-/**
- * server.js - VOLP Reminder Prototype Main Entry Point (Modern ES Module with Dotenv)
- */
 import 'dotenv/config';
 import express from 'express';
 import { fileURLToPath } from 'url';
@@ -20,32 +17,34 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
 
-// Frontend Page Routes
+// Serves the public landing page.
 app.get(['/', '/landing', '/landing.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'landing.html'));
 });
+
+// Serves the main student dashboard console.
 app.get(['/dashboard', '/dashboard.html', '/index', '/index.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
+
+// Serves the user login authentication page.
 app.get(['/login', '/login.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Middleware
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(projectRateLimiter);
 
-// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/blocked', blockedRoutes);
 app.use('/api/blocked-assignments', blockedAssignmentRoutes);
 
-// Top-Level Initialization & Startup
 await initDB();
 startCronJob();
 
+// Starts the Express server listener on the configured port.
 app.listen(PORT, () => {
   console.log(`====================================================`);
   console.log(`🚀 VOLP Reminder Prototype Web UI: http://localhost:${PORT}`);

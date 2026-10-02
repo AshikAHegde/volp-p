@@ -1,9 +1,4 @@
-/**
- * VOLP Reminder — Assignment Console Client
- * Strictly aligned with Backend API Schema and Endpoints
- */
 
-// Global State
 let currentUser = null;
 let rawAssignments = [];
 let rawCourses = [];
@@ -11,9 +6,9 @@ let blockedCoursesList = [];
 let blockedAssignmentsList = [];
 
 let currentTab = "dashboard";
-let currentTaskView = "kanban"; // 'kanban' | 'table'
-let currentStatusFilter = "all"; // 'all' | 'pending' | 'submitted' | 'overdue'
-let currentTypeFilter = "all"; // 'all' | 'SUBJECTIVE' | 'HANDS_ON'
+let currentTaskView = "kanban";
+let currentStatusFilter = "all";
+let currentTypeFilter = "all";
 let currentSubjectFilter = "all";
 let currentSearchQuery = "";
 let pendingModalAction = null;
@@ -22,7 +17,7 @@ let calendarDate = new Date();
 let calendarCourseFilter = "all";
 let calendarStatusFilter = "all";
 
-// Document Ready Initialization
+// Initializes application state, session, and views upon DOM load.
 document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   initSidebarState();
@@ -30,9 +25,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!initUserSession()) return;
   const footerYear = document.getElementById("appFooterYear");
   if (footerYear) footerYear.textContent = new Date().getFullYear();
+  renderAllViews();
   await loadAppData();
 
-  // Accessibility & UX: Dismiss modal, tour, or mobile drawer on Escape key, Arrow keys for tour
   document.addEventListener("keydown", (e) => {
     const tourModal = document.getElementById("interactiveTourOverlay");
     if (tourModal && tourModal.classList.contains("active")) {
@@ -52,6 +47,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
+// Initializes the sidebar collapsed or expanded state from local storage.
 function initSidebarState() {
   const sidebar = document.getElementById("sidebar");
   if (!sidebar) return;
@@ -60,6 +56,7 @@ function initSidebarState() {
   updateSidebarCollapseButton(collapsed);
 }
 
+// Hides the sidebar tour callout if previously dismissed by the user.
 function initSidebarTourState() {
   const dismissed = localStorage.getItem("volp_sidebar_tour_dismissed") === "true";
   const card = document.getElementById("sidebarTourCard");
@@ -68,6 +65,7 @@ function initSidebarTourState() {
   }
 }
 
+// Dismisses the sidebar tour card and records the preference in local storage.
 function dismissSidebarTour(e) {
   if (e) {
     e.preventDefault();
@@ -83,6 +81,7 @@ function dismissSidebarTour(e) {
   }
 }
 
+// Restores the visibility of the sidebar tour callout in the left sidebar.
 function restoreSidebarTour() {
   localStorage.removeItem("volp_sidebar_tour_dismissed");
   const card = document.getElementById("sidebarTourCard");
@@ -97,6 +96,7 @@ function restoreSidebarTour() {
 window.dismissSidebarTour = dismissSidebarTour;
 window.restoreSidebarTour = restoreSidebarTour;
 
+// Updates the collapse toggle button icon and tooltip based on sidebar state.
 function updateSidebarCollapseButton(collapsed) {
   const button = document.getElementById("sidebarCollapseBtn");
   if (!button) return;
@@ -107,6 +107,7 @@ function updateSidebarCollapseButton(collapsed) {
     : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>';
 }
 
+// Toggles the collapsed state of the sidebar navigation and stores it in local storage.
 function toggleSidebarCollapse() {
   const sidebar = document.getElementById("sidebar");
   if (!sidebar) return;
@@ -115,13 +116,14 @@ function toggleSidebarCollapse() {
   updateSidebarCollapseButton(collapsed);
 }
 
-// 1. Theme Management
+// Applies the saved color theme from local storage or defaults to dark.
 function initTheme() {
   const saved = localStorage.getItem("theme") || "dark";
   document.documentElement.setAttribute("data-theme", saved);
   updateThemeIcon(saved);
 }
 
+// Switches between light and dark themes and persists preference.
 function toggleTheme() {
   const current = document.documentElement.getAttribute("data-theme");
   const next = current === "dark" ? "light" : "dark";
@@ -131,12 +133,13 @@ function toggleTheme() {
   showToast(`Switched to ${next.toUpperCase()} theme`, "info");
 }
 
+// Updates the theme button icon to reflect the active theme.
 function updateThemeIcon(theme) {
   const btn = document.getElementById("themeToggleBtn");
   if (btn) btn.textContent = theme === "dark" ? "☼" : "◐";
 }
 
-// 2. User Session Management
+// Validates user authentication from local storage and populates UI profile headers.
 function initUserSession() {
   const stored = localStorage.getItem("volp_user");
   if (stored) {
@@ -177,6 +180,7 @@ function initUserSession() {
   return true;
 }
 
+// Clears the stored user session, calls the logout API, and redirects to login.
 function handleSignOut() {
   if (currentUser?.token) {
     fetch("/api/auth/logout", {
@@ -195,7 +199,7 @@ function handleSignOut() {
   }, 400);
 }
 
-// 3. Helper Functions: Date Parsing & Data Normalization
+// Normalizes raw assignment type strings into standard identifiers.
 function normalizeType(type) {
   if (!type) return "";
   const clean = String(type)
@@ -206,6 +210,7 @@ function normalizeType(type) {
   return clean;
 }
 
+// Checks whether an assignment item is marked as submitted.
 function isSubmitted(item) {
   return (
     item.is_submitted === true ||
@@ -215,6 +220,7 @@ function isSubmitted(item) {
   );
 }
 
+// Parses diverse date string formats from the portal into JavaScript Date objects.
 function parseVolpDate(dateStr) {
   if (!dateStr) return null;
   const str = String(dateStr).trim();
@@ -238,7 +244,6 @@ function parseVolpDate(dateStr) {
     return new Date(Date.now() + parseInt(inDaysMatch[1], 10) * 86400000);
   }
 
-  // Format: DD/MM/YYYY or DD-MM-YYYY (with optional HH:MM AM/PM)
   const match = str.match(
     /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?/i,
   );
@@ -259,6 +264,7 @@ function parseVolpDate(dateStr) {
   return isNaN(parsed) ? null : new Date(parsed);
 }
 
+// Determines if an unsubmitted assignment has passed its due date.
 function isAssignmentOverdue(item) {
   if (isSubmitted(item)) return false;
   if (!item.due_date_raw) return false;
@@ -269,6 +275,7 @@ function isAssignmentOverdue(item) {
   return d.getTime() < Date.now();
 }
 
+// Strips HTML tags and decodes entities from assignment titles.
 function cleanHtmlTitle(html) {
   if (!html) return "";
   return String(html)
@@ -283,7 +290,7 @@ function cleanHtmlTitle(html) {
     .trim();
 }
 
-// 4. Data Fetching from Backend API
+// Constructs authorization and user headers for API requests.
 function getAuthHeaders() {
   if (!currentUser?.token || !currentUser?.email) return {};
   return {
@@ -292,9 +299,9 @@ function getAuthHeaders() {
   };
 }
 
+// Fetches courses, assignments, and block lists, progressively updating views.
 async function loadAppData(refresh = false) {
   try {
-    // 1. Fetch Courses
     const courseRes = await fetch("/api/assignments/my-courses", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...getAuthHeaders() },
@@ -311,11 +318,15 @@ async function loadAppData(refresh = false) {
       const statusEl = document.getElementById("settingsDataSource");
       if (statusEl)
         statusEl.value = `Source: ${courseData.source || "MONGODB_DATABASE"} (Live Connected)`;
+      renderDashboardStats();
+      renderDashboardProjectsGrid();
+      renderCoursesView();
+      renderSubjectFilter();
+      renderCalendarCourseFilter();
     } else {
       throw new Error("Course API returned " + courseRes.status);
     }
 
-    // 2. Fetch Assignments
     const assignRes = await fetch("/api/assignments/my-assignments", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...getAuthHeaders() },
@@ -329,37 +340,42 @@ async function loadAppData(refresh = false) {
     if (assignRes.ok) {
       const assignData = await assignRes.json();
       rawAssignments = assignData.assignments || [];
-    } else {
-      throw new Error("Assignment API returned " + assignRes.status);
     }
 
-    // 3. Fetch Blocked Items
     await loadBlockedData();
+    renderAllViews();
 
-    // 4. Auto-sync from VOLP if DB is empty (first login / no cached data yet)
-    //    Do not recurse if we are already in a refresh/sync call.
-    if (!refresh && rawCourses.length === 0) {
-      showToast("No cached data found — syncing from VOLP for the first time…", "info");
-      showSyncProgress();
-      try {
-        await loadAppData(true); // live sync, then re-render inside that call
-      } finally {
-        hideSyncProgress();
-      }
-      return; // re-render already happened inside the recursive call
+    if (!refresh && rawAssignments.length === 0 && rawCourses.length > 0) {
+      showToast("Fetching assignments from university portal in background...", "info");
+      fetch("/api/assignments/sync-assignments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({
+          email: currentUser.email,
+          token: currentUser.token,
+        }),
+      })
+      .then(async (res) => {
+        if (res.ok) {
+          const syncData = await res.json();
+          if (syncData.assignments && syncData.assignments.length > 0) {
+            rawAssignments = syncData.assignments;
+            renderAllViews();
+            showToast(`Loaded ${rawAssignments.length} assignments!`, "success");
+          }
+        }
+      })
+      .catch((e) => console.warn("Background assignment sync note:", e.message));
     }
   } catch (err) {
-    console.error("Backend API unavailable:", err.message);
-    rawCourses = [];
-    rawAssignments = [];
+    console.error("Backend API note:", err.message);
     const statusEl = document.getElementById("settingsDataSource");
-    if (statusEl) statusEl.value = "Backend unavailable – no data loaded";
-    showToast("Could not connect to the backend. Please check your connection and try again.", "error");
+    if (statusEl) statusEl.value = "Connected state note: " + err.message;
+    renderAllViews();
   }
-
-  renderAllViews();
 }
 
+// Fetches lists of blocked courses and blocked assignments from the backend.
 async function loadBlockedData() {
   try {
     const bCourseRes = await fetch(
@@ -393,7 +409,7 @@ async function loadBlockedData() {
   }
 }
 
-// 5. View Navigation
+// Switches active view pages and updates navigation highlights and headers.
 function navigateTo(pageId, event) {
   if (event) event.preventDefault();
 
@@ -441,6 +457,7 @@ function navigateTo(pageId, event) {
   closeSidebar();
 }
 
+// Opens or closes the mobile sidebar drawer.
 function toggleSidebar() {
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("sidebarOverlay");
@@ -448,6 +465,7 @@ function toggleSidebar() {
   overlay.classList.toggle("active");
 }
 
+// Closes the mobile sidebar drawer and backdrop overlay.
 function closeSidebar() {
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("sidebarOverlay");
@@ -455,7 +473,7 @@ function closeSidebar() {
   if (overlay) overlay.classList.remove("active");
 }
 
-// Helper: Set of blocked course IDs and assignment keys
+// Returns a Set of course IDs that are currently blocked.
 function getBlockedCourseIds() {
   const set = new Set();
   rawCourses.forEach((c) => {
@@ -467,6 +485,7 @@ function getBlockedCourseIds() {
   return set;
 }
 
+// Returns a Set of assignment keys that are currently blocked.
 function getBlockedAssignmentKeys() {
   const set = new Set();
   rawAssignments.forEach((a) => {
@@ -478,6 +497,7 @@ function getBlockedAssignmentKeys() {
   return set;
 }
 
+// Checks whether an assignment or its parent course is blocked.
 function isAssignmentBlocked(item) {
   if (!item) return false;
   if (item.is_blocked) return true;
@@ -491,8 +511,7 @@ function isAssignmentBlocked(item) {
   return false;
 }
 
-// Calendar transformation layer: API assignments -> availability filter -> calendar events.
-// Assignment dates come from the existing due_date_raw field.
+// Checks whether a course is marked as blocked or unavailable.
 function isCourseUnavailable(course) {
   if (!course) return true;
   return (
@@ -501,32 +520,38 @@ function isCourseUnavailable(course) {
   );
 }
 
+// Formats a Date object into a YYYY-MM-DD date key string.
 function dateKey(date) {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null;
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+// Converts a YYYY-MM-DD date string back into a Date object.
 function dateFromKey(key) {
   const [year, month, day] = key.split("-").map(Number);
   return new Date(year, month - 1, day);
 }
 
+// Returns a Date instance set to midnight for accurate day comparison.
 function startOfDay(date) {
   const result = new Date(date);
   result.setHours(0, 0, 0, 0);
   return result;
 }
 
+// Returns a new Date object offset by a given number of days.
 function addDays(date, amount) {
   const result = new Date(date);
   result.setDate(result.getDate() + amount);
   return result;
 }
 
+// Formats a date using localized date string options.
 function formatCalendarDate(date, options = {}) {
   return date.toLocaleDateString(undefined, options);
 }
 
+// Transforms non-blocked assignments into structured calendar event objects.
 function courseCalendarEvents() {
   const blockedIds = getBlockedCourseIds();
   return rawAssignments
@@ -563,6 +588,7 @@ function courseCalendarEvents() {
     });
 }
 
+// Filters calendar events by course selection and completion status.
 function calendarVisibleEvents() {
   return courseCalendarEvents().filter((event) => {
     if (
@@ -576,6 +602,7 @@ function calendarVisibleEvents() {
   });
 }
 
+// Returns an array of date keys covering the event duration.
 function calendarEventDates(event) {
   if (!event.start) return [];
   const end = event.end || event.start;
@@ -589,6 +616,7 @@ function calendarEventDates(event) {
   return dates;
 }
 
+// Generates HTML markup for a single calendar event badge.
 function courseEventMarkup(event, compact = false) {
   const assignment = event.assignment;
   const course = event.course;
@@ -609,6 +637,7 @@ function courseEventMarkup(event, compact = false) {
   </button>`;
 }
 
+// Generates HTML markup for a single calendar day cell with its events.
 function calendarDayMarkup(date, events, outside = false) {
   const key = dateKey(date);
   const today = key === dateKey(new Date());
@@ -621,6 +650,7 @@ function calendarDayMarkup(date, events, outside = false) {
   </div>`;
 }
 
+// Renders the full interactive learning calendar grid or agenda view.
 function renderCalendarView() {
   const shell = document.getElementById("calendarShell");
   const summary = document.getElementById("calendarSummary");
@@ -709,10 +739,12 @@ function renderCalendarView() {
     : "";
 }
 
+// Changes the active calendar view between month, week, and day.
 function setCalendarView(view) {
   calendarView = view;
   renderCalendarView();
 }
+// Shifts the current calendar view forward or backward by month, week, or day.
 function shiftCalendar(amount) {
   if (calendarView === "month")
     calendarDate.setMonth(calendarDate.getMonth() + amount);
@@ -721,14 +753,17 @@ function shiftCalendar(amount) {
   else calendarDate.setDate(calendarDate.getDate() + amount);
   renderCalendarView();
 }
+// Resets the calendar view to the current date.
 function goToCalendarToday() {
   calendarDate = new Date();
   renderCalendarView();
 }
+// Sets the course filter for the calendar view and updates the display.
 function setCalendarFilter(value) {
   calendarCourseFilter = value;
   renderCalendarView();
 }
+// Sets the status filter for the calendar view and updates the display.
 function setCalendarStatusFilter(value, element) {
   calendarStatusFilter = value;
   document
@@ -738,6 +773,7 @@ function setCalendarStatusFilter(value, element) {
   renderCalendarView();
 }
 
+// Populates the course filter dropdown options in the calendar toolbar.
 function renderCalendarCourseFilter() {
   const select = document.getElementById("calendarCourseFilter");
   if (!select) return;
@@ -759,6 +795,7 @@ function renderCalendarCourseFilter() {
     : "all";
 }
 
+// Opens the slide-over modal drawer displaying assignment details.
 function openAssignmentDetails(assignmentId, assignmentType = "") {
   const event = courseCalendarEvents().find(
     (item) =>
@@ -780,6 +817,7 @@ function openAssignmentDetails(assignmentId, assignmentType = "") {
   overlay.classList.add("active");
 }
 
+// Generates and triggers download of an .ics calendar file for an assignment.
 function addAssignmentToCalendar(assignmentId, assignmentType = "") {
   const assignment = rawAssignments.find(
     (item) =>
@@ -831,11 +869,13 @@ function addAssignmentToCalendar(assignmentId, assignmentType = "") {
   showToast("Assignment added to your calendar file.", "success");
 }
 
+// Generates an add-to-calendar action button for an assignment item.
 function assignmentCalendarButton(item) {
   const date = parseVolpDate(item?.due_date_raw);
   return `<button class="btn btn--ghost btn--sm assignment-calendar-btn" ${date ? `onclick="addAssignmentToCalendar(${Number(item.assignment_id)}, '${escapeJsString(item.assignment_type || "")}')"` : "disabled"} title="${date ? "Add to calendar" : "No date available"}">＋ CALENDAR</button>`;
 }
 
+// Closes the assignment detail slide-over drawer.
 function closeCourseDetails(event) {
   if (
     !event ||
@@ -844,13 +884,14 @@ function closeCourseDetails(event) {
     document.getElementById("courseDetailsOverlay")?.classList.remove("active");
 }
 
-// 6. Comprehensive Filtering & Search Engine
+// Filters assignments according to search keywords and re-renders the task view.
 function filterTasks() {
   const input = document.getElementById("taskSearchInput");
   currentSearchQuery = input ? input.value.trim().toLowerCase() : "";
   renderTasksView();
 }
 
+// Applies a status filter to assignments and updates active filter buttons.
 function setStatusFilter(filter, el) {
   currentStatusFilter = filter;
   document
@@ -860,6 +901,7 @@ function setStatusFilter(filter, el) {
   renderTasksView();
 }
 
+// Applies an assignment type filter and updates active filter buttons.
 function setTypeFilter(filter, el) {
   currentTypeFilter = filter;
   document
@@ -869,13 +911,13 @@ function setTypeFilter(filter, el) {
   renderTasksView();
 }
 
-/** Updates the assignment subject filter and refreshes the visible assignments. */
+// Applies a subject filter to assignments and re-renders the task view.
 function setSubjectFilter(filter) {
   currentSubjectFilter = filter || "all";
   renderTasksView();
 }
 
-/** Renders subject options from courses that are currently unblocked in the frontend. */
+// Populates the subject filter dropdown with active enrolled courses.
 function renderSubjectFilter() {
   const select = document.getElementById("subjectFilterSelect");
   if (!select) return;
@@ -908,16 +950,15 @@ function renderSubjectFilter() {
   select.value = currentSubjectFilter;
 }
 
+// Filters raw assignments by subject, search query, type, and status.
 function getFilteredAssignments() {
   const blockedCourseIds = getBlockedCourseIds();
 
   return rawAssignments.filter((item) => {
-    // 0. Course Block Filter: Hide assignments of blocked courses from UI
     if (item.colid && blockedCourseIds.has(Number(item.colid))) {
       return false;
     }
 
-    // 1. Subject Filter: match the selected non-blocked course by ID.
     if (
       currentSubjectFilter !== "all" &&
       String(item.colid) !== String(currentSubjectFilter)
@@ -925,7 +966,6 @@ function getFilteredAssignments() {
       return false;
     }
 
-    // 2. Search Query Filter
     if (currentSearchQuery) {
       const q = currentSearchQuery;
       const rawTitle = item.title_html || "";
@@ -954,7 +994,6 @@ function getFilteredAssignments() {
       }
     }
 
-    // 3. Type Filter ('all', 'SUBJECTIVE', 'HANDS_ON')
     if (currentTypeFilter !== "all") {
       const itemTypeNorm = normalizeType(item.assignment_type);
       const filterTypeNorm = normalizeType(currentTypeFilter);
@@ -963,7 +1002,6 @@ function getFilteredAssignments() {
       }
     }
 
-    // 4. Status Filter ('all', 'pending', 'submitted', 'overdue')
     const submitted = isSubmitted(item);
     const overdue = isAssignmentOverdue(item);
 
@@ -979,7 +1017,7 @@ function getFilteredAssignments() {
   });
 }
 
-// 7. Render All Views
+// Re-renders all main UI views with current data.
 function renderAllViews() {
   renderDashboardStats();
   renderDashboardProjectsGrid();
@@ -993,7 +1031,7 @@ function renderAllViews() {
   renderRemindersView();
 }
 
-// Render Dashboard Metrics (Real computed data)
+// Computes and renders metric counts on the dashboard overview cards.
 function renderDashboardStats() {
   const blockedCourseIds = getBlockedCourseIds();
   const activeAssignments = rawAssignments.filter(
@@ -1037,7 +1075,7 @@ function renderDashboardStats() {
     blockedSub.textContent = `${blockedCoursesList.length} COURSES · ${blockedAssignmentsList.length} TASKS`;
 }
 
-// Render Course Cards on Dashboard
+// Renders enrolled course cards into the dashboard project grid.
 function renderDashboardProjectsGrid() {
   const container = document.getElementById("dashboardProjectsGrid");
   if (!container) return;
@@ -1083,7 +1121,7 @@ function renderDashboardProjectsGrid() {
   });
 }
 
-// Render Dashboard Urgent Deadlines Table
+// Renders urgent upcoming deadlines into the dashboard table.
 function renderDashboardRecentTable() {
   const tbody = document.getElementById("dashboardRecentTableBody");
   if (!tbody) return;
@@ -1143,7 +1181,7 @@ function renderDashboardRecentTable() {
   });
 }
 
-// 8. Tasks & Assignments View (Kanban + Table View with live filters)
+// Toggles assignments view between Kanban board and table layout.
 function switchTaskView(mode) {
   currentTaskView = mode;
   document
@@ -1160,6 +1198,7 @@ function switchTaskView(mode) {
   renderTasksView();
 }
 
+// Renders either the Kanban board or data table view based on user selection.
 function renderTasksView() {
   const filtered = getFilteredAssignments();
 
@@ -1170,6 +1209,7 @@ function renderTasksView() {
   }
 }
 
+// Populates the Kanban board columns with categorized assignment cards.
 function renderKanbanBoard(items) {
   const todoCol = document.getElementById("kanbanColTodo");
   const progressCol = document.getElementById("kanbanColProgress");
@@ -1241,6 +1281,7 @@ function renderKanbanBoard(items) {
       '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px;text-align:center;">NO COMPLETED ASSIGNMENTS</div>';
 }
 
+// Populates the assignments data table view with filtered assignments.
 function renderTasksTable(items) {
   const tbody = document.getElementById("tasksFullTableBody");
   if (!tbody) return;
@@ -1294,7 +1335,7 @@ function renderTasksTable(items) {
   });
 }
 
-// 9. Render Courses View
+// Renders all enrolled courses into the courses grid view.
 function renderCoursesView() {
   const grid = document.getElementById("allCoursesGrid");
   if (!grid) return;
@@ -1342,9 +1383,8 @@ function renderCoursesView() {
   });
 }
 
-// 10. Render Block Manager View
+// Renders blocked courses and blocked assignments in the block manager tables.
 function renderBlockManagerView() {
-  // 1. Blocked Courses
   const cTbody = document.getElementById("blockedCoursesTableBody");
   if (cTbody) {
     cTbody.innerHTML = "";
@@ -1368,7 +1408,6 @@ function renderBlockManagerView() {
     }
   }
 
-  // 2. Blocked Assignments
   const aTbody = document.getElementById("blockedAssignmentsTableBody");
   if (aTbody) {
     aTbody.innerHTML = "";
@@ -1397,7 +1436,7 @@ function renderBlockManagerView() {
   }
 }
 
-// 11. Render Reminders & Notification View
+// Renders the log of automated and manual reminder dispatch events.
 function renderRemindersView() {
   const list = document.getElementById("remindersTimelineList");
   if (!list) return;
@@ -1445,8 +1484,7 @@ function renderRemindersView() {
   list.innerHTML = html;
 }
 
-// 12. Actions: Sync, Trigger Reminders, Blocks, and Submission toggles
-/** Shows the full-screen progress state while live VOLP data is being fetched. */
+// Displays the full-screen live sync loading overlay.
 function showSyncProgress() {
   const overlay = document.getElementById("syncOverlay");
   if (!overlay) return;
@@ -1454,7 +1492,7 @@ function showSyncProgress() {
   overlay.setAttribute("aria-hidden", "false");
 }
 
-/** Hides the live sync progress state after the data refresh has settled. */
+// Hides the full-screen live sync loading overlay.
 function hideSyncProgress() {
   const overlay = document.getElementById("syncOverlay");
   if (!overlay) return;
@@ -1462,13 +1500,14 @@ function hideSyncProgress() {
   overlay.setAttribute("aria-hidden", "true");
 }
 
-/** Rejects a sync attempt when it exceeds the user-facing five-minute wait limit. */
+// Returns a Promise that rejects after a 5-minute timeout.
 function createSyncTimeout() {
   return new Promise((resolve, reject) => {
     setTimeout(() => reject(new Error("SYNC_TIMEOUT")), 5 * 60 * 1000);
   });
 }
 
+// Initiates a live sync from the university portal with progress overlay.
 async function syncNow() {
   const btn = document.getElementById("syncBtn");
   const label = document.getElementById("syncBtnLabel");
@@ -1500,6 +1539,7 @@ async function syncNow() {
   }
 }
 
+// Manually triggers the reminder simulation and logs the result.
 async function triggerReminder() {
   const btn = document.getElementById("reminderBtn");
   const pageBtn = document.getElementById("triggerReminderPageBtn");
@@ -1549,7 +1589,7 @@ async function triggerReminder() {
   }
 }
 
-// Block / Unblock Course
+// Prompts confirmation and toggles the blocked status of a course.
 async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
   const actionText = currentlyBlocked ? "unblock" : "block";
 
@@ -1617,7 +1657,7 @@ async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
   );
 }
 
-// Block / Unblock Assignment
+// Prompts confirmation and toggles the blocked status of an assignment.
 async function toggleAssignmentBlock(
   assignmentId,
   assignmentType,
@@ -1669,7 +1709,7 @@ async function toggleAssignmentBlock(
   );
 }
 
-// 13. Modal Utilities
+// Opens the confirmation modal dialog with customizable title and action callback.
 function openModal(title, body, confirmCallback) {
   document.getElementById("modalTitle").textContent = title;
   document.getElementById("modalBody").textContent = body;
@@ -1677,11 +1717,13 @@ function openModal(title, body, confirmCallback) {
   document.getElementById("modalOverlay").classList.add("active");
 }
 
+// Closes the confirmation modal dialog.
 function closeModal() {
   document.getElementById("modalOverlay").classList.remove("active");
   pendingModalAction = null;
 }
 
+// Executes the pending confirmation action callback and closes the modal.
 function confirmModal() {
   if (typeof pendingModalAction === "function") {
     pendingModalAction();
@@ -1689,7 +1731,7 @@ function confirmModal() {
   closeModal();
 }
 
-// 14. Toast Notification System
+// Displays a transient notification toast banner.
 function showToast(message, type = "info") {
   const container = document.getElementById("toastContainer");
   if (!container) return;
@@ -1711,7 +1753,7 @@ function showToast(message, type = "info") {
   }, 3500);
 }
 
-// Helper: Escape HTML strings
+// Escapes HTML characters in strings to prevent XSS.
 function escapeHtml(str) {
   if (str === null || str === undefined) return "";
   return String(str)
@@ -1722,16 +1764,13 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+// Escapes quotation marks and slashes for safe inline JavaScript strings.
 function escapeJsString(str) {
   return escapeHtml(str)
     .replace(/\\/g, "\\\\")
     .replace(/&#039;/g, "\\'");
 }
 
-
-// ==========================================================================
-// 15. INTERACTIVE PRODUCT TOUR & VISUAL WALKTHROUGH SYSTEM
-// ==========================================================================
 let currentTourStep = 0;
 
 const TOUR_STEPS = [
@@ -1915,6 +1954,7 @@ const TOUR_STEPS = [
   }
 ];
 
+// Starts the guided interactive product tour from a specific step.
 function startInteractiveTour(stepIndex = 0) {
   const overlay = document.getElementById("interactiveTourOverlay");
   if (!overlay) return;
@@ -1922,18 +1962,21 @@ function startInteractiveTour(stepIndex = 0) {
   goToTourStep(stepIndex);
 }
 
+// Closes and dismisses the interactive tour modal overlay.
 function closeInteractiveTour() {
   const overlay = document.getElementById("interactiveTourOverlay");
   if (!overlay) return;
   overlay.classList.remove("active");
 }
 
+// Advances or navigates directly to a specified tour step.
 function goToTourStep(index) {
   if (index < 0 || index >= TOUR_STEPS.length) return;
   currentTourStep = index;
   renderTourStep();
 }
 
+// Advances to the next step in the interactive tour.
 function nextTourStep() {
   if (currentTourStep < TOUR_STEPS.length - 1) {
     goToTourStep(currentTourStep + 1);
@@ -1943,12 +1986,14 @@ function nextTourStep() {
   }
 }
 
+// Navigates to the previous step in the interactive tour.
 function prevTourStep() {
   if (currentTourStep > 0) {
     goToTourStep(currentTourStep - 1);
   }
 }
 
+// Renders content, visual preview, and action buttons for the current tour step.
 function renderTourStep() {
   const stepData = TOUR_STEPS[currentTourStep];
   if (!stepData) return;

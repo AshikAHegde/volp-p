@@ -1,12 +1,6 @@
-/**
- * auth.middleware.js - Standard Bearer Token Authentication Middleware
- * 
- * Extracts Bearer token from standard Authorization header,
- * verifies the session token against MongoDB, and sets req.user.
- */
-
 import { usersCollection } from '../services/db.service.js';
 
+// Validates the incoming Bearer token against MongoDB and attaches the user document to req.user.
 export const requireUser = async (req, res, next) => {
   const authHeader = req.headers.authorization || req.get('authorization') || '';
 
@@ -29,11 +23,9 @@ export const requireUser = async (req, res, next) => {
       return res.status(401).json({ error: 'Unauthorized: Invalid or expired session token.' });
     }
 
-    // Standard JWT convention: attach full user object directly to req.user
     req.user = user;
     return next();
   } catch (error) {
     return res.status(500).json({ error: 'Authentication service unavailable.' });
   }
 };
-

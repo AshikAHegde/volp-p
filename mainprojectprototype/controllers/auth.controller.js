@@ -1,9 +1,7 @@
-/**
- * auth.controller.js - User Authentication Controller (Modern ES Module)
- */
-import { loginVOLP } from "../services/volp.service.js";
-import { usersCollection } from "../services/db.service.js";
+import { loginVOLP, fetchUserCourses } from "../services/volp.service.js";
+import { usersCollection, coursesCollection } from "../services/db.service.js";
 
+// Authenticates user credentials with the VOLP portal and updates the user session in the database.
 export const login = async (req, res) => {
   const { username, password } = req.body;
 
@@ -14,10 +12,8 @@ export const login = async (req, res) => {
   }
 
   try {
-    // 1. Authenticate with VOLP Admin portal
     const token = await loginVOLP(username, password);
 
-    // 2. Save/Update User in MongoDB
     await usersCollection.updateOne(
       { email: username },
       {
@@ -28,7 +24,35 @@ export const login = async (req, res) => {
       { upsert: true },
     );
 
-    // 3. Return session response
+    try {
+      const liveCourses = await fetchUserCourses(token, username);
+      if (liveCourses.length > 0) {
+        for (const currentCourse of liveCourses) {
+          await coursesCollection.updateOne(
+            { user_email: username, colid: Number(currentCourse.colid) },
+            {
+              $set: {
+                crsid: currentCourse.crsid || null,
+                course_name: currentCourse.course_name,
+                semester: currentCourse.semester || null,
+                academic_year: currentCourse.academic_year || null,
+                updated_at: new Date(),
+              },
+              $setOnInsert: {
+                user_email: username,
+                colid: Number(currentCourse.colid),
+                is_blocked: false,
+                blocked_at: null,
+              },
+            },
+            { upsert: true },
+          );
+        }
+      }
+    } catch (courseErr) {
+      console.warn("Could not pre-fetch courses on login:", courseErr.message);
+    }
+
     res.json({
       success: true,
       message: "VOLP Login & User Registration Successful",
@@ -40,11 +64,7 @@ export const login = async (req, res) => {
   }
 };
 
-/**
- * Validate and return active session for the authenticated user.
- * Multi-user safe: strictly requires and verifies the caller's Bearer token in MongoDB.
- * Completely isolates sessions so users never receive another user's session.
- */
+// Verifies the Bearer token in the database and returns the active user session.
 export const getActiveSession = async (req, res) => {
   try {
     const authHeader = req.headers.authorization || req.get("authorization") || "";
@@ -81,9 +101,7 @@ export const getActiveSession = async (req, res) => {
   }
 };
 
-/**
- * Invalidate session token in MongoDB on logout.
- */
+// Invalidates the current session token in the database upon user logout.
 export const logout = async (req, res) => {
   try {
     const authHeader = req.headers.authorization || req.get("authorization") || "";
@@ -115,4 +133,3 @@ export const logout = async (req, res) => {
       .json({ error: "Logout failed: " + err.message });
   }
 };
-

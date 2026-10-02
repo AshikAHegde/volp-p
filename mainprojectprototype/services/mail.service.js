@@ -1,6 +1,3 @@
-/**
- * mail.service.js - SMTP Email Notification Service (Modern ES Module with Dotenv)
- */
 import 'dotenv/config';
 import nodemailer from 'nodemailer';
 
@@ -46,9 +43,7 @@ const transporter = nodemailer.createTransport({
 
 console.log(`✉ Email provider: ${mailSettings.mode} (${mailSettings.host}:${mailSettings.port})`);
 
-/**
- * Escape dynamic values before placing them in an HTML email.
- */
+// Escapes special characters to prevent HTML injection in emails.
 const escapeHtml = value => String(value ?? '')
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -56,6 +51,7 @@ const escapeHtml = value => String(value ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#039;');
 
+// Sends an HTML email digest of pending assignments to the user's email address.
 export const sendAssignmentReminderEmail = async (userEmail, assignments) => {
   const pendingAssignments = assignments.filter(a => !a.is_submitted && !a.is_blocked);
 

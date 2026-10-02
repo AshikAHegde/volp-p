@@ -1,9 +1,6 @@
-/**
- * blocked_assignments.controller.js - Blocked Assignments Management Controller (Modern ES Module)
- */
 import { assignmentsCollection } from '../services/db.service.js';
 
-// GET /api/blocked-assignments - list all blocked assignments for a user
+// Retrieves all blocked assignments for a specific user from the database.
 export const getBlockedAssignments = async (req, res) => {
   const { email } = req.query;
   if (!email) return res.status(400).json({ error: 'Email required.' });
@@ -26,7 +23,7 @@ export const getBlockedAssignments = async (req, res) => {
   }
 };
 
-// POST /api/blocked-assignments - set a specific assignment block state
+// Updates or toggles the blocked status of an assignment for a user.
 export const updateAssignmentBlockStatus = async (req, res) => {
   const { email, assignment_id, assignment_type, colid, course_name, title_hint, is_blocked } = req.body;
   if (!email || !assignment_id || !assignment_type || typeof is_blocked !== 'boolean') {

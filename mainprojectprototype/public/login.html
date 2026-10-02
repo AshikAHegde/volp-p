@@ -64,7 +64,6 @@
   </div>
 
   <script>
-    // Theme toggle
     const themeBtn = document.getElementById('themeToggleBtn');
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -78,6 +77,7 @@
       themeBtn.textContent = next === 'dark' ? '☼' : '◐';
     });
 
+    // Submits the login form credentials to the authentication API and saves session data.
     async function handleLogin(e) {
       e.preventDefault();
       const username = document.getElementById('username').value.trim();
@@ -120,6 +120,7 @@
       }
     }
 
+    // Displays an error message banner inside the login card.
     function showError(msg) {
       const banner = document.getElementById('errorBanner');
       banner.textContent = '⚠ ' + msg;

@@ -1,14 +1,7 @@
-/**
- * rate-limit.middleware.js - Standard Express Rate Limiter using express-rate-limit
- *
- * Provides isolated rate-limiting buckets:
- * 1. strictLimiter: Max 10 requests / 15 minutes (live VOLP sync and login)
- * 2. simpleLimiter: Max 100 requests / 1 minute (fast database-only queries)
- */
 import rateLimit from 'express-rate-limit';
 
 export const strictLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: true,
@@ -19,7 +12,7 @@ export const strictLimiter = rateLimit({
 });
 
 export const simpleLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: true,
@@ -29,7 +22,6 @@ export const simpleLimiter = rateLimit({
   },
 });
 
-// Dedicated routes connecting to external college servers or triggering reminders
 const strictRoutes = new Set([
   '/api/auth/login',
   '/api/assignments/sync-courses',
@@ -37,10 +29,7 @@ const strictRoutes = new Set([
   '/api/assignments/trigger-8pm-reminder',
 ]);
 
-/**
- * Global rate limiter router middleware.
- * Dispatches to strictLimiter for live sync/auth and simpleLimiter for DB-only routes.
- */
+// Dispatches incoming API requests to strict or simple rate limiters based on endpoint sensitivity.
 export function projectRateLimiter(req, res, next) {
   if (!req.path.startsWith('/api')) {
     return next();
@@ -56,4 +45,3 @@ export function projectRateLimiter(req, res, next) {
 
   return simpleLimiter(req, res, next);
 }
-
