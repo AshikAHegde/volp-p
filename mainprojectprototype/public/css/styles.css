@@ -2367,6 +2367,7 @@ h1, h2, h3, h4, h5, h6 {
 .sidebar.is-collapsed .sidebar-tour-card .tour-card-header,
 .sidebar.is-collapsed .sidebar-tour-card .tour-card-title,
 .sidebar.is-collapsed .sidebar-tour-card .tour-card-desc,
+.sidebar.is-collapsed .sidebar-tour-card .sidebar-tour-close-btn,
 .sidebar.is-collapsed .sidebar-tour-card .tour-start-btn span {
   display: none;
 }
