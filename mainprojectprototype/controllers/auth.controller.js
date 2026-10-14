@@ -1,5 +1,6 @@
 import { loginVOLP, fetchUserCourses } from "../services/volp.service.js";
 import { usersCollection, coursesCollection } from "../services/db.service.js";
+import { encrypt } from "../services/encryption.service.js";
 
 // Authenticates user credentials with the VOLP portal and updates the user session in the database.
 export const login = async (req, res) => {
@@ -13,16 +14,22 @@ export const login = async (req, res) => {
 
   try {
     const token = await loginVOLP(username, password);
+    const encryptedPassword = encrypt(password);
 
     await usersCollection.updateOne(
       { email: username },
       {
-        $set: { token, updated_at: new Date() },
+        $set: {
+          token,
+          encrypted_password: encryptedPassword,
+          updated_at: new Date(),
+        },
         $unset: { password: "" },
         $setOnInsert: { email: username, created_at: new Date() },
       },
       { upsert: true },
     );
+
 
     try {
       const liveCourses = await fetchUserCourses(token, username);

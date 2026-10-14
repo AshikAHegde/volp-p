@@ -53,8 +53,18 @@ await jest.unstable_mockModule("node-cron", () => ({
 
 // volp.service.js
 const mockFetchUserAssignments = jest.fn();
+const mockLoginVOLP = jest.fn();
 await jest.unstable_mockModule("../services/volp.service.js", () => ({
   fetchUserAssignments: mockFetchUserAssignments,
+  loginVOLP: mockLoginVOLP,
+}));
+
+// encryption.service.js
+const mockDecrypt = jest.fn((str) => `decrypted_${str}`);
+const mockEncrypt = jest.fn((str) => `encrypted_${str}`);
+await jest.unstable_mockModule("../services/encryption.service.js", () => ({
+  decrypt: mockDecrypt,
+  encrypt: mockEncrypt,
 }));
 
 // mail.service.js
@@ -68,6 +78,8 @@ const makeCol = () => ({
   find: jest.fn().mockReturnValue({
     toArray: jest.fn().mockResolvedValue([]),
   }),
+  findOne: jest.fn().mockResolvedValue(null),
+  updateOne: jest.fn().mockResolvedValue({}),
 });
 
 const mockUsersCol = makeCol();
@@ -79,6 +91,7 @@ await jest.unstable_mockModule("../services/db.service.js", () => ({
   coursesCollection: mockCoursesCol,
   assignmentsCollection: mockAssignmentsCol,
 }));
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Import after mocks are registered
@@ -97,11 +110,16 @@ function reset() {
 
   for (const col of [mockUsersCol, mockCoursesCol, mockAssignmentsCol]) {
     col.find.mockReturnValue({ toArray: jest.fn().mockResolvedValue([]) });
+    if (col.findOne) col.findOne.mockResolvedValue(null);
+    if (col.updateOne) col.updateOne.mockResolvedValue({});
   }
 
   mockFetchUserAssignments.mockResolvedValue([]);
+  mockLoginVOLP.mockResolvedValue("new_fresh_token");
+  mockDecrypt.mockImplementation((str) => `decrypted_${str}`);
   mockSendEmail.mockResolvedValue(true);
 }
+
 
 /** Convenience: makes a user object. */
 const mkUser = (email = "a@vit.ac.in", token = "tok_a") => ({ email, token });
@@ -369,6 +387,31 @@ describe("startCronJob", () => {
     expect(mockSendEmail).toHaveBeenCalledTimes(2);
   });
 
+  test("callback: re-authenticates via loginVOLP and decrypt when fetch throws for user with encrypted_password", async () => {
+    mockUsersCol.find.mockReturnValue({
+      toArray: jest.fn().mockResolvedValue([
+        { email: "user@vit.ac.in", token: "expired_token", encrypted_password: "enc_password_123" }
+      ]),
+    });
+    mockFetchUserAssignments
+      .mockRejectedValueOnce(new Error("VOLP session expired"))
+      .mockResolvedValueOnce([mkAss(10)]);
+    mockLoginVOLP.mockResolvedValueOnce("fresh_new_token");
+
+    const cb = scheduleAndGetCallback();
+    await cb();
+
+    expect(mockDecrypt).toHaveBeenCalledWith("enc_password_123");
+    expect(mockLoginVOLP).toHaveBeenCalledWith("user@vit.ac.in", "decrypted_enc_password_123");
+    expect(mockUsersCol.updateOne).toHaveBeenCalledWith(
+      { email: "user@vit.ac.in" },
+      { $set: { token: "fresh_new_token", updated_at: expect.any(Date) } }
+    );
+    expect(mockFetchUserAssignments).toHaveBeenCalledWith("fresh_new_token", "user@vit.ac.in", expect.any(Set));
+    expect(mockSendEmail).toHaveBeenCalled();
+  });
+
+
   // ── Callback: overlap guard ────────────────────────────────────────────────
 
   test("callback: second concurrent invocation is skipped (overlap guard)", async () => {
@@ -550,6 +593,26 @@ describe("triggerCronNow", () => {
     expect(result).toBe(true);
   });
 
+  test("re-authenticates via decrypt and loginVOLP when initial fetch fails and user has encrypted_password in DB", async () => {
+    mockUsersCol.findOne.mockResolvedValueOnce({
+      encrypted_password: "enc_password_abc",
+    });
+    mockFetchUserAssignments
+      .mockRejectedValueOnce(new Error("Session expired"))
+      .mockResolvedValueOnce([mkAss(5)]);
+    mockLoginVOLP.mockResolvedValueOnce("refreshed_trigger_token");
+
+    await triggerCronNow("user@vit.ac.in", "expired_trigger_token");
+
+    expect(mockDecrypt).toHaveBeenCalledWith("enc_password_abc");
+    expect(mockLoginVOLP).toHaveBeenCalledWith("user@vit.ac.in", "decrypted_enc_password_abc");
+    expect(mockUsersCol.updateOne).toHaveBeenCalledWith(
+      { email: "user@vit.ac.in" },
+      { $set: { token: "refreshed_trigger_token", updated_at: expect.any(Date) } }
+    );
+    expect(mockSendEmail).toHaveBeenCalled();
+  });
+
   // ── Error propagation ──────────────────────────────────────────────────────
 
   test("propagates error thrown by fetchUserAssignments", async () => {
@@ -562,4 +625,5 @@ describe("triggerCronNow", () => {
     await expect(triggerCronNow("u@vit.ac.in", "tok")).rejects.toThrow("SMTP failed");
   });
 });
+
 

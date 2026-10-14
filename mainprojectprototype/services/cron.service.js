@@ -1,8 +1,9 @@
 import 'dotenv/config';
 import cron from 'node-cron';
-import { fetchUserAssignments } from './volp.service.js';
+import { fetchUserAssignments, loginVOLP } from './volp.service.js';
 import { sendAssignmentReminderEmail } from './mail.service.js';
 import { usersCollection, coursesCollection, assignmentsCollection } from './db.service.js';
+import { decrypt } from './encryption.service.js';
 
 let isCronRunning = false;
 
@@ -29,7 +30,7 @@ export const startCronJob = () => {
     try {
       let users = [];
       try {
-        users = await usersCollection.find({}, { projection: { _id: 0, email: 1, token: 1 } }).toArray();
+        users = await usersCollection.find({}, { projection: { _id: 0, email: 1, token: 1, encrypted_password: 1 } }).toArray();
       } catch (e) {
         console.log('⚠ Could not fetch users from DB:', e.message);
         return;
@@ -56,7 +57,35 @@ export const startCronJob = () => {
             .toArray();
           const blockedAssSet = new Set(blockedAssRows.map(r => `${r.assignment_id}:${r.assignment_type}`));
 
-          const allAssignments = await fetchUserAssignments(user.token, user.email, blockedColids);
+          let userToken = user.token;
+          let allAssignments;
+
+          try {
+            if (!userToken) {
+              throw new Error('No active session token found.');
+            }
+            allAssignments = await fetchUserAssignments(userToken, user.email, blockedColids);
+          } catch (tokenErr) {
+            // Attempt to re-authenticate with VOLP if encrypted password is available
+            if (user.encrypted_password) {
+              console.log(`   🔄 Token expired or invalid for ${user.email}. Re-authenticating with VOLP...`);
+              try {
+                const rawPassword = decrypt(user.encrypted_password);
+                userToken = await loginVOLP(user.email, rawPassword);
+                await usersCollection.updateOne(
+                  { email: user.email },
+                  { $set: { token: userToken, updated_at: new Date() } }
+                );
+                console.log(`   ✓ Successfully regenerated VOLP token for ${user.email}`);
+                allAssignments = await fetchUserAssignments(userToken, user.email, blockedColids);
+              } catch (reauthErr) {
+                console.log(`   ⚠ Failed to re-authenticate ${user.email}:`, reauthErr.message);
+                throw reauthErr;
+              }
+            } else {
+              throw tokenErr;
+            }
+          }
 
           const assignments = allAssignments.filter(
             a => !blockedAssSet.has(`${a.assignment_id}:${a.assignment_type}`)
@@ -91,7 +120,36 @@ export const triggerCronNow = async (userEmail, token) => {
     .toArray();
   const blockedAssSet = new Set(blockedAssRows.map(r => `${r.assignment_id}:${r.assignment_type}`));
 
-  const allAssignments = await fetchUserAssignments(token, userEmail, blockedColids);
+  let activeToken = token;
+  let allAssignments;
+
+  try {
+    if (!activeToken) {
+      throw new Error('No session token provided.');
+    }
+    allAssignments = await fetchUserAssignments(activeToken, userEmail, blockedColids);
+  } catch (tokenErr) {
+    let userDoc;
+    try {
+      userDoc = await usersCollection.findOne(
+        { email: userEmail },
+        { projection: { encrypted_password: 1 } }
+      );
+    } catch (_) {}
+
+    if (userDoc?.encrypted_password) {
+      console.log(`   🔄 Re-authenticating ${userEmail} using encrypted password...`);
+      const rawPassword = decrypt(userDoc.encrypted_password);
+      activeToken = await loginVOLP(userEmail, rawPassword);
+      await usersCollection.updateOne(
+        { email: userEmail },
+        { $set: { token: activeToken, updated_at: new Date() } }
+      );
+      allAssignments = await fetchUserAssignments(activeToken, userEmail, blockedColids);
+    } else {
+      throw tokenErr;
+    }
+  }
 
   const assignments = allAssignments.filter(
     a => !blockedAssSet.has(`${a.assignment_id}:${a.assignment_type}`)
@@ -100,3 +158,4 @@ export const triggerCronNow = async (userEmail, token) => {
   console.log(`   📋 ${allAssignments.length} total → ${assignments.length} after assignment blocks`);
   return sendAssignmentReminderEmail(userEmail, assignments);
 };
+
