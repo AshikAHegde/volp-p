@@ -67,10 +67,11 @@ await jest.unstable_mockModule("../services/encryption.service.js", () => ({
   encrypt: mockEncrypt,
 }));
 
-// mail.service.js
-const mockSendEmail = jest.fn();
-await jest.unstable_mockModule("../services/mail.service.js", () => ({
-  sendAssignmentReminderEmail: mockSendEmail,
+// telegram.service.js
+const mockSendTelegram = jest.fn();
+const mockSendEmail = mockSendTelegram;
+await jest.unstable_mockModule("../services/telegram.service.js", () => ({
+  sendAssignmentReminderTelegram: mockSendTelegram,
 }));
 
 // db.service.js — provide collection stubs with jest-mocked methods

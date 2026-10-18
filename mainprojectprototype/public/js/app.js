@@ -177,6 +177,7 @@ function initUserSession() {
   if (settingsEmail) settingsEmail.value = userEmail;
   if (settingsLargeAvatar) settingsLargeAvatar.textContent = avatarText;
   if (settingsProfileTitle) settingsProfileTitle.textContent = nameDisplay;
+  loadTelegramSettings();
   return true;
 }
 
@@ -1539,13 +1540,74 @@ async function syncNow() {
   }
 }
 
-// Manually triggers the reminder simulation and logs the result.
+// Loads Telegram bot configuration and current user's chat ID into Settings.
+async function loadTelegramSettings() {
+  const input = document.getElementById("settingsTelegramChatId");
+  if (input && currentUser?.telegram_chat_id) {
+    input.value = currentUser.telegram_chat_id;
+  }
+
+  try {
+    const res = await fetch("/api/auth/telegram-config");
+    if (res.ok) {
+      const data = await res.json();
+      if (data.bot?.configured && data.bot.botUsername) {
+        const link = document.getElementById("openTelegramBotLink");
+        const hint = document.getElementById("telegramBotStatusHint");
+        if (link) {
+          link.href = `https://t.me/${data.bot.botUsername}`;
+          link.style.display = "inline-flex";
+          link.textContent = `OPEN @${data.bot.botUsername} ↗`;
+        }
+        if (hint) {
+          hint.textContent = `CONNECTED TO BOT: @${data.bot.botUsername}`;
+          hint.style.color = "var(--accent)";
+        }
+      }
+    }
+  } catch (_) {}
+}
+
+// Saves user's Telegram Chat ID to the database.
+async function saveTelegramChatId() {
+  const input = document.getElementById("settingsTelegramChatId");
+  const btn = document.getElementById("saveTelegramBtn");
+  if (!input) return;
+  const chatId = input.value.trim();
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/auth/telegram-chat-id", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      body: JSON.stringify({
+        email: currentUser.email,
+        token: currentUser.token,
+        telegram_chat_id: chatId,
+      }),
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      currentUser.telegram_chat_id = chatId;
+      localStorage.setItem("volp_user", JSON.stringify(currentUser));
+      showToast("Telegram Chat ID saved successfully!", "success");
+    } else {
+      throw new Error(data.error || "Failed to save Chat ID");
+    }
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// Manually triggers the 8 PM reminder Telegram simulation and logs the result.
 async function triggerReminder() {
   const btn = document.getElementById("reminderBtn");
   const pageBtn = document.getElementById("triggerReminderPageBtn");
   if (btn) btn.disabled = true;
   if (pageBtn) pageBtn.disabled = true;
-  showToast("Simulating 8 PM Cron Assignment Reminder...", "info");
+  showToast("Dispatching 8 PM Telegram Assignment Alert...", "info");
 
   try {
     const res = await fetch("/api/assignments/trigger-8pm-reminder", {
@@ -1559,13 +1621,13 @@ async function triggerReminder() {
 
     const data = await res.json();
     if (res.ok && data.success) {
-      showToast(data.message || "8 PM Reminder digest dispatched!", "success");
+      showToast(data.message || "8 PM Telegram alert dispatched!", "success");
       if (!window.reminderLogs) window.reminderLogs = [];
       window.reminderLogs.unshift({
-        title: "MANUAL 8 PM DISPATCH TRIGGER",
+        title: "MANUAL 8 PM TELEGRAM DISPATCH",
         message:
           data.message ||
-          `Dispatched assignment reminder digest to ${currentUser.email}`,
+          `Dispatched 8 PM Telegram assignment alert for ${currentUser.email}`,
         time: new Date().toLocaleTimeString(),
         success: true,
       });
@@ -1574,13 +1636,13 @@ async function triggerReminder() {
       throw new Error(data.error || "Server error");
     }
   } catch (e) {
-    showToast("8 PM Reminder triggered: " + e.message, "info");
+    showToast("8 PM Reminder: " + e.message, "info");
     if (!window.reminderLogs) window.reminderLogs = [];
     window.reminderLogs.unshift({
-      title: "MANUAL 8 PM DISPATCH TRIGGER",
-      message: `Trigger executed for ${currentUser.email}. Check server terminal / mailbox.`,
+      title: "MANUAL 8 PM TELEGRAM DISPATCH",
+      message: `Trigger executed for ${currentUser.email}: ${e.message}`,
       time: new Date().toLocaleTimeString(),
-      success: true,
+      success: false,
     });
     renderRemindersView();
   } finally {

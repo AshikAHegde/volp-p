@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import cron from 'node-cron';
 import { fetchUserAssignments, loginVOLP } from './volp.service.js';
-import { sendAssignmentReminderEmail } from './mail.service.js';
+import { sendAssignmentReminderTelegram } from './telegram.service.js';
 import { usersCollection, coursesCollection, assignmentsCollection } from './db.service.js';
 import { decrypt } from './encryption.service.js';
 
@@ -92,7 +92,7 @@ export const startCronJob = () => {
           );
 
           console.log(`   📋 ${allAssignments.length} total → ${assignments.length} after assignment blocks`);
-          await sendAssignmentReminderEmail(user.email, assignments);
+          await sendAssignmentReminderTelegram(user.email, assignments, user.telegram_chat_id);
         } catch (err) {
           console.log(`⚠ Failed to process user ${user.email}:`, err.message);
         }
@@ -156,6 +156,6 @@ export const triggerCronNow = async (userEmail, token) => {
   );
 
   console.log(`   📋 ${allAssignments.length} total → ${assignments.length} after assignment blocks`);
-  return sendAssignmentReminderEmail(userEmail, assignments);
+  return sendAssignmentReminderTelegram(userEmail, assignments);
 };
 

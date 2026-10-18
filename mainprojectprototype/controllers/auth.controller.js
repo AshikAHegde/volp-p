@@ -1,6 +1,7 @@
 import { loginVOLP, fetchUserCourses } from "../services/volp.service.js";
 import { usersCollection, coursesCollection } from "../services/db.service.js";
 import { encrypt } from "../services/encryption.service.js";
+import { getTelegramBotInfo } from "../services/telegram.service.js";
 
 // Authenticates user credentials with the VOLP portal and updates the user session in the database.
 export const login = async (req, res) => {
@@ -89,7 +90,7 @@ export const getActiveSession = async (req, res) => {
 
     const user = await usersCollection.findOne(
       { token },
-      { projection: { _id: 0, email: 1, token: 1, updated_at: 1 } },
+      { projection: { _id: 0, email: 1, token: 1, telegram_chat_id: 1, updated_at: 1 } },
     );
 
     if (!user) {
@@ -100,6 +101,7 @@ export const getActiveSession = async (req, res) => {
       success: true,
       email: user.email,
       token: user.token,
+      telegram_chat_id: user.telegram_chat_id || "",
     });
   } catch (err) {
     return res
@@ -138,5 +140,54 @@ export const logout = async (req, res) => {
     return res
       .status(500)
       .json({ error: "Logout failed: " + err.message });
+  }
+};
+
+// Updates or saves the user's Telegram chat_id for 8 PM reminders.
+export const updateTelegramChatId = async (req, res) => {
+  const email = req.user?.email || req.body?.email;
+  const telegramChatId = req.body?.telegram_chat_id;
+
+  if (!email) {
+    return res.status(400).json({ error: "User email is required." });
+  }
+
+  const cleanedChatId = String(telegramChatId || "").trim();
+
+  try {
+    await usersCollection.updateOne(
+      { email },
+      {
+        $set: {
+          telegram_chat_id: cleanedChatId,
+          updated_at: new Date(),
+        },
+      },
+      { upsert: false }
+    );
+
+    return res.json({
+      success: true,
+      message: "Telegram Chat ID saved successfully.",
+      telegram_chat_id: cleanedChatId,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ error: "Failed to update Telegram Chat ID: " + err.message });
+  }
+};
+
+// Returns Telegram bot status and public configuration.
+export const getTelegramConfig = async (req, res) => {
+  try {
+    const info = await getTelegramBotInfo();
+    return res.json({
+      success: true,
+      bot: info,
+      defaultChatId: process.env.TELEGRAM_CHAT_ID || null,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };

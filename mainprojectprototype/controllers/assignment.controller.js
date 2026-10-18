@@ -237,15 +237,16 @@ export const syncMyAssignments = async (request, response) => {
   }
 };
 
-// Manually triggers an immediate run of the reminder digest email simulation for a user.
+// Manually triggers an immediate run of the 8 PM reminder digest simulation for a user.
 export const triggerReminderSimulation = async (request, response) => {
   const { email, token } = request.user;
 
   try {
-    await triggerCronNow(email, token);
+    const result = await triggerCronNow(email, token);
     response.json({
       success: true,
-      message: `8 PM Email Reminder simulation executed for ${email}.`
+      message: result?.message || `8 PM Telegram Reminder dispatch executed for ${email}.`,
+      result
     });
   } catch (cronError) {
     response.status(500).json({ error: 'Cron trigger failed: ' + cronError.message });
