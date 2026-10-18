@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { initDB } from './services/db.service.js';
 import { startCronJob } from './services/cron.service.js';
+import { startTelegramPolling } from './services/telegram.service.js';
 import { projectRateLimiter } from './middleware/rate-limit.middleware.js';
 
 import authRoutes from './routes/auth.routes.js';
@@ -43,6 +44,7 @@ app.use('/api/blocked-assignments', blockedAssignmentRoutes);
 
 await initDB();
 startCronJob();
+startTelegramPolling();
 
 // Starts the Express server listener on the configured port.
 app.listen(PORT, () => {

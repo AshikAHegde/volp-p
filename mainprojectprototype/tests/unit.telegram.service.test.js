@@ -6,9 +6,11 @@
 import { jest } from '@jest/globals';
 
 const mockFindOne = jest.fn();
+const mockUpdateOne = jest.fn();
 await jest.unstable_mockModule('../services/db.service.js', () => ({
   usersCollection: {
     findOne: mockFindOne,
+    updateOne: mockUpdateOne,
   },
 }));
 
@@ -20,6 +22,8 @@ const {
   sendAssignmentReminderTelegram,
   getTelegramBotInfo,
   escapeTelegramHtml,
+  generateTelegramLinkToken,
+  handleTelegramIncomingMessage,
 } = await import('../services/telegram.service.js');
 
 describe('telegram.service.js', () => {
@@ -158,6 +162,58 @@ describe('telegram.service.js', () => {
       const info = await getTelegramBotInfo();
       expect(info.configured).toBe(true);
       expect(info.botUsername).toBe('MyVolpBot');
+    });
+  });
+
+  describe('generateTelegramLinkToken', () => {
+    test('generates secure link token and updates user in MongoDB', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          ok: true,
+          result: { username: 'MyVolpBot' },
+        }),
+      });
+
+      const res = await generateTelegramLinkToken('user@vit.edu');
+      expect(res.token).toMatch(/^volp_[a-f0-9]{16}$/);
+      expect(res.linkUrl).toContain(`https://t.me/MyVolpBot?start=${res.token}`);
+      expect(mockUpdateOne).toHaveBeenCalledWith(
+        { email: 'user@vit.edu' },
+        expect.objectContaining({
+          $set: expect.objectContaining({
+            telegram_link_token: res.token,
+          }),
+        })
+      );
+    });
+  });
+
+  describe('handleTelegramIncomingMessage', () => {
+    test('binds telegram_chat_id when user sends /start <valid_token>', async () => {
+      mockFindOne.mockResolvedValue({ email: 'ashik@vit.edu' });
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ ok: true, result: { message_id: 888 } }),
+      });
+
+      const message = {
+        chat: { id: 7526762528, first_name: 'Ashik' },
+        from: { username: 'ashik_hegde' },
+        text: '/start volp_1234567890abcdef',
+      };
+
+      await handleTelegramIncomingMessage(message);
+
+      expect(mockUpdateOne).toHaveBeenCalledWith(
+        { email: 'ashik@vit.edu' },
+        expect.objectContaining({
+          $set: expect.objectContaining({
+            telegram_chat_id: '7526762528',
+            telegram_username: 'ashik_hegde',
+          }),
+        })
+      );
     });
   });
 });

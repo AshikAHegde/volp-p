@@ -1,7 +1,12 @@
 import 'dotenv/config';
+import crypto from 'crypto';
 import { usersCollection } from './db.service.js';
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org';
+
+let isPollingActive = false;
+let pollingAbortController = null;
+let cachedBotUsername = null;
 
 // Escapes special characters for Telegram HTML mode (<, >, &)
 export const escapeTelegramHtml = (value) =>
@@ -161,6 +166,190 @@ export const getTelegramBotInfo = async () => {
     return { configured: false, error: data.description || 'Invalid bot token' };
   } catch (err) {
     return { configured: false, error: err.message };
+  }
+};
+
+/**
+ * Generates a one-time link token for 1-Click Telegram Deep Linking.
+ */
+export const generateTelegramLinkToken = async (userEmail) => {
+  const token = 'volp_' + crypto.randomBytes(8).toString('hex');
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+  await usersCollection.updateOne(
+    { email: userEmail },
+    {
+      $set: {
+        telegram_link_token: token,
+        telegram_link_expires: expiresAt,
+        updated_at: new Date()
+      }
+    }
+  );
+
+  let botUser = cachedBotUsername;
+  if (!botUser) {
+    const info = await getTelegramBotInfo();
+    if (info?.botUsername) {
+      cachedBotUsername = info.botUsername;
+      botUser = info.botUsername;
+    }
+  }
+
+  const linkUrl = botUser ? `https://t.me/${botUser}?start=${token}` : null;
+  return { token, botUsername: botUser, linkUrl };
+};
+
+/**
+ * Handles an incoming message from Telegram (e.g. /start <token>).
+ */
+export const handleTelegramIncomingMessage = async (message) => {
+  if (!message || !message.chat || !message.text) return;
+
+  const chatId = String(message.chat.id);
+  const text = message.text.trim();
+  const username = message.from?.username || message.chat?.username || '';
+  const firstName = message.from?.first_name || message.chat?.first_name || 'Learner';
+
+  const parts = text.split(/\s+/);
+  const command = parts[0].toLowerCase();
+  const startArg = parts[1] || '';
+
+  if (command === '/start') {
+    if (startArg) {
+      // Find user with this active link token
+      const user = await usersCollection.findOne({
+        telegram_link_token: startArg,
+        telegram_link_expires: { $gte: new Date() }
+      });
+
+      if (user) {
+        await usersCollection.updateOne(
+          { email: user.email },
+          {
+            $set: {
+              telegram_chat_id: chatId,
+              telegram_username: username,
+              updated_at: new Date()
+            },
+            $unset: {
+              telegram_link_token: '',
+              telegram_link_expires: ''
+            }
+          }
+        );
+
+        console.log(`✓ 1-Click Connected: ${user.email} -> Telegram Chat ID ${chatId} (@${username})`);
+
+        const welcomeMsg = [
+          `🎉 <b>Connection Successful!</b>`,
+          ``,
+          `Hello <b>${escapeTelegramHtml(firstName)}</b>! Your Telegram is now connected to <b>${escapeTelegramHtml(user.email)}</b>.`,
+          ``,
+          `⏰ You will automatically receive your assignment summary here every evening at <b>8:00 PM</b>.`,
+          ``,
+          `⚡ <i>No further setup required. You're all set!</i>`
+        ].join('\n');
+
+        await sendTelegramMessage(chatId, welcomeMsg).catch(e => console.error('Error sending welcome message:', e.message));
+        return;
+      } else {
+        const expiredMsg = [
+          `⚠ <b>Link Expired or Invalid</b>`,
+          ``,
+          `This connection link has expired or is invalid.`,
+          `Please return to your VOLP Reminder dashboard and click <b>Connect Telegram in 1-Click</b> to generate a fresh link.`
+        ].join('\n');
+        await sendTelegramMessage(chatId, expiredMsg).catch(() => {});
+        return;
+      }
+    }
+
+    // /start without parameter
+    const existing = await usersCollection.findOne({ telegram_chat_id: chatId });
+    if (existing) {
+      const alreadyMsg = [
+        `👋 Hello <b>${escapeTelegramHtml(firstName)}</b>!`,
+        ``,
+        `Your Telegram account is already connected to <b>${escapeTelegramHtml(existing.email)}</b>.`,
+        `You will receive assignment alerts every day at <b>8:00 PM</b>.`
+      ].join('\n');
+      await sendTelegramMessage(chatId, alreadyMsg).catch(() => {});
+    } else {
+      const promptMsg = [
+        `👋 Hello <b>${escapeTelegramHtml(firstName)}</b>!`,
+        ``,
+        `Welcome to <b>VOLP Reminder Bot</b>!`,
+        `To link this bot to your university account, please open your VOLP Reminder dashboard and click <b>Connect Telegram in 1-Click</b>.`
+      ].join('\n');
+      await sendTelegramMessage(chatId, promptMsg).catch(() => {});
+    }
+  }
+};
+
+/**
+ * Starts long-polling Telegram getUpdates in the background.
+ */
+export const startTelegramPolling = async () => {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    console.log('ℹ TELEGRAM_BOT_TOKEN is not set. Telegram polling skipped.');
+    return;
+  }
+
+  if (isPollingActive) {
+    return;
+  }
+
+  isPollingActive = true;
+  pollingAbortController = new AbortController();
+
+  console.log('🤖 Starting Telegram Bot Long Polling (1-Click deep link listener)...');
+
+  try {
+    const info = await getTelegramBotInfo();
+    if (info?.botUsername) {
+      cachedBotUsername = info.botUsername;
+      console.log(`✓ Telegram Bot active: @${cachedBotUsername}`);
+    }
+  } catch (_) {}
+
+  (async () => {
+    let offset = 0;
+    while (isPollingActive) {
+      try {
+        const url = `${TELEGRAM_API_BASE}/bot${token}/getUpdates?offset=${offset}&timeout=20&allowed_updates=["message"]`;
+        const res = await fetch(url, { signal: pollingAbortController?.signal });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.ok && Array.isArray(data.result)) {
+          for (const update of data.result) {
+            offset = Math.max(offset, update.update_id + 1);
+            if (update.message) {
+              await handleTelegramIncomingMessage(update.message).catch(err => {
+                console.error('Error handling Telegram update:', err.message);
+              });
+            }
+          }
+        } else {
+          await new Promise(r => setTimeout(r, 5000));
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') break;
+        await new Promise(r => setTimeout(r, 3000));
+      }
+    }
+  })();
+};
+
+/**
+ * Stops the Telegram polling loop.
+ */
+export const stopTelegramPolling = () => {
+  isPollingActive = false;
+  if (pollingAbortController) {
+    pollingAbortController.abort();
+    pollingAbortController = null;
   }
 };
 

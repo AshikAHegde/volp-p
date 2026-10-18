@@ -1,7 +1,7 @@
 import { loginVOLP, fetchUserCourses } from "../services/volp.service.js";
 import { usersCollection, coursesCollection } from "../services/db.service.js";
 import { encrypt } from "../services/encryption.service.js";
-import { getTelegramBotInfo } from "../services/telegram.service.js";
+import { getTelegramBotInfo, generateTelegramLinkToken } from "../services/telegram.service.js";
 
 // Authenticates user credentials with the VOLP portal and updates the user session in the database.
 export const login = async (req, res) => {
@@ -197,3 +197,80 @@ export const getTelegramConfig = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+// Generates a 1-Click Deep Link for connecting user's Telegram without manual Chat ID.
+export const getTelegramLinkToken = async (req, res) => {
+  const email = req.user?.email || req.body?.email;
+  if (!email) {
+    return res.status(400).json({ error: "User email is required." });
+  }
+
+  try {
+    const result = await generateTelegramLinkToken(email);
+    if (!result?.linkUrl) {
+      return res.status(500).json({
+        error: "Could not generate Telegram link. Bot token might be invalid or unconfigured."
+      });
+    }
+
+    return res.json({
+      success: true,
+      token: result.token,
+      botUsername: result.botUsername,
+      linkUrl: result.linkUrl
+    });
+  } catch (err) {
+    return res.status(500).json({ error: "Failed to generate Telegram link: " + err.message });
+  }
+};
+
+// Checks real-time Telegram connection status for the user.
+export const getTelegramStatus = async (req, res) => {
+  const email = req.user?.email || req.query?.email;
+  if (!email) {
+    return res.status(400).json({ error: "User email is required." });
+  }
+
+  try {
+    const user = await usersCollection.findOne(
+      { email },
+      { projection: { telegram_chat_id: 1, telegram_username: 1 } }
+    );
+
+    const isConnected = Boolean(user?.telegram_chat_id);
+    return res.json({
+      success: true,
+      connected: isConnected,
+      telegram_chat_id: user?.telegram_chat_id || "",
+      telegram_username: user?.telegram_username || ""
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+// Disconnects/unlinks Telegram from user's account.
+export const disconnectTelegram = async (req, res) => {
+  const email = req.user?.email || req.body?.email;
+  if (!email) {
+    return res.status(400).json({ error: "User email is required." });
+  }
+
+  try {
+    await usersCollection.updateOne(
+      { email },
+      {
+        $set: { telegram_chat_id: "", telegram_username: "", updated_at: new Date() },
+        $unset: { telegram_link_token: "", telegram_link_expires: "" }
+      }
+    );
+
+    return res.json({
+      success: true,
+      message: "Telegram disconnected successfully."
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+

@@ -1476,19 +1476,26 @@ function renderRemindersView() {
   const chatIdDisplay = currentUser?.telegram_chat_id ? `CHAT ID: ${currentUser.telegram_chat_id}` : "CHAT ID NOT SET (CLICK SETTINGS)";
   let html = "";
 
+  const userTag = currentUser?.telegram_username
+    ? `@${currentUser.telegram_username}`
+    : (currentUser?.telegram_chat_id ? `CHAT ID: ${currentUser.telegram_chat_id}` : "NOT CONNECTED");
+
   if (!currentUser?.telegram_chat_id) {
     html += `
-      <div class="note-card" style="border-left: 4px solid var(--warning); background: rgba(240, 187, 65, 0.08);">
+      <div class="note-card" style="border-left: 4px solid #0088cc; background: rgba(0, 136, 204, 0.08);">
         <div class="note-card-header">
-          <span style="color: var(--warning); font-weight: 700;">⚠️ TELEGRAM CHAT ID NOT CONFIGURED</span>
-          <span class="badge badge--pending">ACTION NEEDED</span>
+          <span style="color: #0088cc; font-weight: 700;">✈ CONNECT TELEGRAM FOR 8 PM REMINDERS</span>
+          <span class="badge badge--pending">1-CLICK SETUP</span>
         </div>
         <div class="note-card-body" style="font-size: 13px;">
-          You haven't connected your Telegram Chat ID yet! To receive automatic 8:00 PM alerts on your phone, enter your Telegram Chat ID in <strong>Settings</strong> or test an alert below.
+          Connect your Telegram account to start receiving daily assignment alerts directly on your phone every evening at 8:00 PM. No manual Chat ID setup required!
         </div>
-        <div class="note-card-footer" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-          <button class="btn btn--primary btn--sm" onclick="navigateTo('settings')">GO TO SETTINGS TO ENTER CHAT ID</button>
-          <span style="font-size: 11px; color: var(--muted);">Tip: Message <a href="https://t.me/userinfobot" target="_blank" style="color: var(--accent); text-decoration: underline;">@userinfobot</a> on Telegram to find your Chat ID.</span>
+        <div class="note-card-footer" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <button type="button" class="btn-telegram-connect" onclick="startOneClickTelegramConnect()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+            <span>CONNECT TELEGRAM IN 1-CLICK</span>
+          </button>
+          <span style="font-size: 11px; color: var(--muted);">⚡ Opens Telegram and auto-binds your session instantly.</span>
         </div>
       </div>
     `;
@@ -1499,16 +1506,22 @@ function renderRemindersView() {
     <div class="note-card">
       <div class="note-card-header">
         <span>DAILY TELEGRAM REMINDER CONFIGURATION</span>
-        <span class="badge ${currentUser?.telegram_chat_id ? "badge--submitted" : "badge--pending"}">${currentUser?.telegram_chat_id ? "ACTIVE BOT CRON" : "AWAITING CHAT ID"}</span>
+        <span class="badge ${currentUser?.telegram_chat_id ? "badge--submitted" : "badge--pending"}">${currentUser?.telegram_chat_id ? "ACTIVE BOT CRON" : "AWAITING TELEGRAM"}</span>
       </div>
       <div class="note-card-body">
         Daily cron is scheduled for <strong>8:00 PM ("0 20 * * *")</strong>. It checks all active enrolled courses, aggregates unsubmitted assignments, omits blocked items, and dispatches a consolidated digest directly via Telegram Bot.
-        <div style="margin-top: 10px; font-size: 11px; color: var(--text-secondary); background: rgba(0, 136, 204, 0.08); padding: 8px 12px; border-radius: 4px; border-left: 2px solid #0088cc;">
-          ℹ️ <strong>Telegram Requirement:</strong> Open <a href="https://t.me/${botUser}" target="_blank" style="color: #0088cc; font-weight: 700; text-decoration: underline;">@${botUser}</a> in Telegram and click <strong>START</strong> (/start) so Telegram permits messages.
-        </div>
+        ${!currentUser?.telegram_chat_id ? `
+          <div style="margin-top: 10px; font-size: 11px; color: var(--text-secondary); background: rgba(0, 136, 204, 0.08); padding: 8px 12px; border-radius: 4px; border-left: 2px solid #0088cc;">
+            ℹ️ <strong>1-Click Setup:</strong> Click the button above or in Settings to connect your bot in 1 click!
+          </div>
+        ` : `
+          <div style="margin-top: 10px; font-size: 11px; color: var(--accent); background: rgba(103, 224, 130, 0.08); padding: 8px 12px; border-radius: 4px; border-left: 2px solid var(--accent);">
+            ✓ <strong>Connected:</strong> Reminders will be pushed to <strong>${escapeHtml(userTag)}</strong>.
+          </div>
+        `}
       </div>
       <div class="note-card-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-        <span>RECIPIENT: ${escapeHtml(chatIdDisplay)} | PENDING TO SEND: ${pendingUnblocked} | MUTED ITEMS: ${blockedCount}</span>
+        <span>RECIPIENT: ${escapeHtml(userTag)} | PENDING TO SEND: ${pendingUnblocked} | MUTED ITEMS: ${blockedCount}</span>
         <a id="remindersBotLink" href="https://t.me/${botUser}" target="_blank" class="btn btn--ghost btn--sm" style="color: #0088cc;">
           OPEN @${botUser} IN TELEGRAM ↗
         </a>
@@ -1589,11 +1602,38 @@ async function syncNow() {
   }
 }
 
+let telegramPollTimer = null;
+
 // Loads Telegram bot configuration and current user's chat ID into Settings.
 async function loadTelegramSettings() {
   const input = document.getElementById("settingsTelegramChatId");
   if (input && currentUser?.telegram_chat_id) {
     input.value = currentUser.telegram_chat_id;
+  }
+
+  const notConnectedView = document.getElementById("telegramNotConnectedView");
+  const connectedView = document.getElementById("telegramConnectedView");
+  const details = document.getElementById("telegramConnectedDetails");
+  const hint = document.getElementById("telegramBotStatusHint");
+
+  if (currentUser?.telegram_chat_id) {
+    if (notConnectedView) notConnectedView.style.display = "none";
+    if (connectedView) connectedView.style.display = "block";
+    if (details) {
+      const userTag = currentUser.telegram_username ? `@${currentUser.telegram_username}` : `Chat ID: ${currentUser.telegram_chat_id}`;
+      details.textContent = `Connected to ${userTag}. Daily 8:00 PM alerts are active.`;
+    }
+    if (hint) {
+      hint.textContent = `STATUS: CONNECTED • DAILY 8 PM DISPATCH ACTIVE`;
+      hint.style.color = "var(--accent)";
+    }
+  } else {
+    if (notConnectedView) notConnectedView.style.display = "block";
+    if (connectedView) connectedView.style.display = "none";
+    if (hint) {
+      hint.textContent = `STATUS: NOT CONNECTED • CONNECT IN 1-CLICK BELOW`;
+      hint.style.color = "var(--muted)";
+    }
   }
 
   try {
@@ -1603,15 +1643,10 @@ async function loadTelegramSettings() {
       if (data.bot?.configured && data.bot.botUsername) {
         window.telegramBotUsername = data.bot.botUsername;
         const link = document.getElementById("openTelegramBotLink");
-        const hint = document.getElementById("telegramBotStatusHint");
         if (link) {
           link.href = `https://t.me/${data.bot.botUsername}`;
           link.style.display = "inline-flex";
           link.textContent = `OPEN @${data.bot.botUsername} ↗`;
-        }
-        if (hint) {
-          hint.textContent = `CONNECTED TO BOT: @${data.bot.botUsername}`;
-          hint.style.color = "var(--accent)";
         }
         const remindersLink = document.getElementById("remindersBotLink");
         if (remindersLink) {
@@ -1621,6 +1656,111 @@ async function loadTelegramSettings() {
       }
     }
   } catch (_) {}
+}
+
+// Initiates the 1-Click Telegram Deep Link connection.
+async function startOneClickTelegramConnect() {
+  const btn = document.getElementById("btnOneClickConnect");
+  const originalHtml = btn ? btn.innerHTML : "";
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span style="display:inline-flex; align-items:center; gap:6px;">GENERATING SECURE LINK...</span>`;
+  }
+
+  try {
+    const res = await fetch("/api/auth/telegram-link-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      body: JSON.stringify({ email: currentUser.email, token: currentUser.token }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.linkUrl) {
+      throw new Error(data.error || "Could not generate Telegram link.");
+    }
+
+    // Open Telegram in a new tab/app
+    window.open(data.linkUrl, "_blank");
+    showToast("Opening Telegram... Tap 'START' to link your account!", "info");
+
+    if (btn) {
+      btn.innerHTML = `<span>AWAITING 'START' IN TELEGRAM...</span>`;
+    }
+
+    pollTelegramConnectionStatus(btn, originalHtml);
+  } catch (err) {
+    showToast(err.message, "error");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  }
+}
+
+// Polls real-time connection status until user taps START in Telegram.
+function pollTelegramConnectionStatus(btn, originalHtml, attemptsLeft = 30) {
+  if (telegramPollTimer) clearTimeout(telegramPollTimer);
+
+  telegramPollTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(
+        `/api/auth/telegram-status?email=${encodeURIComponent(currentUser.email)}`,
+        { headers: getAuthHeaders() }
+      );
+      const data = await res.json();
+
+      if (res.ok && data.connected) {
+        currentUser.telegram_chat_id = data.telegram_chat_id;
+        currentUser.telegram_username = data.telegram_username || "";
+        localStorage.setItem("volp_user", JSON.stringify(currentUser));
+        loadTelegramSettings();
+        if (currentTab === "reminders") renderRemindersView();
+        showToast("🎉 Telegram connected successfully in 1-Click!", "success");
+        return;
+      }
+    } catch (_) {}
+
+    if (attemptsLeft > 1) {
+      pollTelegramConnectionStatus(btn, originalHtml, attemptsLeft - 1);
+    } else {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    }
+  }, 2000);
+}
+
+// Disconnects user's Telegram bot connection.
+async function disconnectTelegram() {
+  openModal(
+    "DISCONNECT TELEGRAM",
+    "Are you sure you want to disconnect Telegram reminders? You will no longer receive daily 8 PM homework alerts.",
+    async () => {
+      try {
+        const res = await fetch("/api/auth/telegram-disconnect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify({ email: currentUser.email, token: currentUser.token }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          currentUser.telegram_chat_id = "";
+          currentUser.telegram_username = "";
+          localStorage.setItem("volp_user", JSON.stringify(currentUser));
+          const input = document.getElementById("settingsTelegramChatId");
+          if (input) input.value = "";
+          loadTelegramSettings();
+          if (currentTab === "reminders") renderRemindersView();
+          showToast("Telegram disconnected successfully", "info");
+        } else {
+          throw new Error(data.error || "Failed to disconnect");
+        }
+      } catch (e) {
+        showToast(e.message, "error");
+      }
+    }
+  );
 }
 
 // Saves user's Telegram Chat ID to the database.

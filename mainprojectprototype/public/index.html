@@ -492,18 +492,38 @@
               </div>
 
               <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 24px;">
-                <div class="form-group">
-                  <label class="form-label">YOUR TELEGRAM CHAT ID</label>
-                  <div style="display: flex; gap: 10px;">
-                    <input type="text" class="form-input" id="settingsTelegramChatId" placeholder="e.g. 123456789">
-                    <button type="button" class="btn btn--primary" onclick="saveTelegramChatId()" id="saveTelegramBtn">SAVE ID</button>
+                <!-- 1-Click Connection Section -->
+                <div id="telegramConnectActionBox" style="background: rgba(0, 136, 204, 0.05); border: 1px solid rgba(0, 136, 204, 0.2); border-radius: var(--radius-sm); padding: 18px;">
+                  <div id="telegramNotConnectedView">
+                    <div style="font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">Zero-Friction Connection (1-Click)</div>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5;">
+                      Click the button below to open Telegram and tap <strong>START</strong>. Your university account will be automatically recognized and connected in seconds.
+                    </p>
+                    <button type="button" class="btn-telegram-connect" id="btnOneClickConnect" onclick="startOneClickTelegramConnect()">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+                      <span>CONNECT TELEGRAM IN 1-CLICK</span>
+                    </button>
                   </div>
-                  <div class="meta-text" style="margin-top: 6px; font-size: 11px;">
-                    Tip: Start a chat with your Telegram Bot or <a href="https://t.me/userinfobot" target="_blank" style="color: var(--accent); text-decoration: underline;">@userinfobot</a> to find your numeric Chat ID.
+
+                  <div id="telegramConnectedView" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                      <div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                          <span style="color: var(--accent); font-size: 16px;">✓</span>
+                          <span style="font-weight: 700; color: var(--accent); font-size: 13px;">TELEGRAM BOT CONNECTED</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;" id="telegramConnectedDetails">
+                          Daily 8:00 PM alerts are active.
+                        </div>
+                      </div>
+                      <button type="button" class="btn btn--danger btn--sm" onclick="disconnectTelegram()">
+                        DISCONNECT BOT
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div class="settings-footer-actions" style="margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <div class="settings-footer-actions" style="margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap;">
                   <button type="button" class="btn btn--ghost btn--sm" onclick="triggerReminder()">
                     SEND SAMPLE TELEGRAM ALERT NOW
                   </button>
@@ -511,6 +531,15 @@
                     OPEN BOT IN TELEGRAM ↗
                   </a>
                 </div>
+
+                <!-- Collapsible Manual Option for edge cases -->
+                <details style="margin-top: 8px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border-subtle); padding-top: 10px;">
+                  <summary style="cursor: pointer; user-select: none;">Manual Chat ID Setup (Optional Fallback)</summary>
+                  <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <input type="text" class="form-input" id="settingsTelegramChatId" placeholder="e.g. 123456789">
+                    <button type="button" class="btn btn--primary btn--sm" onclick="saveTelegramChatId()" id="saveTelegramBtn">SAVE ID</button>
+                  </div>
+                </details>
               </div>
             </div>
           </div>

@@ -2959,6 +2959,29 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Email & Telegram Mock Visuals */
+.btn-telegram-connect {
+  background: #0088cc;
+  color: #ffffff !important;
+  border: 1px solid #0099e6;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0, 136, 204, 0.25);
+}
+
+.btn-telegram-connect:hover {
+  background: #0099e6;
+  box-shadow: 0 6px 16px rgba(0, 136, 204, 0.4);
+  transform: translateY(-1px);
+}
+
 .telegram-mock-card {
   background: var(--surface);
   border: 1px solid rgba(0, 136, 204, 0.35);
