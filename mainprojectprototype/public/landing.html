@@ -53,7 +53,7 @@
     </h1>
 
     <p class="hero-subtitle">
-      VOLP Reminder connects to your university portal, pulls all your assignments from every course automatically, and sends you a daily 8:00 PM email digest so you always know what's due — without clicking through 16 different pages every day.
+      VOLP Reminder connects to your university portal, pulls all your assignments from every course automatically, and sends you a daily 8:00 PM Telegram bot alert so you always know what's due — without clicking through 16 different pages every day.
     </p>
 
     <div class="hero-actions">
@@ -74,7 +74,7 @@
       </div>
       <div class="hero-badge-item">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>Nightly 8:00 PM Email Digest</span>
+        <span>Nightly 8:00 PM Telegram Alert</span>
       </div>
       <div class="hero-badge-item">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -165,26 +165,34 @@
           
           <div class="mockup-card-pane">
             <div class="mockup-pane-title">
-              <span>Nightly 8:00 PM Email Digest</span>
+              <span>Nightly 8:00 PM Telegram Alert</span>
               <span class="badge badge--accent" style="font-size: 9px;">AUTOMATED</span>
             </div>
 
-            <div class="mockup-email-box">
-              <div class="mockup-email-meta">
-                <div><strong>FROM:</strong> VOLP Reminder Bot &lt;notifier@univ.edu&gt;</div>
-                <div><strong>TO:</strong> your@email.edu</div>
-                <div><strong>SUBJECT:</strong> 🔔 Reminder: 2 Coursework Deadlines Due Soon!</div>
+            <div class="mockup-telegram-box" style="border-color: rgba(0, 136, 204, 0.35); background: rgba(0, 136, 204, 0.03);">
+              <div class="mockup-telegram-meta" style="border-bottom-color: rgba(0, 136, 204, 0.2); display: flex; align-items: center; gap: 8px;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: #0088cc; display: flex; align-items: center; justify-content: center; color: #fff;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+                </div>
+                <div>
+                  <div style="font-weight: 700; color: var(--text-primary); font-size: 11px;">VOLP Reminder Bot <span style="background: rgba(0, 136, 204, 0.2); color: #0088cc; padding: 1px 4px; border-radius: 3px; font-size: 9px; margin-left: 4px;">BOT</span></div>
+                  <div style="color: var(--muted); font-size: 10px;">8:00 PM • Direct Push Notification</div>
+                </div>
               </div>
-              <div style="color: var(--text-secondary); line-height: 1.5;">
-                Hello Student,<br>
-                Here is your nightly 8:00 PM coursework digest:<br>
-                <div style="margin: 8px 0; padding: 6px 10px; background: rgba(255, 92, 92, 0.1); border-left: 2px solid var(--danger); font-size: 11px;">
-                  ⚠️ <strong>Compiler Design</strong> — Assignment 7 due tonight at 11:59 PM!
+              <div style="color: var(--text-secondary); line-height: 1.5; margin-top: 10px;">
+                📚 <strong>VOLP 8 PM Assignment Reminder</strong><br>
+                Hello Student, you have <strong>2 pending assignments</strong>:<br>
+                <div style="margin: 8px 0; padding: 6px 10px; background: rgba(255, 92, 92, 0.1); border-left: 2px solid var(--danger); font-size: 11px; border-radius: 4px;">
+                  ⚠️ <strong>Compiler Design [SUBJECTIVE]</strong><br>
+                  📝 Assignment 7: Symbol Table<br>
+                  📅 Due: Tonight, 11:59 PM
                 </div>
-                <div style="margin: 6px 0; padding: 6px 10px; background: rgba(240, 187, 65, 0.1); border-left: 2px solid var(--warning); font-size: 11px;">
-                  ⏳ <strong>Operating Systems</strong> — Unit 4 Report due tomorrow.
+                <div style="margin: 6px 0; padding: 6px 10px; background: rgba(240, 187, 65, 0.1); border-left: 2px solid var(--warning); font-size: 11px; border-radius: 4px;">
+                  ⏳ <strong>Operating Systems [HANDS_ON]</strong><br>
+                  📝 Unit 4: Process Synchronization Lab<br>
+                  📅 Due: Tomorrow, 11:59 PM
                 </div>
-                <div style="color: var(--muted); font-size: 10px; margin-top: 6px;">Next automated check: Tomorrow at 8:00 PM.</div>
+                <div style="color: var(--muted); font-size: 10px; margin-top: 6px;">⚡ Direct to your Telegram phone app • Instant push!</div>
               </div>
             </div>
           </div>
@@ -243,7 +251,7 @@
           </li>
           <li class="comparison-item">
             <span style="color: var(--accent); font-weight: 700;">✓</span>
-            <div><strong>Nightly 8:00 PM email summary:</strong> Every evening, an automatic email tells you exactly what's due tonight and tomorrow — nothing gets missed.</div>
+            <div><strong>Nightly 8:00 PM Telegram summary:</strong> Every evening, an automatic Telegram push message tells you exactly what's due tonight and tomorrow — nothing gets missed.</div>
           </li>
           <li class="comparison-item">
             <span style="color: var(--accent); font-weight: 700;">✓</span>
@@ -296,9 +304,9 @@
         <div class="feature-icon-box">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
         </div>
-        <div class="feature-title">Daily 8:00 PM Email Reminder</div>
+        <div class="feature-title">Daily 8:00 PM Telegram Bot Alert</div>
         <p class="feature-desc">
-          Every evening at 8:00 PM, you receive a clean email listing tonight's and tomorrow's pending assignments. You can also trigger a manual reminder anytime from the dashboard.
+          Every evening at 8:00 PM, you receive a direct Telegram alert listing tonight's and tomorrow's pending assignments. You can also trigger a manual reminder anytime from the dashboard.
         </p>
       </div>
 
@@ -309,7 +317,7 @@
         </div>
         <div class="feature-title">Course & Assignment Muting</div>
         <p class="feature-desc">
-          Finished an elective? Already submitted a unit? Mute it with one click. Muted items disappear from your pending counts and won't appear in your daily email.
+          Finished an elective? Already submitted a unit? Mute it with one click. Muted items disappear from your pending counts and won't appear in your daily Telegram alerts.
         </p>
       </div>
 
@@ -368,8 +376,8 @@
 
       <div class="workflow-card">
         <div class="workflow-num">04</div>
-        <div class="workflow-step-title">Get Reminded Every Evening at 8 PM</div>
-        <div class="workflow-step-desc">Sit back — every night at 8:00 PM, an automatic email lands in your inbox with a list of assignments due tonight and tomorrow. Nothing slips through.</div>
+        <div class="workflow-step-title">Get Reminded Every Evening at 8 PM on Telegram</div>
+        <div class="workflow-step-desc">Sit back — every night at 8:00 PM, an automatic Telegram notification lands on your phone with a clean list of assignments due tonight and tomorrow. Nothing slips through.</div>
       </div>
     </div>
   </section>
@@ -405,11 +413,11 @@
 
       <div class="faq-item" onclick="toggleFaq(this)">
         <div class="faq-question">
-          <span>What time does the email reminder arrive?</span>
+          <span>What time does the Telegram reminder arrive?</span>
           <span class="faq-chevron">▼</span>
         </div>
         <div class="faq-answer">
-          The system automatically sends a reminder email every evening at 8:00 PM. It lists all assignments due tonight and tomorrow. You can also send yourself a reminder manually anytime from the Reminders section of the dashboard.
+          The system automatically sends a reminder alert every evening at 8:00 PM directly to your Telegram bot. It lists all assignments due tonight and tomorrow. You can also send yourself a reminder manually anytime from the Reminders section of the dashboard.
         </div>
       </div>
 
@@ -419,7 +427,7 @@
           <span class="faq-chevron">▼</span>
         </div>
         <div class="faq-answer">
-          Yes. From the Courses or Assignments tab, you can mute any course or individual assignment with one click. Muted items are removed from your pending counts, dashboard views, and will not trigger email notifications.
+          Yes. From the Courses or Assignments tab, you can mute any course or individual assignment with one click. Muted items are removed from your pending counts, dashboard views, and will not trigger Telegram notifications.
         </div>
       </div>
 
@@ -439,7 +447,7 @@
   <div class="landing-cta-banner">
     <h2 class="landing-cta-title">Stop Checking the Portal Manually.</h2>
     <p class="landing-cta-sub">
-      Sign in with your university account, let VOLP Reminder fetch everything, and get your daily 8 PM email — all in under a minute.
+      Sign in with your university account, let VOLP Reminder fetch everything, and get your daily 8 PM Telegram alert — all in under a minute.
     </p>
     <a href="login.html" class="btn-hero-primary" id="bottomUseProjectBtn" style="padding: 16px 36px; font-size: 15px;">
       <span>GET STARTED NOW</span>

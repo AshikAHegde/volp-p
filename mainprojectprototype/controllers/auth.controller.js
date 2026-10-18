@@ -61,11 +61,17 @@ export const login = async (req, res) => {
       console.warn("Could not pre-fetch courses on login:", courseErr.message);
     }
 
+    const existingUser = await usersCollection.findOne(
+      { email: username },
+      { projection: { telegram_chat_id: 1 } }
+    );
+
     res.json({
       success: true,
       message: "VOLP Login & User Registration Successful",
       email: username,
       token,
+      telegram_chat_id: existingUser?.telegram_chat_id || "",
     });
   } catch (err) {
     res.status(401).json({ error: "Authentication failed: " + err.message });

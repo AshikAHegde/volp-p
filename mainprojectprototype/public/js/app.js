@@ -178,6 +178,24 @@ function initUserSession() {
   if (settingsLargeAvatar) settingsLargeAvatar.textContent = avatarText;
   if (settingsProfileTitle) settingsProfileTitle.textContent = nameDisplay;
   loadTelegramSettings();
+
+  if (currentUser?.token) {
+    fetch("/api/auth/session", {
+      headers: { Authorization: `Bearer ${currentUser.token}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.telegram_chat_id) {
+          currentUser.telegram_chat_id = data.telegram_chat_id;
+          localStorage.setItem("volp_user", JSON.stringify(currentUser));
+          const input = document.getElementById("settingsTelegramChatId");
+          if (input && !input.value) input.value = data.telegram_chat_id;
+          if (currentTab === "reminders") renderRemindersView();
+        }
+      })
+      .catch(() => {});
+  }
+
   return true;
 }
 
@@ -449,6 +467,9 @@ function navigateTo(pageId, event) {
 
   if (pageId === "reminders") {
     renderRemindersView();
+  }
+  if (pageId === "settings") {
+    loadTelegramSettings();
   }
   if (pageId === "calendar") {
     renderCalendarCourseFilter();
@@ -1452,17 +1473,45 @@ function renderRemindersView() {
   const blockedCount =
     blockedCoursesList.length + blockedAssignmentsList.length;
 
-  let html = `
+  const chatIdDisplay = currentUser?.telegram_chat_id ? `CHAT ID: ${currentUser.telegram_chat_id}` : "CHAT ID NOT SET (CLICK SETTINGS)";
+  let html = "";
+
+  if (!currentUser?.telegram_chat_id) {
+    html += `
+      <div class="note-card" style="border-left: 4px solid var(--warning); background: rgba(240, 187, 65, 0.08);">
+        <div class="note-card-header">
+          <span style="color: var(--warning); font-weight: 700;">⚠️ TELEGRAM CHAT ID NOT CONFIGURED</span>
+          <span class="badge badge--pending">ACTION NEEDED</span>
+        </div>
+        <div class="note-card-body" style="font-size: 13px;">
+          You haven't connected your Telegram Chat ID yet! To receive automatic 8:00 PM alerts on your phone, enter your Telegram Chat ID in <strong>Settings</strong> or test an alert below.
+        </div>
+        <div class="note-card-footer" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <button class="btn btn--primary btn--sm" onclick="navigateTo('settings')">GO TO SETTINGS TO ENTER CHAT ID</button>
+          <span style="font-size: 11px; color: var(--muted);">Tip: Message <a href="https://t.me/userinfobot" target="_blank" style="color: var(--accent); text-decoration: underline;">@userinfobot</a> on Telegram to find your Chat ID.</span>
+        </div>
+      </div>
+    `;
+  }
+
+  const botUser = window.telegramBotUsername || "volp_remainder_bot";
+  html += `
     <div class="note-card">
       <div class="note-card-header">
-        <span>DAILY REMINDER SERVICE CONFIGURATION</span>
-        <span class="badge badge--submitted">ACTIVE CRON</span>
+        <span>DAILY TELEGRAM REMINDER CONFIGURATION</span>
+        <span class="badge ${currentUser?.telegram_chat_id ? "badge--submitted" : "badge--pending"}">${currentUser?.telegram_chat_id ? "ACTIVE BOT CRON" : "AWAITING CHAT ID"}</span>
       </div>
       <div class="note-card-body">
-        Daily cron is scheduled for <strong>8:00 PM ("0 20 * * *")</strong>. It checks all active enrolled courses, aggregates unsubmitted assignments, omits blocked items, and dispatches a consolidated digest via SMTP.
+        Daily cron is scheduled for <strong>8:00 PM ("0 20 * * *")</strong>. It checks all active enrolled courses, aggregates unsubmitted assignments, omits blocked items, and dispatches a consolidated digest directly via Telegram Bot.
+        <div style="margin-top: 10px; font-size: 11px; color: var(--text-secondary); background: rgba(0, 136, 204, 0.08); padding: 8px 12px; border-radius: 4px; border-left: 2px solid #0088cc;">
+          ℹ️ <strong>Telegram Requirement:</strong> Open <a href="https://t.me/${botUser}" target="_blank" style="color: #0088cc; font-weight: 700; text-decoration: underline;">@${botUser}</a> in Telegram and click <strong>START</strong> (/start) so Telegram permits messages.
+        </div>
       </div>
-      <div class="note-card-footer">
-        RECIPIENT: ${escapeHtml(currentUser?.email || "N/A")} | PENDING TO SEND: ${pendingUnblocked} | MUTED ITEMS: ${blockedCount}
+      <div class="note-card-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <span>RECIPIENT: ${escapeHtml(chatIdDisplay)} | PENDING TO SEND: ${pendingUnblocked} | MUTED ITEMS: ${blockedCount}</span>
+        <a id="remindersBotLink" href="https://t.me/${botUser}" target="_blank" class="btn btn--ghost btn--sm" style="color: #0088cc;">
+          OPEN @${botUser} IN TELEGRAM ↗
+        </a>
       </div>
     </div>
   `;
@@ -1473,10 +1522,10 @@ function renderRemindersView() {
         <div class="note-card">
           <div class="note-card-header">
             <span>${escapeHtml(log.title)} — ${escapeHtml(log.time)}</span>
-            <span class="badge ${log.success ? "badge--submitted" : "badge--pending"}">${log.success ? "SENT" : "LOGGED"}</span>
+            <span class="badge ${log.success ? "badge--submitted" : "badge--pending"}">${log.success ? "DELIVERED" : "LOGGED"}</span>
           </div>
           <div class="note-card-body">${escapeHtml(log.message)}</div>
-          <div class="note-card-footer">RECIPIENT: ${escapeHtml(currentUser?.email || "N/A")} | STATUS: PROCESSED</div>
+          <div class="note-card-footer">CHANNEL: TELEGRAM PUSH | RECIPIENT: ${escapeHtml(currentUser?.telegram_chat_id || currentUser?.email || "N/A")} | STATUS: PROCESSED</div>
         </div>
       `;
     });
@@ -1552,6 +1601,7 @@ async function loadTelegramSettings() {
     if (res.ok) {
       const data = await res.json();
       if (data.bot?.configured && data.bot.botUsername) {
+        window.telegramBotUsername = data.bot.botUsername;
         const link = document.getElementById("openTelegramBotLink");
         const hint = document.getElementById("telegramBotStatusHint");
         if (link) {
@@ -1562,6 +1612,11 @@ async function loadTelegramSettings() {
         if (hint) {
           hint.textContent = `CONNECTED TO BOT: @${data.bot.botUsername}`;
           hint.style.color = "var(--accent)";
+        }
+        const remindersLink = document.getElementById("remindersBotLink");
+        if (remindersLink) {
+          remindersLink.href = `https://t.me/${data.bot.botUsername}`;
+          remindersLink.textContent = `OPEN @${data.bot.botUsername} IN TELEGRAM ↗`;
         }
       }
     }
@@ -1657,7 +1712,7 @@ async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
 
   openModal(
     `${actionText.toUpperCase()} COURSE`,
-    `Are you sure you want to ${actionText} "${courseName}"? ${currentlyBlocked ? "It will reappear in daily reminders." : "All assignments for this course will be omitted from 8 PM email digests."}`,
+    `Are you sure you want to ${actionText} "${courseName}"? ${currentlyBlocked ? "It will reappear in daily reminders." : "All assignments for this course will be omitted from 8 PM Telegram alerts."}`,
     async () => {
       try {
         const response = await fetch("/api/blocked", {
@@ -1951,10 +2006,10 @@ const TOUR_STEPS = [
     step: 3,
     kicker: "04 / ZERO CLUTTER",
     title: "Silence Old Semesters or Extra Subjects (Muting)",
-    narrative: "Have subjects from an earlier semester or elective labs you don't need alerts for? Click 'Block' to silence them. They stay safely on your official college portal, but won't clutter your dashboard or spam your email inbox.",
+    narrative: "Have subjects from an earlier semester or elective labs you don't need alerts for? Click 'Block' to silence them. They stay safely on your official college portal, but won't clutter your dashboard or spam your phone with notifications.",
     points: [
       "Declutter Your View: Muted subjects disappear from your daily homework board.",
-      "Silence Email Alerts: Muted subjects won't generate daily reminder emails.",
+      "Silence Telegram Alerts: Muted subjects won't generate daily reminder alerts.",
       "Easy to Un-mute: Review or restore any muted subject anytime in the 'BLOCKED ITEMS' tab."
     ],
     protip: "Helpful Tip: Go to the 'COURSES' tab to mute any past courses you've already passed so your active view stays clean.",
@@ -1982,34 +2037,47 @@ const TOUR_STEPS = [
   {
     step: 4,
     kicker: "05 / EVENING REMINDERS",
-    title: "Automatic 8:00 PM Email Directly to Your Inbox",
-    narrative: "You don't even need to open this app every single day! Every evening at 8:00 PM, the system automatically checks your active subjects and sends a polite summary email with only the tasks you still need to finish.",
+    title: "Automatic 8:00 PM Alert Directly to Your Telegram",
+    narrative: "You don't even need to open this app every single day! Every evening at 8:00 PM, the system automatically checks your active subjects and sends a direct Telegram push notification to your phone with only the tasks you still need to finish.",
     points: [
-      "Arrives Daily at 8:00 PM: Sent straight to your email so you never miss tomorrow's submission.",
+      "Arrives Daily at 8:00 PM: Sent straight to your Telegram bot so you never miss tomorrow's submission.",
       "Clean & Short: Lists only pending tasks with subject names and exact deadlines.",
-      "Test Anytime: Click the button below to send yourself a test reminder right now!"
+      "Test Anytime: Click the button below to test your Telegram push notification right now!"
     ],
-    protip: "Helpful Tip: Click 'Send Me a Sample Email Now' below to test your email notification right away!",
-    actionLabel: "Send Me a Sample Email Now",
+    protip: "Helpful Tip: Click 'Send Sample Telegram Alert Now' below to test your Telegram notification right away!",
+    actionLabel: "Send Sample Telegram Alert Now",
     actionFn: () => { closeInteractiveTour(); triggerReminder(); },
     renderVisual: () => `
-      <div class="email-mock-card">
-        <div class="email-mock-header">
-          <span class="email-dot red"></span>
-          <span class="email-dot yellow"></span>
-          <span class="email-dot green"></span>
-          <span class="email-subject-line">🔔 College Reminder: 2 Pending Assignments Due Soon</span>
+      <div class="telegram-mock-card" style="border: 1px solid rgba(0, 136, 204, 0.35); background: rgba(0, 136, 204, 0.03); border-radius: var(--radius-md); overflow: hidden;">
+        <div class="telegram-mock-header">
+          <div class="telegram-mock-avatar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+          </div>
+          <div>
+            <div class="telegram-mock-botname">
+              VOLP Reminder Bot
+              <span class="telegram-mock-badge">BOT</span>
+            </div>
+            <div class="telegram-mock-sub">8:00 PM • Direct Push Notification</div>
+          </div>
         </div>
-        <div class="email-mock-table-wrap">
-          <table class="email-mock-table">
-            <thead>
-              <tr><th>Subject</th><th>What is Due?</th><th>Due Date</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Compiler Design</td><td>Assignment 7: Symbol Table</td><td>Tonight, 11:59 PM</td></tr>
-              <tr><td>Operating Systems</td><td>Unit 4: Process Sync Report</td><td>Tomorrow</td></tr>
-            </tbody>
-          </table>
+        <div class="telegram-mock-body">
+          <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">📚 VOLP 8 PM Assignment Reminder</div>
+          <div>Hello Student, you have <strong>2 pending assignments</strong>:</div>
+          <div class="telegram-mock-item telegram-mock-item--urgent">
+            <div style="font-weight: 700; color: var(--text-primary);">1. Compiler Design <span style="font-size: 10px; color: var(--muted); font-weight: 400;">[SUBJECTIVE]</span></div>
+            <div>📝 Assignment 7: Symbol Table</div>
+            <div style="color: var(--danger); font-weight: 600;">📅 Due: Tonight, 11:59 PM</div>
+          </div>
+          <div class="telegram-mock-item telegram-mock-item--warning">
+            <div style="font-weight: 700; color: var(--text-primary);">2. Operating Systems <span style="font-size: 10px; color: var(--muted); font-weight: 400;">[HANDS_ON]</span></div>
+            <div>📝 Unit 4: Process Synchronization Lab</div>
+            <div style="color: var(--warning); font-weight: 600;">📅 Due: Tomorrow, 11:59 PM</div>
+          </div>
+          <div style="font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0, 136, 204, 0.15); padding-top: 6px; margin-top: 6px;">
+            <span>⚡ Direct push to Telegram</span>
+            <span>8:00 PM ✓✓</span>
+          </div>
         </div>
       </div>
     `

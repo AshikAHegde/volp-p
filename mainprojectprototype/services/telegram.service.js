@@ -41,7 +41,12 @@ export const sendTelegramMessage = async (chatId, text, options = {}) => {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok || !data.ok) {
-    const errorMsg = data.description || `Telegram API responded with HTTP ${res.status}`;
+    let errorMsg = data.description || `Telegram API responded with HTTP ${res.status}`;
+    if (errorMsg.toLowerCase().includes('chat not found')) {
+      errorMsg = 'Chat not found. Please open your bot in Telegram and press START (/start) so it can send you messages.';
+    } else if (errorMsg.toLowerCase().includes('blocked by the user')) {
+      errorMsg = 'Bot was blocked. Please unblock your bot in Telegram.';
+    }
     console.error(`❌ Telegram send error for chat ${chatId}:`, errorMsg);
     throw new Error(errorMsg);
   }

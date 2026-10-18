@@ -102,7 +102,7 @@
           <span class="tour-step-count">5 STEPS</span>
         </div>
         <div class="tour-card-title">How This App Helps You</div>
-        <p class="tour-card-desc">A quick 2-minute visual guide: automatic homework fetching, tracking deadlines & daily 8 PM email reminders.</p>
+        <p class="tour-card-desc">A quick 2-minute visual guide: automatic homework fetching, tracking deadlines & daily 8 PM Telegram push alerts.</p>
         <button type="button" class="btn btn--accent-sm btn--full tour-start-btn" onclick="startInteractiveTour()" title="Start Interactive Visual Tour">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           <span>TAKE A 2-MIN TOUR</span>
@@ -452,7 +452,7 @@
 
               <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 24px;">
                 <div class="form-group">
-                  <label class="form-label">CONNECTED EMAIL</label>
+                  <label class="form-label">CONNECTED VOLP PORTAL ACCOUNT (EMAIL)</label>
                   <input type="email" class="form-input" id="settingsEmail" readonly>
                 </div>
 
@@ -542,7 +542,7 @@
               <span>STUDENT TIME-SAVER</span>
             </div>
             <h2 class="guide-hero-title">Never Miss Homework or an Assignment Again</h2>
-            <p class="guide-hero-sub">Logging into the college website every day and clicking into 16 separate subjects just to check if something is due takes forever. This tool does the boring work for you: it gathers all your tasks into one clean screen and emails you every evening at 8:00 PM with what's due!</p>
+            <p class="guide-hero-sub">Logging into the college website every day and clicking into 16 separate subjects just to check if something is due takes forever. This tool does the boring work for you: it gathers all your tasks into one clean screen and sends you an instant Telegram alert every evening at 8:00 PM with what's due!</p>
             
             <div class="guide-step-strip">
               <div class="guide-step-chip" onclick="startInteractiveTour(0)">
@@ -563,7 +563,7 @@
               </div>
               <div class="guide-step-chip" onclick="startInteractiveTour(4)">
                 <span class="step-num">05</span>
-                <span class="step-title">Daily 8 PM Email</span>
+                <span class="step-title">Daily 8 PM Telegram</span>
               </div>
             </div>
           </div>
@@ -708,7 +708,7 @@
                   <div class="mock-block-arrow">➔</div>
                   <div class="mock-block-result">
                     <span class="result-item">✓ Removed from your daily view</span>
-                    <span class="result-item">✓ Silenced from evening email reminders</span>
+                    <span class="result-item">✓ Silenced from evening Telegram alerts</span>
                   </div>
                 </div>
               </div>
@@ -734,25 +734,35 @@
               <p class="guide-card-desc">You don't even have to open this website every day! Every evening at 8:00 PM, the system automatically checks your pending homework across all active subjects and sends your Telegram bot a clean, instant push notification with only the tasks you still need to finish.</p>
               
               
-              <div class="visual-diagram visual-diagram--email">
-                <div class="email-mock-preview">
-                  <div class="email-mock-bar">
-                    <span class="email-dot red"></span>
-                    <span class="email-dot yellow"></span>
-                    <span class="email-dot green"></span>
-                    <span class="email-title">Telegram Bot: 🔔 VOLP 8 PM Assignment Reminder</span>
+              <div class="telegram-mock-card" style="margin: 16px 0; border: 1px solid rgba(0, 136, 204, 0.35); background: rgba(0, 136, 204, 0.03); border-radius: var(--radius-md); overflow: hidden;">
+                <div class="telegram-mock-header">
+                  <div class="telegram-mock-avatar">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
                   </div>
-                  <div class="email-mock-content">
-                    <div class="email-greeting">Hi! Here is your quick evening summary of homework due soon:</div>
-                    <table class="email-mock-table">
-                      <thead>
-                        <tr><th>Subject</th><th>What is Due?</th><th>Due Date</th><th>Action Needed</th></tr>
-                      </thead>
-                      <tbody>
-                        <tr><td>Compiler Design</td><td>Assignment 7: Symbol Table</td><td>Tonight, 11:59 PM</td><td style="color:var(--danger); font-weight:700;">Pending</td></tr>
-                        <tr><td>Operating Systems</td><td>Unit 4: Process Sync Report</td><td>Tomorrow</td><td style="color:var(--warning); font-weight:700;">Due Soon</td></tr>
-                      </tbody>
-                    </table>
+                  <div>
+                    <div class="telegram-mock-botname">
+                      VOLP Reminder Bot
+                      <span class="telegram-mock-badge">BOT</span>
+                    </div>
+                    <div class="telegram-mock-sub">8:00 PM • Direct Push Notification</div>
+                  </div>
+                </div>
+                <div class="telegram-mock-body">
+                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">📚 VOLP 8 PM Assignment Reminder</div>
+                  <div>Hello Student, you have <strong>2 pending assignments</strong>:</div>
+                  <div class="telegram-mock-item telegram-mock-item--urgent">
+                    <div style="font-weight: 700; color: var(--text-primary);">1. Compiler Design <span style="font-size: 10px; color: var(--muted); font-weight: 400;">[SUBJECTIVE]</span></div>
+                    <div>📝 Assignment 7: Symbol Table</div>
+                    <div style="color: var(--danger); font-weight: 600;">📅 Due: Tonight, 11:59 PM</div>
+                  </div>
+                  <div class="telegram-mock-item telegram-mock-item--warning">
+                    <div style="font-weight: 700; color: var(--text-primary);">2. Operating Systems <span style="font-size: 10px; color: var(--muted); font-weight: 400;">[HANDS_ON]</span></div>
+                    <div>📝 Unit 4: Process Synchronization Lab</div>
+                    <div style="color: var(--warning); font-weight: 600;">📅 Due: Tomorrow, 11:59 PM</div>
+                  </div>
+                  <div style="font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0, 136, 204, 0.15); padding-top: 8px; margin-top: 8px;">
+                    <span>⚡ <em>Direct push to your Telegram phone app • Instant delivery</em></span>
+                    <span style="font-size: 10px;">8:00 PM ✓✓</span>
                   </div>
                 </div>
               </div>
@@ -834,7 +844,7 @@
         <button type="button" class="tour-tab-btn" onclick="goToTourStep(1)" id="tourTab1">02. Live Sync</button>
         <button type="button" class="tour-tab-btn" onclick="goToTourStep(2)" id="tourTab2">03. Assignments</button>
         <button type="button" class="tour-tab-btn" onclick="goToTourStep(3)" id="tourTab3">04. Blocking</button>
-        <button type="button" class="tour-tab-btn" onclick="goToTourStep(4)" id="tourTab4">05. 8 PM Alerts</button>
+        <button type="button" class="tour-tab-btn" onclick="goToTourStep(4)" id="tourTab4">05. 8 PM Telegram</button>
       </div>
 
       

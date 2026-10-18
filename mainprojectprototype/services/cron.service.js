@@ -30,14 +30,14 @@ export const startCronJob = () => {
     try {
       let users = [];
       try {
-        users = await usersCollection.find({}, { projection: { _id: 0, email: 1, token: 1, encrypted_password: 1 } }).toArray();
+        users = await usersCollection.find({}, { projection: { _id: 0, email: 1, token: 1, telegram_chat_id: 1, encrypted_password: 1 } }).toArray();
       } catch (e) {
         console.log('⚠ Could not fetch users from DB:', e.message);
         return;
       }
 
       if (users.length === 0) {
-        console.log('ℹ No registered users found for email notifications.');
+        console.log('ℹ No registered users found for assignment notifications.');
         return;
       }
 

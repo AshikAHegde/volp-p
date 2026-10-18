@@ -104,7 +104,8 @@
           }
           localStorage.setItem('volp_user', JSON.stringify({
             email: data.email || username,
-            token: data.token
+            token: data.token,
+            telegram_chat_id: data.telegram_chat_id || ''
           }));
           window.location.href = 'dashboard.html';
           return;

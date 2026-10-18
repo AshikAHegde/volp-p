@@ -2958,7 +2958,67 @@ h1, h2, h3, h4, h5, h6 {
   border-color: rgba(103, 224, 130, 0.3);
 }
 
-/* Email Mock Visual */
+/* Email & Telegram Mock Visuals */
+.telegram-mock-card {
+  background: var(--surface);
+  border: 1px solid rgba(0, 136, 204, 0.35);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+}
+
+.telegram-mock-header {
+  background: rgba(0, 136, 204, 0.08);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(0, 136, 204, 0.18);
+}
+
+.telegram-mock-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0088cc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.telegram-mock-botname {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.telegram-mock-badge {
+  background: rgba(0, 136, 204, 0.18);
+  color: #0088cc;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.telegram-mock-sub {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.telegram-mock-body {
+  padding: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
 .email-mock-card {
   background: var(--surface);
   border: 1px solid var(--border-strong);
@@ -3804,6 +3864,7 @@ body.landing-body {
   margin-bottom: 0;
 }
 
+.mockup-telegram-box,
 .mockup-email-box {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -3813,6 +3874,7 @@ body.landing-body {
   font-size: 11px;
 }
 
+.mockup-telegram-meta,
 .mockup-email-meta {
   color: var(--muted);
   border-bottom: 1px solid var(--border-subtle);
