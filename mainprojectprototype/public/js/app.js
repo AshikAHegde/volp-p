@@ -1505,10 +1505,10 @@ function renderRemindersView() {
     <div class="note-card">
       <div class="note-card-header">
         <span>DAILY TELEGRAM REMINDER CONFIGURATION</span>
-        <span class="badge ${currentUser?.telegram_chat_id ? "badge--submitted" : "badge--pending"}">${currentUser?.telegram_chat_id ? "ACTIVE BOT CRON" : "AWAITING TELEGRAM"}</span>
+        <span class="badge ${currentUser?.telegram_chat_id ? "badge--submitted" : "badge--pending"}">${currentUser?.telegram_chat_id ? "ACTIVE BOT ALERTS" : "AWAITING TELEGRAM"}</span>
       </div>
       <div class="note-card-body">
-        Daily cron is scheduled for <strong>8:00 PM ("0 20 * * *")</strong>. It checks all active enrolled courses, aggregates unsubmitted assignments, omits blocked items, and dispatches a consolidated digest directly via Telegram Bot.
+        Reminders are automatically sent every day at <strong>8:00 PM</strong>. It checks all active enrolled courses, aggregates unsubmitted assignments, omits blocked items, and dispatches a consolidated digest directly via Telegram Bot.
         ${!currentUser?.telegram_chat_id ? `
           <div style="margin-top: 10px; font-size: 11px; color: var(--text-secondary); background: rgba(0, 136, 204, 0.08); padding: 8px 12px; border-radius: 4px; border-left: 2px solid #0088cc;">
             ℹ️ <strong>1-Click Setup:</strong> Click the button above or in Settings to connect your bot in 1 click!
