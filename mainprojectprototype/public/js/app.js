@@ -1472,36 +1472,12 @@ function renderRemindersView() {
   const blockedCount =
     blockedCoursesList.length + blockedAssignmentsList.length;
 
-  const chatIdDisplay = currentUser?.telegram_chat_id ? `CHAT ID: ${currentUser.telegram_chat_id}` : "CHAT ID NOT SET (CLICK SETTINGS)";
-  let html = "";
-
+  const botUser = window.telegramBotUsername || "volp_remainder_bot";
   const userTag = currentUser?.telegram_username
     ? `@${currentUser.telegram_username}`
     : (currentUser?.telegram_chat_id ? `CHAT ID: ${currentUser.telegram_chat_id}` : "NOT CONNECTED");
 
-  if (!currentUser?.telegram_chat_id) {
-    html += `
-      <div class="note-card" style="border-left: 4px solid #0088cc; background: rgba(0, 136, 204, 0.08);">
-        <div class="note-card-header">
-          <span style="color: #0088cc; font-weight: 700;">✈ CONNECT TELEGRAM FOR 8 PM REMINDERS</span>
-          <span class="badge badge--pending">1-CLICK SETUP</span>
-        </div>
-        <div class="note-card-body" style="font-size: 13px;">
-          Connect your Telegram account to start receiving daily assignment alerts directly on your phone every evening at 8:00 PM. No manual Chat ID setup required!
-        </div>
-        <div class="note-card-footer" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-          <button type="button" class="btn-telegram-connect" onclick="startOneClickTelegramConnect()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
-            <span>CONNECT TELEGRAM IN 1-CLICK</span>
-          </button>
-          <span style="font-size: 11px; color: var(--muted);">⚡ Opens Telegram and auto-binds your session instantly.</span>
-        </div>
-      </div>
-    `;
-  }
-
-  const botUser = window.telegramBotUsername || "volp_remainder_bot";
-  html += `
+  let html = `
     <div class="note-card">
       <div class="note-card-header">
         <span>DAILY TELEGRAM REMINDER CONFIGURATION</span>
@@ -1510,8 +1486,12 @@ function renderRemindersView() {
       <div class="note-card-body">
         Reminders are automatically sent every day at <strong>8:00 PM</strong>. It checks all active enrolled courses, aggregates unsubmitted assignments, omits blocked items, and dispatches a consolidated digest directly via Telegram Bot.
         ${!currentUser?.telegram_chat_id ? `
-          <div style="margin-top: 10px; font-size: 11px; color: var(--text-secondary); background: rgba(0, 136, 204, 0.08); padding: 8px 12px; border-radius: 4px; border-left: 2px solid #0088cc;">
-            ℹ️ <strong>1-Click Setup:</strong> Click the button above or in Settings to connect your bot in 1 click!
+          <div style="margin-top: 14px; padding: 12px; background: rgba(0, 136, 204, 0.08); border: 1px solid rgba(0, 136, 204, 0.2); border-radius: var(--radius-sm); display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="btn-telegram-connect" onclick="startOneClickTelegramConnect()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+              <span>CONNECT TELEGRAM IN 1-CLICK</span>
+            </button>
+            <span style="font-size: 11px; color: var(--muted);">⚡ Connect once to receive daily 8:00 PM alerts directly on your phone.</span>
           </div>
         ` : `
           <div style="margin-top: 10px; font-size: 11px; color: var(--accent); background: rgba(103, 224, 130, 0.08); padding: 8px 12px; border-radius: 4px; border-left: 2px solid var(--accent);">
