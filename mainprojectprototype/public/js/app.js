@@ -188,8 +188,7 @@ function initUserSession() {
         if (data && data.telegram_chat_id) {
           currentUser.telegram_chat_id = data.telegram_chat_id;
           localStorage.setItem("volp_user", JSON.stringify(currentUser));
-          const input = document.getElementById("settingsTelegramChatId");
-          if (input && !input.value) input.value = data.telegram_chat_id;
+          loadTelegramSettings();
           if (currentTab === "reminders") renderRemindersView();
         }
       })
@@ -1616,7 +1615,15 @@ async function loadTelegramSettings() {
   const details = document.getElementById("telegramConnectedDetails");
   const hint = document.getElementById("telegramBotStatusHint");
 
+  const profileChatId = document.getElementById("settingsProfileTelegramChatId");
+
   if (currentUser?.telegram_chat_id) {
+    if (profileChatId) {
+      profileChatId.value = currentUser.telegram_username
+        ? `${currentUser.telegram_chat_id} (@${currentUser.telegram_username})`
+        : currentUser.telegram_chat_id;
+      profileChatId.style.color = "var(--accent)";
+    }
     if (notConnectedView) notConnectedView.style.display = "none";
     if (connectedView) connectedView.style.display = "block";
     if (details) {
@@ -1628,6 +1635,10 @@ async function loadTelegramSettings() {
       hint.style.color = "var(--accent)";
     }
   } else {
+    if (profileChatId) {
+      profileChatId.value = "NOT CONNECTED (CONNECT TELEGRAM BELOW)";
+      profileChatId.style.color = "var(--muted)";
+    }
     if (notConnectedView) notConnectedView.style.display = "block";
     if (connectedView) connectedView.style.display = "none";
     if (hint) {
