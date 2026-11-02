@@ -21,6 +21,11 @@ export const login = async (req, res) => {
     // Set 2-hour platform-independent session expiration timestamp in MongoDB
     const tokenExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
 
+    const existingUser = await usersCollection.findOne(
+      { email: normalizedEmail },
+      { projection: { telegram_chat_id: 1, is_premium: 1 } }
+    );
+
     await usersCollection.updateOne(
       { email: normalizedEmail },
       {
@@ -31,20 +36,14 @@ export const login = async (req, res) => {
           updated_at: new Date(),
         },
         $unset: { password: "" },
-        $setOnInsert: { email: normalizedEmail, created_at: new Date() },
+        $setOnInsert: {
+          email: normalizedEmail,
+          is_premium: false,
+          created_at: new Date(),
+        },
       },
       { upsert: true },
     );
-
-
-
-
-    const existingUser = await usersCollection.findOne(
-      { email: normalizedEmail },
-      { projection: { telegram_chat_id: 1, is_premium: 1 } }
-    );
-
-    const isPremiumUser = existingUser?.is_premium === true;
 
     res.json({
       success: true,
@@ -52,7 +51,7 @@ export const login = async (req, res) => {
       email: normalizedEmail,
       token,
       telegram_chat_id: existingUser?.telegram_chat_id || "",
-      is_premium: isPremiumUser,
+      is_premium: Boolean(existingUser?.is_premium),
     });
   } catch (err) {
     res.status(401).json({ error: "Authentication failed: " + err.message });
