@@ -35,7 +35,13 @@ app.get(['/login', '/login.html'], (req, res) => {
 });
 
 app.use(express.json({ limit: '100kb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.css') || filePath.endsWith('.js') || filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    }
+  }
+}));
 app.use(projectRateLimiter);
 
 app.use('/api/auth', authRoutes);

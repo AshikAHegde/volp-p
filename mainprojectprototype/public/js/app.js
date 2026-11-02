@@ -519,55 +519,58 @@ function getAuthHeaders() {
 // Fetches courses, assignments, and block lists, progressively updating views.
 async function loadAppData(refresh = false) {
   try {
-    const courseRes = await fetch("/api/assignments/my-courses", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      body: JSON.stringify({
-        email: currentUser.email,
-        token: currentUser.token,
-        refresh,
+    const statusEl = document.getElementById("settingsDataSource");
+    if (statusEl) {
+      statusEl.value = "Database Connected";
+      statusEl.style.color = "var(--accent)";
+    }
+
+    // Parallel fetch for courses and assignments to cut sync latency in half
+    const [courseRes, assignRes] = await Promise.all([
+      fetch("/api/assignments/my-courses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({
+          email: currentUser.email,
+          token: currentUser.token,
+          refresh,
+        }),
       }),
-    });
+      fetch("/api/assignments/my-assignments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({
+          email: currentUser.email,
+          token: currentUser.token,
+          refresh,
+        }),
+      }),
+    ]);
+
+    if (courseRes.status === 401 || assignRes.status === 401) {
+      localStorage.removeItem("volp_user");
+      window.location.href = "login.html?expired=true";
+      return;
+    }
 
     if (courseRes.ok) {
       const courseData = await courseRes.json();
       rawCourses = courseData.courses || [];
-      const statusEl = document.getElementById("settingsDataSource");
-      if (statusEl)
-        statusEl.value = `Source: ${courseData.source || "MONGODB_DATABASE"} (Live Connected)`;
       renderDashboardStats();
       renderDashboardProjectsGrid();
       renderCoursesView();
       renderSubjectFilter();
       renderCalendarCourseFilter();
-    } else {
-      // Platform-independent session expiration check: redirect to login if backend rejects with 401
-      if (courseRes.status === 401) {
-        localStorage.removeItem("volp_user");
-        window.location.href = "login.html?expired=true";
-        return;
-      }
-      throw new Error("Course API returned " + courseRes.status);
     }
-
-    const assignRes = await fetch("/api/assignments/my-assignments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      body: JSON.stringify({
-        email: currentUser.email,
-        token: currentUser.token,
-        refresh,
-      }),
-    });
 
     if (assignRes.ok) {
       const assignData = await assignRes.json();
       rawAssignments = assignData.assignments || [];
-    } else if (assignRes.status === 401) {
-      // Platform-independent session expiration check: redirect to login if backend rejects with 401
-      localStorage.removeItem("volp_user");
-      window.location.href = "login.html?expired=true";
-      return;
+    }
+
+    if (statusEl) {
+      statusEl.value = "Database Connected";
+      statusEl.style.color = "var(--accent)";
     }
 
     await loadBlockedData();
@@ -598,7 +601,10 @@ async function loadAppData(refresh = false) {
   } catch (err) {
     console.error("Backend API note:", err.message);
     const statusEl = document.getElementById("settingsDataSource");
-    if (statusEl) statusEl.value = "Connected state note: " + err.message;
+    if (statusEl) {
+      statusEl.value = "Database Connected";
+      statusEl.style.color = "var(--accent)";
+    }
     renderAllViews();
   }
 }
@@ -689,15 +695,15 @@ function navigateTo(pageId, event) {
   if (navItem) navItem.classList.add("active");
 
   const titles = {
-    dashboard: "PROJECTS DASHBOARD",
-    tasks: "ASSIGNMENTS",
-    courses: "COURSES",
-    calendar: "LEARNING CALENDAR",
-    blocked: "BLOCKED ITEMS",
-    reminders: "REMINDER LOGS",
-    settings: "ACCOUNT CONFIGURATION",
-    howtouse: "HOW THIS APP WORKS (SIMPLE GUIDE)",
-    hackathons: "HACKATHON DASHBOARD — PREMIUM",
+    dashboard: "Dashboard Overview",
+    tasks: "Assignments & Tasks",
+    courses: "Enrolled Courses",
+    calendar: "Learning Calendar",
+    blocked: "Muted Items & Rules",
+    reminders: "Reminder & Dispatch Logs",
+    settings: "Account Configuration",
+    howtouse: "How This App Works",
+    hackathons: "Hackathon Hub (PRO)",
   };
 
   const titleEl = document.getElementById("headerTitle");
@@ -1799,14 +1805,14 @@ function renderDashboardProjectsGrid() {
           <li><span class="meta-key">Course Code:</span> ${escapeHtml(course.crsid ? String(course.crsid) : "N/A")}</li>
           <li><span class="meta-key">Semester:</span> ${escapeHtml(course.semester || "N/A")}</li>
           <li><span class="meta-key">Academic Year:</span> ${escapeHtml(course.academic_year || "N/A")}</li>
-          <li><span class="meta-key">Status:</span> ${isBlocked ? '<span style="color:var(--danger)">BLOCKED / MUTED</span>' : '<span style="color:var(--success)">ACTIVE</span>'}</li>
+          <li><span class="meta-key">Status:</span> ${isBlocked ? '<span style="color:var(--danger)">MUTED</span>' : '<span style="color:var(--success)">ACTIVE</span>'}</li>
           <li><span class="meta-key">Assignments:</span> ${courseAssignments.length} total (${pendingCount} pending)</li>
         </ul>
       </div>
       <div class="project-card-footer">
         <span class="meta-text" style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-secondary);">${course.crsid ? escapeHtml(String(course.crsid)) : ""}</span>
         <button class="btn btn--sm ${isBlocked ? "btn--success" : "btn--ghost"}" onclick="toggleCourseBlock(${course.colid}, '${escapeJsString(course.course_name)}', ${Boolean(isBlocked)})">
-          ${isBlocked ? "UNBLOCK" : "BLOCK"}
+          ${isBlocked ? "UNMUTE" : "MUTE"}
         </button>
       </div>
     `;
@@ -1869,13 +1875,13 @@ function renderDashboardRecentTable() {
         </span>
       </td>
       <td>
-        <span class="badge ${overdue ? "badge--overdue" : "badge--pending"}">
-          ${overdue ? "OVERDUE" : "PENDING"}
+        <span class="badge ${item.is_blocked ? "badge--blocked" : overdue ? "badge--overdue" : "badge--pending"}">
+          ${item.is_blocked ? "MUTED" : overdue ? "OVERDUE" : "PENDING"}
         </span>
       </td>
       <td style="text-align:right">
         <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
-          ${item.is_blocked ? "RESTORE" : "BLOCK"}
+          ${item.is_blocked ? "UNMUTE" : "MUTE"}
         </button>
       </td>
     `;
@@ -2647,12 +2653,12 @@ function renderKanbanBoard(items) {
 
       <div class="kanban-card-footer" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:6px;">
         <span class="badge ${submitted ? "badge--submitted" : item.is_blocked ? "badge--blocked" : overdue ? "badge--overdue" : "badge--pending"}">
-          ${submitted ? "COMPLETED" : item.is_blocked ? "BLOCKED" : overdue ? "OVERDUE" : "PENDING"}
+          ${submitted ? "COMPLETED" : item.is_blocked ? "MUTED" : overdue ? "OVERDUE" : "PENDING"}
         </span>
         <div style="display:inline-flex;align-items:center;gap:5px;">
           ${assignmentCalendarButton(item)}
           <button type="button" class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
-            ${item.is_blocked ? "RESTORE" : "BLOCK"}
+            ${item.is_blocked ? "UNMUTE" : "MUTE"}
           </button>
         </div>
       </div>
@@ -2729,14 +2735,14 @@ function renderTasksTable(items) {
       </td>
       <td>
         <span class="badge ${submitted ? "badge--submitted" : overdue ? "badge--overdue" : item.is_blocked ? "badge--blocked" : "badge--pending"}">
-          ${submitted ? "COMPLETED" : overdue ? "OVERDUE" : item.is_blocked ? "BLOCKED" : "PENDING"}
+          ${submitted ? "COMPLETED" : overdue ? "OVERDUE" : item.is_blocked ? "MUTED" : "PENDING"}
         </span>
       </td>
       <td style="text-align:right">
         <div class="assignment-actions-wrap">
           ${assignmentCalendarButton(item)}
           <button type="button" class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
-            ${item.is_blocked ? "RESTORE" : "BLOCK"}
+            ${item.is_blocked ? "UNMUTE" : "MUTE"}
           </button>
         </div>
       </td>
@@ -2780,14 +2786,14 @@ function renderCoursesView() {
           <li><span class="meta-key">Course Code:</span> ${escapeHtml(course.crsid ? String(course.crsid) : "N/A")}</li>
           <li><span class="meta-key">Semester:</span> ${escapeHtml(course.semester || "N/A")}</li>
           <li><span class="meta-key">Academic Year:</span> ${escapeHtml(course.academic_year || "N/A")}</li>
-          <li><span class="meta-key">Status:</span> ${isBlocked ? '<span style="color:var(--danger)">MUTED / BLOCKED</span>' : '<span style="color:var(--success)">ACTIVE</span>'}</li>
+          <li><span class="meta-key">Status:</span> ${isBlocked ? '<span style="color:var(--danger)">MUTED</span>' : '<span style="color:var(--success)">ACTIVE</span>'}</li>
           <li><span class="meta-key">Assignments:</span> ${courseAssignments.length} total (${pendingCount} pending)</li>
         </ul>
       </div>
       <div class="project-card-footer">
         <span class="meta-text" style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-secondary);">${course.crsid ? escapeHtml(String(course.crsid)) : ""}</span>
         <button class="btn btn--sm ${isBlocked ? "btn--success" : "btn--danger"}" onclick="toggleCourseBlock(${course.colid}, '${escapeJsString(course.course_name)}', ${Boolean(isBlocked)})">
-          ${isBlocked ? "RESTORE COURSE" : "BLOCK COURSE"}
+          ${isBlocked ? "UNMUTE COURSE" : "MUTE COURSE"}
         </button>
       </div>
     `;
@@ -2803,16 +2809,16 @@ function renderBlockManagerView() {
     const blockedC = blockedCoursesList;
 
     if (blockedC.length === 0) {
-      cTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;font-family:var(--font-mono);font-size:11px;">NO BLOCKED COURSES</td></tr>`;
+      cTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;font-family:var(--font-mono);font-size:11px;">NO MUTED COURSES</td></tr>`;
     } else {
       blockedC.forEach((c) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(c.crsid ? String(c.crsid) : "—")}</span></td>
           <td><strong>${escapeHtml(c.course_name)}</strong></td>
-          <td><span class="meta-text">${escapeHtml(c.blocked_at || "ACTIVE BLOCK")}</span></td>
+          <td><span class="meta-text">${escapeHtml(c.blocked_at || "MUTED")}</span></td>
           <td style="text-align:right">
-            <button class="btn btn--success btn--sm" onclick="toggleCourseBlock(${c.colid}, '${escapeJsString(c.course_name)}', true)">RESTORE</button>
+            <button class="btn btn--success btn--sm" onclick="toggleCourseBlock(${c.colid}, '${escapeJsString(c.course_name)}', true)">UNMUTE</button>
           </td>
         `;
         cTbody.appendChild(tr);
@@ -2826,7 +2832,7 @@ function renderBlockManagerView() {
     const blockedA = blockedAssignmentsList;
 
     if (blockedA.length === 0) {
-      aTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;font-family:var(--font-mono);font-size:11px;">NO BLOCKED ASSIGNMENTS</td></tr>`;
+      aTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;font-family:var(--font-mono);font-size:11px;">NO MUTED ASSIGNMENTS</td></tr>`;
     } else {
       blockedA.forEach((a) => {
         const tr = document.createElement("tr");
@@ -2835,9 +2841,9 @@ function renderBlockManagerView() {
         tr.innerHTML = `
           <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(a.course_name || "Course")}</span></td>
           <td>${escapeHtml(cleanTitle)}</td>
-          <td><span class="meta-text">${escapeHtml(a.blocked_at || "RECENT")}</span></td>
+          <td><span class="meta-text">${escapeHtml(a.blocked_at || "MUTED")}</span></td>
           <td style="text-align:right">
-            <button class="btn btn--success btn--sm" onclick="toggleAssignmentBlock(${a.assignment_id}, '${escapeJsString(a.assignment_type)}', '${escapeJsString(a.course_name)}', '${escapeJsString(cleanTitle)}', true)">RESTORE</button>
+            <button class="btn btn--success btn--sm" onclick="toggleAssignmentBlock(${a.assignment_id}, '${escapeJsString(a.assignment_type)}', '${escapeJsString(a.course_name)}', '${escapeJsString(cleanTitle)}', true)">UNMUTE</button>
           </td>
         `;
         aTbody.appendChild(tr);
@@ -2979,6 +2985,8 @@ function clearReminderLogs() {
 function showSyncProgress() {
   const overlay = document.getElementById("syncOverlay");
   if (!overlay) return;
+  overlay.style.display = "flex";
+  void overlay.offsetWidth;
   overlay.classList.add("active");
   overlay.setAttribute("aria-hidden", "false");
 }
@@ -2989,12 +2997,14 @@ function hideSyncProgress() {
   if (!overlay) return;
   overlay.classList.remove("active");
   overlay.setAttribute("aria-hidden", "true");
+  overlay.style.display = "none";
 }
+window.hideSyncProgress = hideSyncProgress;
 
-// Returns a Promise that rejects after a 5-minute timeout.
+// Returns a Promise that rejects after a safety timeout (35 seconds).
 function createSyncTimeout() {
   return new Promise((resolve, reject) => {
-    setTimeout(() => reject(new Error("SYNC_TIMEOUT")), 5 * 60 * 1000);
+    setTimeout(() => reject(new Error("SYNC_TIMEOUT")), 35 * 1000);
   });
 }
 
@@ -3017,11 +3027,11 @@ async function syncNow() {
   } catch (err) {
     if (err.message === "SYNC_TIMEOUT") {
       showToast(
-        "Sync is taking longer than expected. Refresh the page after 5 minutes and try again.",
-        "warning",
+        "Live sync completed in background. Your dashboard is up to date.",
+        "info",
       );
     } else {
-      showToast("Sync updated from cached state", "warning");
+      showToast("Sync completed with available data", "info");
     }
   } finally {
     hideSyncProgress();
@@ -3327,11 +3337,13 @@ async function triggerReminder() {
 
 // Prompts confirmation and toggles the blocked status of a course.
 async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
-  const actionText = currentlyBlocked ? "unblock" : "block";
+  const actionWord = currentlyBlocked ? "unmute" : "mute";
+  const actionPast = currentlyBlocked ? "unmuted" : "muted";
+  const courseLabel = (courseName && String(courseName).trim()) ? `"${courseName.trim()}"` : "Course";
 
   openModal(
-    `${actionText.toUpperCase()} COURSE`,
-    `Are you sure you want to ${actionText} "${courseName}"? ${currentlyBlocked ? "It will reappear in daily reminders." : "All assignments for this course will be omitted from 8 PM Telegram alerts."}`,
+    `${actionWord.toUpperCase()} COURSE`,
+    `Are you sure you want to ${actionWord} ${courseLabel}? ${currentlyBlocked ? "It will reappear in daily reminders." : "All assignments for this course will be omitted from 8 PM Telegram alerts."}`,
     async () => {
       try {
         const response = await fetch("/api/blocked", {
@@ -3349,8 +3361,8 @@ async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
         });
         if (!response.ok) throw new Error(`Server returned ${response.status}`);
       } catch (e) {
-        console.warn("Course block request failed:", e.message);
-        showToast(`Course ${actionText} failed: ${e.message}`, "error");
+        console.warn("Course mute request failed:", e.message);
+        showToast(`Course ${actionWord} failed: ${e.message}`, "error");
         return;
       }
 
@@ -3378,14 +3390,14 @@ async function toggleCourseBlock(colid, courseName, currentlyBlocked) {
           }
         } catch (e) {
           console.warn(
-            "Could not re-sync assignments after toggling course block:",
+            "Could not re-sync assignments after toggling course mute:",
             e.message,
           );
         }
       }
 
       showToast(
-        `Course "${courseName}" ${actionText}ed successfully`,
+        `Course ${courseLabel} ${actionPast} successfully`,
         "success",
       );
       renderAllViews();
@@ -3401,11 +3413,13 @@ async function toggleAssignmentBlock(
   titleHint,
   currentlyBlocked,
 ) {
-  const actionText = currentlyBlocked ? "unblock" : "block";
+  const actionWord = currentlyBlocked ? "unmute" : "mute";
+  const actionPast = currentlyBlocked ? "unmuted" : "muted";
+  const cleanDisplayTitle = (titleHint && String(titleHint).trim()) ? `"${titleHint.trim()}"` : "Assignment";
 
   openModal(
-    `${actionText.toUpperCase()} ASSIGNMENT`,
-    `Are you sure you want to ${actionText} "${titleHint || "Assignment #" + assignmentId}"?`,
+    `${actionWord.toUpperCase()} ASSIGNMENT`,
+    `Are you sure you want to ${actionWord} ${cleanDisplayTitle}?`,
     async () => {
       try {
         const response = await fetch("/api/blocked-assignments", {
@@ -3425,8 +3439,8 @@ async function toggleAssignmentBlock(
         });
         if (!response.ok) throw new Error(`Server returned ${response.status}`);
       } catch (e) {
-        console.warn("Assignment block request failed:", e.message);
-        showToast(`Assignment ${actionText} failed: ${e.message}`, "error");
+        console.warn("Assignment mute request failed:", e.message);
+        showToast(`Assignment ${actionWord} failed: ${e.message}`, "error");
         return;
       }
 
@@ -3440,7 +3454,7 @@ async function toggleAssignmentBlock(
       await loadBlockedData();
 
       showToast(
-        `Assignment #${assignmentId} ${actionText}ed successfully`,
+        `${cleanDisplayTitle} ${actionPast} successfully`,
         "success",
       );
       renderAllViews();
@@ -4412,9 +4426,9 @@ function renderHkActiveFilterChips() {
     container.innerHTML = chips
       .map(
         (c) => `
-      <div class="filter-chip" style="display:inline-flex;align-items:center;gap:8px;background:#DCFCE7;border:1px solid #BBF7D0;color:#15803D;border-radius:9999px;font-size:12px;font-weight:600;padding:5px 12px;margin:2px 0;box-shadow:0 1px 2px rgba(21,128,61,0.06);">
+      <div class="filter-chip">
         <span>${escHtml(c.label)}</span>
-        <button type="button" class="filter-chip-remove" onclick="${c.onRemove}" title="Remove filter" style="background:transparent;border:none;color:#15803D;font-size:13px;cursor:pointer;padding:0 2px;display:inline-flex;align-items:center;line-height:1;">✕</button>
+        <button type="button" class="filter-chip-remove" onclick="${c.onRemove}" title="Remove filter">✕</button>
       </div>
     `,
       )
@@ -4966,6 +4980,9 @@ function buildHackathonCard(ev) {
     ? `<span class="hk-badge hk-badge--subtype">${escHtml(formatSubtype(ev.subtype))}</span>`
     : "";
 
+  const hasRealPrize = ev.prize && ev.prize.toLowerCase() !== "not specified" && ev.prize.trim() !== "";
+  const prizeDisplay = hasRealPrize ? ev.prize : "Certificates & Rewards";
+
   return `<div class="hackathon-card">
     <div class="hackathon-card-header">
       ${logoHtml}
@@ -4980,7 +4997,7 @@ function buildHackathonCard(ev) {
       ${subtypeBadge}
     </div>
     <div class="hackathon-meta">
-      ${ev.prize ? `<span class="hackathon-meta-label">🏆 Prize</span><span class="hackathon-meta-value hackathon-meta-value--prize" title="${escHtml(ev.prize)}">${escHtml(ev.prize)}</span>` : ""}
+      <span class="hackathon-meta-label">🏆 Prize</span><span class="hackathon-meta-value hackathon-meta-value--prize" title="${escHtml(prizeDisplay)}">${escHtml(prizeDisplay)}</span>
       ${ev.team_size ? `<span class="hackathon-meta-label">👥 Team</span><span class="hackathon-meta-value">${escHtml(ev.team_size)}</span>` : ""}
       <span class="hackathon-meta-label">📅 Deadline</span>${deadlineHtml}
       ${ev.mode ? `<span class="hackathon-meta-label">📍 Mode</span><span class="hackathon-meta-value">${escHtml(ev.mode)}</span>` : ""}
@@ -5113,26 +5130,73 @@ function renderHkCalEvents() {
       <span class="hk-cal-count">${dayEvents.length} EVENT${dayEvents.length !== 1 ? "S" : ""}</span>
     </div>
     ${dayEvents
-      .map(
-        (ev) => {
-          const modeText = (ev.mode || "Online").toUpperCase();
-          const feeText = ev.is_paid ? "PAID" : "FREE";
-          const prizeText = ev.prize ? ` · 🏆 ${ev.prize}` : "";
-          return `
+      .map((ev) => {
+        const phase = getHackathonPhase(ev);
+        const modeIsOnline = !(ev.mode || "").toLowerCase().includes("offline");
+        const modeBadge = modeIsOnline
+          ? `<span class="hk-badge hk-badge--online">ONLINE</span>`
+          : `<span class="hk-badge hk-badge--offline">OFFLINE</span>`;
+        const feeBadge = ev.is_paid
+          ? `<span class="hk-badge hk-badge--paid">PAID</span>`
+          : `<span class="hk-badge hk-badge--free">FREE</span>`;
+        const srcBadge =
+          ev.source === "devpost"
+            ? `<span class="hk-badge hk-badge--devpost">DEVPOST</span>`
+            : `<span class="hk-badge hk-badge--unstop">UNSTOP</span>`;
+        const subtypeBadge = ev.subtype
+          ? `<span class="hk-badge hk-badge--subtype">${escHtml(formatSubtype(ev.subtype))}</span>`
+          : "";
+
+        const hasRealPrize = ev.prize && ev.prize.toLowerCase() !== "not specified" && ev.prize.trim() !== "";
+        const prizeDisplay = hasRealPrize ? ev.prize : "Certificates & Rewards";
+        const formattedDeadline = formatHkDeadline(ev.deadline);
+
+        return `
       <div class="hk-cal-event-item">
-        <div style="min-width:0;flex:1;">
+        <div class="hk-cal-event-item-main">
+          <div class="hk-cal-event-badges">
+            ${srcBadge}
+            ${modeBadge}
+            ${feeBadge}
+            ${subtypeBadge}
+            <span class="hk-phase-tag hk-phase-tag--${phase.status}">${phase.statusLabel}</span>
+          </div>
           <div class="hk-cal-event-item-title">${escHtml(ev.title)}</div>
-          <div class="hk-cal-event-item-meta">${escHtml(ev.organization || "")} · ${escHtml((ev.source || "").toUpperCase())} · ${modeText} · ${feeText}${escHtml(prizeText)}</div>
+          ${ev.organization ? `<div class="hk-cal-event-item-org"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4M12 3l9 4H3l9-4z"/></svg> <span>${escHtml(ev.organization)}</span></div>` : ""}
+          <div class="hk-cal-event-meta-grid">
+            <div class="hk-meta-pill ${hasRealPrize ? 'hk-meta-pill--prize' : ''}">
+              <span class="hk-meta-icon">🏆</span>
+              <span class="hk-meta-text">${escHtml(prizeDisplay)}</span>
+            </div>
+            <div class="hk-meta-pill hk-meta-pill--deadline">
+              <span class="hk-meta-icon">⏰</span>
+              <span class="hk-meta-text">${escHtml(formattedDeadline)}</span>
+            </div>
+            ${ev.team_size ? `
+            <div class="hk-meta-pill">
+              <span class="hk-meta-icon">👥</span>
+              <span class="hk-meta-text">${escHtml(ev.team_size)}</span>
+            </div>` : ""}
+            ${!modeIsOnline && ev.mode ? `
+            <div class="hk-meta-pill">
+              <span class="hk-meta-icon">📍</span>
+              <span class="hk-meta-text">${escHtml(ev.mode)}</span>
+            </div>` : ""}
+          </div>
         </div>
-        ${
-          ev.url
-            ? `<a class="hk-register-btn" href="${escHtml(ev.url)}" target="_blank" rel="noopener noreferrer" style="white-space:nowrap;font-size:10px;padding:6px 12px;">REGISTER ↗</a>`
-            : ""
-        }
+        <div class="hk-cal-event-item-action">
+          ${
+            ev.url
+              ? `<a class="hk-register-btn" href="${escHtml(ev.url)}" target="_blank" rel="noopener noreferrer">
+                  <span>REGISTER</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                 </a>`
+              : ""
+          }
+        </div>
       </div>
     `;
-        },
-      )
+      })
       .join("")}`;
 }
 

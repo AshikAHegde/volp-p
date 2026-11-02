@@ -68,6 +68,7 @@ export const fetchUserCourses = async (token, email) => {
       method: "POST",
       headers: getHeaders(token, email, "/learner-course-overview"),
       body: null,
+      signal: AbortSignal.timeout(15000),
     },
   );
 
@@ -105,6 +106,7 @@ export const fetchUserAssignments = async (
       method: "POST",
       headers: getHeaders(token, email, "/learner-course-overview"),
       body: null,
+      signal: AbortSignal.timeout(15000),
     },
   );
 
@@ -146,6 +148,7 @@ export const fetchUserAssignments = async (
           method: "POST",
           headers: getHeaders(token, email, "/learner-course-content"),
           body: JSON.stringify({ colid }),
+          signal: AbortSignal.timeout(10000),
         },
       );
       if (cntRes.ok) {

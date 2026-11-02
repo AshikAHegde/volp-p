@@ -10,7 +10,9 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/styles.css?v=20261102-white">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" type="image/png" href="/assets/logo.svg">
+  <link rel="stylesheet" href="css/styles.css?v=20261102-boxesfixed2">
 </head>
 <body class="dashboard-body">
   <div class="noise-overlay"></div>
@@ -21,9 +23,9 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-brand">
-          <a href="landing.html" style="text-decoration: none; color: inherit;" title="Go to Home / Landing Page">
-            <h1><span class="brand-logo-pill">VOLP</span> REMINDER</h1>
-            <div class="brand-sub">ASSIGNMENT CONSOLE</div>
+          <a href="landing.html" class="brand-link" title="Go to Home / Landing Page">
+            <img src="/assets/logo.svg" alt="VOLP Logo" class="brand-logo-img" width="28" height="28">
+            <h1 class="brand-title">VOLP <span class="brand-accent">REMINDER</span></h1>
           </a>
         </div>
         <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" onclick="toggleSidebarCollapse()" aria-label="Collapse sidebar" title="Collapse sidebar">
@@ -57,7 +59,7 @@
           <li class="sidebar-nav-item" data-page="blocked">
             <a href="#" onclick="navigateTo('blocked', event)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-              BLOCKED ITEMS
+              MUTED ITEMS
             </a>
           </li>
           <li class="sidebar-nav-item" data-page="calendar">
@@ -83,6 +85,13 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               <span>HOW IT WORKS</span>
               <span class="nav-tour-pill">GUIDE</span>
+            </a>
+          </li>
+          <li class="sidebar-nav-item" data-page="hackathons" id="navHackathons" style="display:none;">
+            <a href="#" onclick="navigateTo('hackathons', event)" title="Hackathon Dashboard — Premium">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>HACKATHONS</span>
+              <span class="nav-premium-pill">PRO</span>
             </a>
           </li>
         </ul>
@@ -162,6 +171,16 @@
         
         <div class="page-view active" id="page-dashboard">
           
+          <div class="page-header">
+            <div class="page-header-lead">
+              <h1 class="page-title">Dashboard Overview</h1>
+              <p class="page-subtitle">Real-time status of active coursework, urgent deadlines, and portal sync.</p>
+            </div>
+            <div class="page-header-actions">
+              <span class="meta-badge" id="lastSyncStatusLabel">SYNC STATUS: READY</span>
+            </div>
+          </div>
+
           <div class="metric-grid">
             <div class="metric-card metric-card--accent">
               <div class="metric-label">TOTAL ASSIGNMENTS</div>
@@ -179,17 +198,16 @@
               <div class="metric-delta" id="statSubmittedAssignmentsSub">COMPLETED</div>
             </div>
             <div class="metric-card metric-card--danger">
-              <div class="metric-label">BLOCKED / MUTED</div>
+              <div class="metric-label">MUTED ITEMS</div>
               <div class="metric-value" id="statBlockedAssignments">--</div>
               <div class="metric-delta" id="statBlockedAssignmentsSub">EXCLUDED FROM DIGEST</div>
             </div>
           </div>
           
-          
-          <div class="page-header">
+          <div class="section-header">
             <div>
-              <div class="section-title">ACTIVE COURSE MODULES</div>
-              <div class="meta-text" id="lastSyncStatusLabel">SYNC STATUS: READY</div>
+              <h2 class="section-title">Active Course Modules</h2>
+              <p class="section-subtitle">Enrolled subjects tracked for automated assignment alerts</p>
             </div>
             <button class="btn btn--ghost btn--sm" onclick="navigateTo('courses')">VIEW ALL COURSES →</button>
           </div>
@@ -198,9 +216,11 @@
             
           </div>
           
-          
-          <div class="page-header" style="margin-top: 16px;">
-            <div class="section-title">URGENT DEADLINES</div>
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Urgent Deadlines</h2>
+              <p class="section-subtitle">Deliverables due soonest requiring your immediate action</p>
+            </div>
             <button class="btn btn--ghost btn--sm" onclick="navigateTo('tasks')">VIEW ALL ASSIGNMENTS →</button>
           </div>
           
@@ -224,12 +244,59 @@
         </div>
 
         
+        <!-- ── ASSIGNMENTS / TASKS PAGE ─────────────────────────────────── -->
         <div class="page-view" id="page-tasks">
           
-          <div class="toolbar">
+          <div class="page-header">
+            <div class="page-header-lead">
+              <h1 class="page-title">Assignments &amp; Tasks</h1>
+              <p class="page-subtitle">Track, filter, and review all subjective, hands-on, and quiz deliverables across enrolled modules.</p>
+            </div>
+            <div class="page-header-actions">
+              <button type="button" class="btn btn--primary btn--sm" onclick="syncNow()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                <span>SYNC VOLP</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Overall Dynamic Statistics Banner -->
+          <div class="phase-stats-banner" id="phaseStatsBanner">
+            <div class="phase-stat-card">
+              <div class="phase-stat-label">TOTAL ITEMS</div>
+              <div class="phase-stat-value" id="overallTotalCount">0</div>
+              <div class="phase-stat-sub" id="overallTotalSub">Across all courses</div>
+            </div>
+            <div class="phase-stat-card">
+              <div class="phase-stat-label">FILTERED MATCHES</div>
+              <div class="phase-stat-value" id="overallFilteredCount" style="color:var(--accent);">0</div>
+              <div class="phase-stat-sub" id="overallFilteredSub">Matching current filters</div>
+            </div>
+            <div class="phase-stat-card">
+              <div class="phase-stat-label">OVERDUE / URGENT</div>
+              <div class="phase-stat-value" id="overallUrgentCount" style="color:var(--danger);">0</div>
+              <div class="phase-stat-sub" id="overallUrgentSub">Immediate action needed</div>
+            </div>
+            <div class="phase-stat-card">
+              <div class="phase-stat-label">COMPLETED / SUBMITTED</div>
+              <div class="phase-stat-value" id="overallCompletedCount" style="color:var(--success);">0</div>
+              <div class="phase-stat-sub" id="overallCompletedSub">0% progress</div>
+            </div>
+            <div class="phase-stat-card">
+              <div class="phase-stat-label">PENDING / REMAINING</div>
+              <div class="phase-stat-value" id="overallPendingCount" style="color:var(--warning);">0</div>
+              <div class="phase-stat-sub" id="overallPendingSub">Action required</div>
+            </div>
+          </div>
+
+
+
+          <!-- Main Interactive Toolbar -->
+          <div class="toolbar" style="margin-bottom: 8px;">
             <div class="search-input-wrapper">
               <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" class="search-input" id="taskSearchInput" placeholder="SEARCH ASSIGNMENTS..." oninput="filterTasks()" onkeyup="filterTasks()">
+              <input type="text" class="search-input" id="taskSearchInput" placeholder="SEARCH ASSIGNMENTS, COURSES, UNITS..." oninput="filterTasks()" onkeyup="filterTasks()">
+              <button type="button" class="search-clear-btn" id="taskSearchClearBtn" onclick="clearSearchInput()" title="Clear search" style="display:none;">✕</button>
             </div>
             
             <div class="filter-group" id="statusFilterGroup">
@@ -252,21 +319,33 @@
               </select>
             </label>
 
-            <div style="flex: 1"></div>
+            <!-- Sorting Select Dropdown -->
+            <label class="subject-filter" for="taskSortSelect">
+              <span class="subject-filter-label">SORT</span>
+              <select id="taskSortSelect" class="subject-filter-select" onchange="setSortOption(this.value)">
+                <option value="due_asc">DUE DATE: SOONEST FIRST</option>
+                <option value="due_desc">DUE DATE: FURTHEST FIRST</option>
+                <option value="course_asc">COURSE: A TO Z</option>
+                <option value="title_asc">TITLE: A TO Z</option>
+              </select>
+            </label>
+
+            <div class="toolbar-spacer" style="flex: 1"></div>
 
             <div class="view-toggle">
               <button class="view-toggle-btn active" id="viewToggleKanban" onclick="switchTaskView('kanban')" title="Kanban Board View">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="10"/></svg>
+                <span class="view-toggle-label">KANBAN</span>
               </button>
               <button class="view-toggle-btn" id="viewToggleTable" onclick="switchTaskView('table')" title="Data Table View">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                <span class="view-toggle-label">TABLE</span>
               </button>
             </div>
           </div>
           
-          
+          <!-- Kanban Board View -->
           <div class="kanban-board" id="tasksKanbanView">
-            
             <div class="kanban-column">
               <div class="kanban-column-header">
                 <span class="status-dot status-dot--todo"></span>
@@ -275,7 +354,6 @@
               <div id="kanbanColTodo" style="display:flex;flex-direction:column;gap:12px;"></div>
             </div>
             
-            
             <div class="kanban-column">
               <div class="kanban-column-header">
                 <span class="status-dot status-dot--progress"></span>
@@ -283,7 +361,6 @@
               </div>
               <div id="kanbanColProgress" style="display:flex;flex-direction:column;gap:12px;"></div>
             </div>
-            
             
             <div class="kanban-column">
               <div class="kanban-column-header">
@@ -294,7 +371,7 @@
             </div>
           </div>
           
-          
+          <!-- Data Table View -->
           <div class="table-container" id="tasksTableView" style="display:none;">
             <table class="data-table">
               <thead>
@@ -307,18 +384,22 @@
                   <th style="text-align:right; min-width:175px;">ACTIONS</th>
                 </tr>
               </thead>
-              <tbody id="tasksFullTableBody">
-                
-              </tbody>
+              <tbody id="tasksFullTableBody"></tbody>
             </table>
           </div>
+
         </div>
 
         
         <div class="page-view" id="page-courses">
           <div class="page-header">
-            <div class="section-title">ENROLLED COURSES</div>
-            <div class="meta-text" id="coursesCountMeta">-- ENROLLED COURSES</div>
+            <div class="page-header-lead">
+              <h1 class="page-title">Enrolled Courses</h1>
+              <p class="page-subtitle">Active course offerings, instructors, and module IDs discovered from your university portal.</p>
+            </div>
+            <div class="page-header-actions">
+              <span class="meta-badge" id="coursesCountMeta">-- ENROLLED COURSES</span>
+            </div>
           </div>
           
           <div class="projects-grid" id="allCoursesGrid">
@@ -327,14 +408,15 @@
         </div>
 
         
+        <!-- ── VOLP ASSIGNMENT & LEARNING CALENDAR ────────────────── -->
         <div class="page-view" id="page-calendar">
           <div class="calendar-hero">
             <div>
-              <div class="eyebrow">LEARNING RHYTHM · LIVE COURSE DATA</div>
-              <h1 class="calendar-title">Your learning calendar</h1>
-              <p class="calendar-subtitle">A focused view of your assignments, due dates, and learning workload.</p>
+              <div class="eyebrow">LEARNING RHYTHM · LIVE VOLP COURSE DATA</div>
+              <h1 class="calendar-title">Assignment &amp; Learning Calendar</h1>
+              <p class="calendar-subtitle">Interactive schedule of your course deadlines, submission milestones, and study rhythm.</p>
             </div>
-            <div class="calendar-summary" id="calendarSummary">-- AVAILABLE COURSES</div>
+            <div class="calendar-summary" id="calendarSummary">-- AVAILABLE ASSIGNMENTS</div>
           </div>
 
           <div class="calendar-toolbar" style="margin-bottom: 20px;">
@@ -368,19 +450,24 @@
             <div class="hk-cal-events" id="volpCalendarEvents"></div>
           </div>
 
-          <section class="unscheduled-section" id="unscheduledSection" style="max-width: 860px; margin: 32px auto 0;"></section>
+          <section class="unscheduled-section" id="unscheduledSection" style="max-width: 1200px; margin: 32px auto 0;"></section>
         </div>
 
         
         <div class="page-view" id="page-blocked">
           <div class="page-header">
-            <div class="section-title">BLOCKED COURSES & ASSIGNMENTS</div>
-              <div class="meta-text">MANAGE BLOCKED COURSES AND ASSIGNMENTS</div>
+            <div class="page-header-lead">
+              <h1 class="page-title">Muted Items &amp; Rules</h1>
+              <p class="page-subtitle">Courses and assignments muted from daily 8:00 PM Telegram alerts and reminder digests.</p>
+            </div>
           </div>
 
-          <div style="margin-bottom: 32px;">
-            <div class="section-title" style="font-size: 11px; margin-bottom: 12px; color: var(--accent);">
-              BLOCKED COURSES (NO REMINDERS SENT)
+          <div style="margin-bottom: 28px;">
+            <div class="section-header">
+              <div>
+                <h2 class="section-title">Muted Courses</h2>
+                <p class="section-subtitle">Entire course offerings excluded from automated daily Telegram digests</p>
+              </div>
             </div>
             <div class="table-container">
               <table class="data-table">
@@ -388,7 +475,7 @@
                   <tr>
                     <th>COURSE CODE</th>
                     <th>COURSE NAME</th>
-                    <th>BLOCKED TIMESTAMP</th>
+                    <th>MUTED TIMESTAMP</th>
                     <th style="text-align:right">ACTION</th>
                   </tr>
                 </thead>
@@ -400,8 +487,11 @@
           </div>
 
           <div>
-            <div class="section-title" style="font-size: 11px; margin-bottom: 12px; color: var(--accent);">
-              BLOCKED ASSIGNMENTS
+            <div class="section-header">
+              <div>
+                <h2 class="section-title">Muted Assignments</h2>
+                <p class="section-subtitle">Specific individual deliverables excluded from alerts</p>
+              </div>
             </div>
             <div class="table-container">
               <table class="data-table">
@@ -409,7 +499,7 @@
                   <tr>
                     <th>COURSE</th>
                     <th>ASSIGNMENT TITLE</th>
-                    <th>BLOCKED DATE</th>
+                    <th>MUTED DATE</th>
                     <th style="text-align:right">ACTION</th>
                   </tr>
                 </thead>
@@ -424,14 +514,16 @@
         
         <div class="page-view" id="page-reminders">
           <div class="page-header">
-            <div>
-              <div class="section-title">REMINDER LOGS</div>
-              <div class="meta-text" style="margin-top:4px;">AUTOMATIC 8 PM DAILY DIGEST STATUS & DISPATCH</div>
+            <div class="page-header-lead">
+              <h1 class="page-title">Reminder &amp; Dispatch Logs</h1>
+              <p class="page-subtitle">Complete delivery history of nightly 8:00 PM Telegram assignment digests and manual test alerts.</p>
             </div>
-            <button class="btn btn--primary" id="triggerReminderPageBtn" onclick="triggerReminder()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
-              TRIGGER 8 PM DISPATCH NOW
-            </button>
+            <div class="page-header-actions">
+              <button class="btn btn--primary btn--sm" id="triggerReminderPageBtn" onclick="triggerReminder()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+                <span>TRIGGER 8 PM DISPATCH NOW</span>
+              </button>
+            </div>
           </div>
 
           <div class="notes-list" id="remindersTimelineList">
@@ -442,8 +534,10 @@
         
         <div class="page-view" id="page-settings">
           <div class="page-header">
-            <div class="section-title">ACCOUNT CONFIGURATION</div>
-            <div class="meta-text">CONNECTED VOLP PORTAL SESSION & CREDENTIALS</div>
+            <div class="page-header-lead">
+              <h1 class="page-title">Account Configuration</h1>
+              <p class="page-subtitle">Connected university portal credentials, Telegram bot integration, and active session status.</p>
+            </div>
           </div>
 
           <div class="settings-layout">
@@ -474,7 +568,7 @@
 
                 <div class="form-group">
                   <label class="form-label">SYNC DATA SOURCE</label>
-                  <input type="text" class="form-input" id="settingsDataSource" value="MONGODB DATABASE CACHED / LIVE SYNC READY" readonly>
+                  <input type="text" class="form-input" id="settingsDataSource" value="Database Connected" readonly style="color: var(--accent);">
                 </div>
 
                 <div class="settings-footer-actions" style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
@@ -495,65 +589,122 @@
                 </div>
                 <div>
                   <div class="profile-title">TELEGRAM 8 PM BOT ALERTS</div>
-                  <div class="meta-text" id="telegramBotStatusHint">INSTANT DIRECT PUSH NOTIFICATIONS TO YOUR PHONE</div>
+                  <div class="meta-text" id="telegramBotStatusHint">STATUS: NOT CONNECTED • DAILY 8:00 PM IST PUSH ALERTS</div>
                 </div>
               </div>
 
-              <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 24px;">
-                <!-- 1-Click Connection Section -->
-                <div id="telegramConnectActionBox" style="background: rgba(0, 136, 204, 0.05); border: 1px solid rgba(0, 136, 204, 0.2); border-radius: var(--radius-sm); padding: 18px;">
-                  <div id="telegramNotConnectedView">
-                    <div style="font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">Zero-Friction Connection (1-Click)</div>
-                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5;">
-                      Choose your preferred way to open Telegram and tap <strong>START</strong>. Your university account will be automatically recognized and connected in seconds.
-                    </p>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                      <button type="button" class="btn-telegram-connect" id="btnOneClickConnect" onclick="startOneClickTelegramConnect('app')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
-                        <span>📱 OPEN IN TELEGRAM APP</span>
-                      </button>
-                      <button type="button" class="btn-telegram-connect btn-telegram-web" id="btnOneClickConnectWeb" onclick="startOneClickTelegramConnect('web')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                        <span>🌐 OPEN IN TELEGRAM WEB</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div id="telegramConnectedView" style="display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                      <div>
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                          <span style="color: var(--accent); font-size: 16px;">✓</span>
-                          <span style="font-weight: 700; color: var(--accent); font-size: 13px;">TELEGRAM BOT CONNECTED</span>
+              <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px;">
+                <!-- When NOT Connected: 2 Cohesive Choice Cards -->
+                <div id="telegramNotConnectedView">
+                  <div class="tg-connect-methods">
+                    <!-- Option 1: Telegram App -->
+                    <div class="tg-method-card">
+                      <div class="tg-method-top">
+                        <div class="tg-method-icon">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
                         </div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;" id="telegramConnectedDetails">
-                          Daily 8:00 PM alerts are active.
+                        <div>
+                          <div class="tg-method-title">Telegram App</div>
+                          <div class="tg-method-sub">Phone &amp; Desktop App</div>
                         </div>
                       </div>
+
+                      <div class="tg-card-buttons">
+                        <button type="button" class="btn-telegram-connect" id="btnOneClickConnect" onclick="startOneClickTelegramConnect('app')">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+                          <span>CONNECT VIA APP ↗</span>
+                        </button>
+                        <button type="button" class="btn-telegram-chat" onclick="openTelegramChat('app')">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                          <span>OPEN CHAT (APP) ↗</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Option 2: Telegram Web -->
+                    <div class="tg-method-card">
+                      <div class="tg-method-top">
+                        <div class="tg-method-icon">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        </div>
+                        <div>
+                          <div class="tg-method-title">Telegram Web</div>
+                          <div class="tg-method-sub">Browser (No App Download)</div>
+                        </div>
+                      </div>
+
+                      <div class="tg-card-buttons">
+                        <button type="button" class="btn-telegram-connect" id="btnOneClickConnectWeb" onclick="startOneClickTelegramConnect('web')">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+                          <span>CONNECT VIA WEB ↗</span>
+                        </button>
+                        <button type="button" class="btn-telegram-chat" onclick="openTelegramChat('web')">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                          <span>OPEN CHAT (WEB) ↗</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Optional Fallback: Manual Chat ID Accordion -->
+                  <details class="tg-manual-details" style="margin-top: 14px;">
+                    <summary class="tg-manual-summary">
+                      ⚙️ Manual Chat ID Setup (Optional Fallback)
+                    </summary>
+                    <div class="tg-manual-body">
+                      <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" class="form-input" id="settingsTelegramChatId" placeholder="Enter numeric Chat ID (e.g. 123456789)">
+                        <button type="button" class="btn btn--primary btn--sm" onclick="saveTelegramChatId()" id="saveTelegramBtn">SAVE ID</button>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+
+                <!-- When Connected View: Clean & Reassuring -->
+                <div id="telegramConnectedView" style="display: none;">
+                  <div class="tg-connected-box">
+                    <div class="tg-connected-header">
+                      <div class="tg-connected-badge">
+                        <span class="tg-dot-pulse"></span>
+                        <span>ACTIVE &amp; CONNECTED</span>
+                      </div>
+                      <div class="tg-connected-title" id="telegramConnectedTitle">VOLP Reminder Bot is Active</div>
+                      <p class="tg-connected-sub" id="telegramConnectedDetails">
+                        Daily 8:00 PM alerts are enabled for your assignments.
+                      </p>
+                    </div>
+
+                    <div class="tg-connected-grid">
+                      <div class="tg-connected-item">
+                        <div class="tg-item-label">SCHEDULE</div>
+                        <div class="tg-item-val">Every Day @ 8:00 PM IST</div>
+                      </div>
+                      <div class="tg-connected-item">
+                        <div class="tg-item-label">ALERTS</div>
+                        <div class="tg-item-val">Deadlines Due Tonight &amp; Next 48h</div>
+                      </div>
+                    </div>
+
+                    <div class="tg-connected-actions">
+                      <button type="button" class="btn-telegram-connect btn--sm" onclick="openTelegramChat('app')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        <span>OPEN CHAT (APP) ↗</span>
+                      </button>
+                      <button type="button" class="btn-telegram-connect btn--sm" onclick="openTelegramChat('web')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        <span>OPEN CHAT (WEB) ↗</span>
+                      </button>
+                      <button type="button" class="btn btn--primary btn--sm" onclick="triggerReminder()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+                        <span>SEND SAMPLE ALERT NOW</span>
+                      </button>
                       <button type="button" class="btn btn--danger btn--sm" onclick="disconnectTelegram()">
-                        DISCONNECT BOT
+                        <span>DISCONNECT BOT</span>
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div class="settings-footer-actions" style="margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap;">
-                  <a id="openTelegramBotLink" href="#" target="_blank" class="btn btn--ghost btn--sm" style="display: none;">
-                    📱 OPEN IN TELEGRAM APP ↗
-                  </a>
-                  <a id="openTelegramBotWebLink" href="#" target="_blank" class="btn btn--ghost btn--sm" style="display: none;">
-                    🌐 OPEN IN TELEGRAM WEB ↗
-                  </a>
-                </div>
-
-                <!-- Collapsible Manual Option for edge cases -->
-                <details style="margin-top: 8px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border-subtle); padding-top: 10px;">
-                  <summary style="cursor: pointer; user-select: none;">Manual Chat ID Setup (Optional Fallback)</summary>
-                  <div style="margin-top: 10px; display: flex; gap: 10px;">
-                    <input type="text" class="form-input" id="settingsTelegramChatId" placeholder="e.g. 123456789">
-                    <button type="button" class="btn btn--primary btn--sm" onclick="saveTelegramChatId()" id="saveTelegramBtn">SAVE ID</button>
-                  </div>
-                </details>
               </div>
             </div>
           </div>
@@ -561,19 +712,19 @@
 
         
         <div class="page-view" id="page-howtouse">
-          <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
-            <div>
-              <div class="section-title">HOW THIS APP WORKS (SIMPLE GUIDE)</div>
-              <div class="meta-text">EVERYTHING YOU NEED TO KNOW — IN SIMPLE, EVERYDAY WORDS</div>
+          <div class="page-header">
+            <div class="page-header-lead">
+              <h1 class="page-title">How This App Works</h1>
+              <p class="page-subtitle">A simple, student-friendly walkthrough of automated assignment tracking and daily Telegram alerts.</p>
             </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div class="page-header-actions">
               <button type="button" class="btn btn--ghost btn--sm" id="restoreTourBtn" onclick="restoreSidebarTour()" title="Re-enable Tour Badge in Sidebar">
                 ↻ SHOW TOUR IN SIDEBAR
               </button>
 
-              <button type="button" class="btn btn--primary" onclick="startInteractiveTour(0)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-                START VISUAL TOUR
+              <button type="button" class="btn btn--primary btn--sm" onclick="startInteractiveTour(0)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                <span>START VISUAL TOUR</span>
               </button>
             </div>
           </div>
@@ -790,18 +941,18 @@
                   <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">📚 VOLP 8 PM Assignment Reminder</div>
                   <div>Hello Student, you have <strong>2 pending assignments</strong>:</div>
                   <div class="telegram-mock-item telegram-mock-item--urgent">
-                    <div style="font-weight: 700; color: var(--text-primary);">1. Compiler Design <span style="font-size: 10px; color: var(--muted); font-weight: 400;">[SUBJECTIVE]</span></div>
+                    <div style="font-weight: 700; color: var(--text-primary);">1. Compiler Design <span style="font-size: 11px; color: var(--muted); font-weight: 500;">[SUBJECTIVE]</span></div>
                     <div>📝 Assignment 7: Symbol Table</div>
                     <div style="color: var(--danger); font-weight: 600;">📅 Due: Tonight, 11:59 PM</div>
                   </div>
                   <div class="telegram-mock-item telegram-mock-item--warning">
-                    <div style="font-weight: 700; color: var(--text-primary);">2. Operating Systems <span style="font-size: 10px; color: var(--muted); font-weight: 400;">[HANDS_ON]</span></div>
+                    <div style="font-weight: 700; color: var(--text-primary);">2. Operating Systems <span style="font-size: 11px; color: var(--muted); font-weight: 500;">[HANDS_ON]</span></div>
                     <div>📝 Unit 4: Process Synchronization Lab</div>
                     <div style="color: var(--warning); font-weight: 600;">📅 Due: Tomorrow, 11:59 PM</div>
                   </div>
-                  <div style="font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0, 136, 204, 0.15); padding-top: 8px; margin-top: 8px;">
+                  <div style="font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0, 136, 204, 0.15); padding-top: 8px; margin-top: 8px;">
                     <span>⚡ <em>Direct push to your Telegram phone app • Instant delivery</em></span>
-                    <span style="font-size: 10px;">8:00 PM ✓✓</span>
+                    <span style="font-size: 11px;">8:00 PM ✓✓</span>
                   </div>
                 </div>
               </div>
@@ -812,6 +963,209 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- ── HACKATHON DASHBOARD (PREMIUM) ───────────────────────── -->
+        <div class="page-view" id="page-hackathons">
+          
+          <div class="page-header">
+            <div class="page-header-lead">
+              <h1 class="page-title">Hackathon &amp; Event Intelligence</h1>
+              <p class="page-subtitle">Curated developer hackathons, coding challenges, and competitions aggregated from Devpost and Unstop.</p>
+            </div>
+            <div class="page-header-actions">
+              <button type="button" class="btn btn--ghost btn--sm" onclick="fetchHackathonEvents()" title="Refresh live hackathons from Postgres database">
+                ↻ REFRESH LIVE
+              </button>
+              <button type="button" class="btn btn--primary btn--sm" id="btnSyncPipeline" onclick="syncHackathonsPipeline()" title="Trigger live pipeline fetch from Devpost &amp; Unstop into PostgreSQL">
+                ⚡ SYNC PIPELINE
+              </button>
+            </div>
+          </div>
+
+          <!-- Overall Dynamic Statistics Banner -->
+          <div class="phase-stats-banner" id="hkStatsBanner">
+            <div class="phase-stat-card">
+              <div class="phase-stat-label">TOTAL HACKATHONS</div>
+              <div class="phase-stat-value" id="hkTotalCount">0</div>
+              <div class="phase-stat-sub" id="hkTotalSub">Unstop + Devpost</div>
+            </div>
+            <div class="phase-stat-card">
+              <div class="phase-stat-label">FILTERED MATCHES</div>
+              <div class="phase-stat-value" id="hkFilteredCount" style="color:var(--accent);">0</div>
+              <div class="phase-stat-sub" id="hkFilteredSub">Matching current filters</div>
+            </div>
+            <div class="phase-stat-card">
+              <div class="phase-stat-label">CLOSING SOON (&lt; 48H)</div>
+              <div class="phase-stat-value" id="hkUrgentCount" style="color:var(--danger);">0</div>
+              <div class="phase-stat-sub" id="hkUrgentSub">Urgent registration</div>
+            </div>
+            <div class="phase-stat-card">
+              <div class="phase-stat-label">ONLINE EVENTS</div>
+              <div class="phase-stat-value" id="hkOnlineCount" style="color:var(--info);">0</div>
+              <div class="phase-stat-sub" id="hkOnlineSub">Virtual participation</div>
+            </div>
+            <div class="phase-stat-card">
+              <div class="phase-stat-label">FREE TO ENTER</div>
+              <div class="phase-stat-value" id="hkFreeCount" style="color:var(--success);">0</div>
+              <div class="phase-stat-sub" id="hkFreeSub">No registration fee</div>
+            </div>
+          </div>
+
+          <!-- Sub-navigation Tabs: List vs Calendar -->
+          <div class="hackathon-tabs" style="display:flex;align-items:center;">
+            <button class="hackathon-tab active" id="hkTabList" onclick="switchHackathonTab('list')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              <span>EVENT LIST</span>
+            </button>
+            <button class="hackathon-tab" id="hkTabCal" onclick="switchHackathonTab('calendar')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>DEADLINE CALENDAR</span>
+            </button>
+          </div>
+
+          <!-- Main Interactive Filter & Search Toolbar -->
+          <div class="toolbar" style="margin-bottom: 8px;">
+            <div class="search-input-wrapper">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" class="search-input" id="hackathonSearch" placeholder="SEARCH HACKATHONS, ORGS, THEMES..." oninput="filterHackathons()" onkeyup="filterHackathons()">
+              <button type="button" class="search-clear-btn" id="hkSearchClearBtn" onclick="clearHkSearchInput()" title="Clear search" style="display:none;">✕</button>
+            </div>
+
+            <!-- Source Filter Group -->
+            <div class="filter-group" id="hkSourceFilterGroup">
+              <button class="filter-btn active" data-source="all" onclick="setHackathonSource('all', this)">ALL</button>
+              <button class="filter-btn" data-source="unstop" onclick="setHackathonSource('unstop', this)">UNSTOP</button>
+              <button class="filter-btn" data-source="devpost" onclick="setHackathonSource('devpost', this)">DEVPOST</button>
+            </div>
+
+            <!-- Mode Filter Group -->
+            <div class="filter-group" id="hkModeFilterGroup">
+              <button class="filter-btn active" data-mode="all" onclick="setHkModeFilter('all', this)">ALL MODES</button>
+              <button class="filter-btn" data-mode="online" onclick="setHkModeFilter('online', this)">ONLINE</button>
+              <button class="filter-btn" data-mode="offline" onclick="setHkModeFilter('offline', this)">OFFLINE</button>
+            </div>
+
+            <!-- Sort Dropdown -->
+            <label class="subject-filter" for="hkSortSelect">
+              <span class="subject-filter-label">SORT</span>
+              <select id="hkSortSelect" class="subject-filter-select" onchange="setHkSort(this.value)">
+                <option value="deadline_asc">DEADLINE: SOONEST FIRST</option>
+                <option value="deadline_desc">DEADLINE: FURTHEST FIRST</option>
+                <option value="title_asc">TITLE: A TO Z</option>
+                <option value="prize_desc">HIGHEST PRIZE FIRST</option>
+              </select>
+            </label>
+
+            <!-- Advanced Filters Button -->
+            <button type="button" class="btn btn--ghost btn--sm" id="hkAdvancedFilterToggleBtn" onclick="toggleHkAdvancedFilters()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+              <span>ADVANCED FILTERS</span>
+            </button>
+
+            <!-- Reset All Filters Button -->
+            <button type="button" class="btn btn--ghost btn--sm" id="hkResetFiltersBtn" onclick="resetAllHkFilters()" title="Reset all active filters and search">
+              ✕ RESET ALL
+            </button>
+          </div>
+
+          <!-- Advanced Collapsible Filter Panel -->
+          <div class="advanced-filter-panel" id="hkAdvancedFilterPanel" style="display:none;">
+            <div class="filter-panel-header">
+              <div class="filter-panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                <span>ADVANCED EVENT FILTERS</span>
+              </div>
+              <button type="button" class="btn btn--ghost btn--sm" onclick="toggleHkAdvancedFilters()" title="Close filter panel">✕</button>
+            </div>
+
+            <div class="filter-panel-grid">
+              
+              <div class="filter-panel-group">
+                <label class="filter-field-label" for="hkFilterPhaseSelect">DEADLINE PHASE</label>
+                <select id="hkFilterPhaseSelect" class="filter-field-select" onchange="setHkPhaseFilter(this.value)">
+                  <option value="all">ALL PHASES</option>
+                  <option value="closing_soon">🚨 CLOSING SOON (&lt; 48H)</option>
+                  <option value="ongoing">⚡ ONGOING (THIS WEEK)</option>
+                  <option value="upcoming">📅 UPCOMING (THIS MONTH)</option>
+                  <option value="future">🎯 FUTURE (30+ DAYS)</option>
+                  <option value="concluded">🏁 CONCLUDED / EXPIRED</option>
+                  <option value="unscheduled">❓ NO DEADLINE SPECIFIED</option>
+                </select>
+              </div>
+
+              <div class="filter-panel-group">
+                <label class="filter-field-label" for="hkFilterFeeSelect">ENTRY FEE</label>
+                <select id="hkFilterFeeSelect" class="filter-field-select" onchange="setHkFeeFilter(this.value)">
+                  <option value="all">ALL (FREE &amp; PAID)</option>
+                  <option value="free">FREE REGISTRATION ONLY</option>
+                  <option value="paid">PAID ENTRY ONLY</option>
+                </select>
+              </div>
+
+              <div class="filter-panel-group">
+                <label class="filter-field-label" for="hkFilterThemeSelect">CATEGORY / THEME</label>
+                <select id="hkFilterThemeSelect" class="filter-field-select" onchange="setHkThemeFilter(this.value)">
+                  <option value="all">ALL THEMES / SUBTYPES</option>
+                </select>
+              </div>
+
+              <div class="filter-panel-group filter-panel-group--date">
+                <label class="filter-field-label">DEADLINE DATE RANGE</label>
+                <div class="date-range-inputs">
+                  <input type="date" id="hkFilterStartDate" class="filter-field-input" onchange="setHkDateRangeFilter()" title="Deadline date from">
+                  <span class="date-range-sep">TO</span>
+                  <input type="date" id="hkFilterEndDate" class="filter-field-input" onchange="setHkDateRangeFilter()" title="Deadline date to">
+                </div>
+              </div>
+
+            </div>
+
+            <div class="filter-panel-actions">
+              <span class="filter-panel-hint" id="hkAdvFilterNote">Combine multiple criteria to narrow down hackathons.</span>
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="btn btn--ghost btn--sm" onclick="resetAllHkFilters()">CLEAR FILTERS</button>
+                <button type="button" class="btn btn--accent-sm" onclick="applyHkAdvancedFilters()">APPLY FILTERS</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Filter Chips Bar -->
+          <div class="active-filters-bar" id="hkActiveFilterChipsBar" style="display:none;">
+            <div class="active-filters-label">ACTIVE FILTERS:</div>
+            <div class="active-chips-container" id="hkActiveChipsContainer"></div>
+            <button type="button" class="clear-all-chips-btn" id="hkClearAllChipsBtn" onclick="resetAllHkFilters()">
+              ✕ CLEAR ALL
+            </button>
+          </div>
+
+          <!-- Sub-view 1: Event List Grid -->
+          <div id="hkListView">
+            <div class="hackathon-grid" id="hackathonGrid"></div>
+            <div class="hackathon-pagination" id="hkPagination" style="display:none;">
+              <button class="btn btn--ghost btn--sm" id="hkPrevBtn" onclick="hkChangePage(-1)">← PREV</button>
+              <span class="hk-page-info" id="hkPageInfo">PAGE 1</span>
+              <button class="btn btn--ghost btn--sm" id="hkNextBtn" onclick="hkChangePage(1)">NEXT →</button>
+            </div>
+          </div>
+
+          <!-- Sub-view 2: Deadline Calendar -->
+          <div id="hkCalView" style="display:none;">
+            <div class="hk-calendar-wrap">
+              <div class="hk-cal-controls">
+                <div class="hk-cal-controls-left">
+                  <button type="button" class="btn btn--ghost btn--sm" onclick="hkCalShift(-1)">‹ PREV</button>
+                  <button type="button" class="btn btn--ghost btn--sm" onclick="hkCalToday()">TODAY</button>
+                  <button type="button" class="btn btn--ghost btn--sm" onclick="hkCalShift(1)">NEXT ›</button>
+                </div>
+                <div class="hk-cal-label" id="hkCalLabel">OCTOBER 2026</div>
+                <div class="hk-cal-hint">● Highlighted dates have deadlines</div>
+              </div>
+              <div class="hk-cal-grid" id="hkCalendar"></div>
+              <div class="hk-cal-events" id="hkCalEvents"></div>
+            </div>
+          </div>
+
         </div>
 
       </main>
@@ -843,7 +1197,7 @@
   </div>
 
   
-  <div class="sync-overlay" id="syncOverlay" role="status" aria-live="polite" aria-hidden="true">
+  <div class="sync-overlay" id="syncOverlay" role="status" aria-live="polite" aria-hidden="true" style="display: none;">
     <div class="sync-progress-card">
       <div class="sync-icon-wrap" aria-hidden="true">
         <svg class="sync-progress-icon" viewBox="0 0 64 64" fill="none">
@@ -852,11 +1206,14 @@
         </svg>
       </div>
       <div class="sync-progress-kicker">LIVE VOLP SYNC</div>
-      <div class="sync-progress-title">UPDATING YOUR COURSES</div>
-      <p class="sync-progress-message">We are fetching the latest courses and assignments.</p>
-      <p class="sync-progress-duration">The browser may wait for 2–5 minutes while syncing.</p>
-      <p class="sync-progress-refresh">If it has not updated after 5 minutes, refresh the page and try again.</p>
+      <div class="sync-progress-title">UPDATING YOUR COURSES &amp; ASSIGNMENTS</div>
+      <p class="sync-progress-message">Fetching the latest deliverables from your university portal...</p>
       <div class="sync-progress-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div style="margin-top: 18px;">
+        <button type="button" class="btn btn--ghost btn--sm" onclick="hideSyncProgress()" style="font-size: 11px; padding: 6px 14px; border-radius: 6px; letter-spacing: 0.5px; color: var(--text-secondary);">
+          DISMISS / RUN IN BACKGROUND
+        </button>
+      </div>
     </div>
   </div>
 
@@ -903,8 +1260,40 @@
   </div>
 
   
+  <!-- Assignment Phase Details Drawer Overlay -->
+  <div class="phase-details-overlay" id="phaseDetailsOverlay" onclick="closePhaseDetailsModal(event)">
+    <aside class="phase-details-drawer" role="dialog" aria-modal="true" aria-labelledby="phaseDrawerTitle">
+      <div class="phase-drawer-header">
+        <div>
+          <div class="phase-drawer-kicker" id="phaseDrawerKicker">PHASE DETAILS &amp; TIMELINE</div>
+          <h2 class="phase-drawer-title" id="phaseDrawerTitle">Phase Title</h2>
+        </div>
+        <button class="course-details-close" onclick="closePhaseDetailsModal()" aria-label="Close phase details">×</button>
+      </div>
+      <div class="phase-drawer-content" id="phaseDrawerContent">
+        <!-- Injected dynamically -->
+      </div>
+    </aside>
+  </div>
+
+  <!-- Hackathon Phase Details Drawer Overlay -->
+  <div class="phase-details-overlay" id="hkPhaseDetailsOverlay" onclick="closeHkPhaseDetailsModal(event)">
+    <aside class="phase-details-drawer" role="dialog" aria-modal="true" aria-labelledby="hkPhaseDrawerTitle">
+      <div class="phase-drawer-header">
+        <div>
+          <div class="phase-drawer-kicker" id="hkPhaseDrawerKicker">DEADLINE PHASE DETAILS</div>
+          <h2 class="phase-drawer-title" id="hkPhaseDrawerTitle">Phase Title</h2>
+        </div>
+        <button class="course-details-close" onclick="closeHkPhaseDetailsModal()" aria-label="Close phase details">×</button>
+      </div>
+      <div class="phase-drawer-content" id="hkPhaseDrawerContent">
+        <!-- Injected dynamically -->
+      </div>
+    </aside>
+  </div>
+
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="js/app.js?v=20261001-nontech"></script>
+  <script src="js/app.js?v=20261102-syncfix"></script>
 </body>
 </html>
