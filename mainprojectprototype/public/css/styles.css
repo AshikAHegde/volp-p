@@ -389,12 +389,11 @@ h6, .h6 {
 
 /* Secondary Meta & Eyebrows */
 .meta-text {
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  font-weight: var(--fw-medium);
-  letter-spacing: var(--ls-wide);
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
   color: var(--text-secondary);
-  text-transform: uppercase;
 }
 
 .meta-badge {
@@ -1502,10 +1501,11 @@ body.sidebar-is-resizing .sidebar-resizer .sidebar-resizer-handle {
 }
 
 .kanban-card-course {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-family: var(--font-primary);
+  font-size: 12px;
   color: var(--accent);
   font-weight: 600;
+  letter-spacing: 0.2px;
   max-width: 170px;
   white-space: nowrap;
   overflow: hidden;
@@ -1514,11 +1514,37 @@ body.sidebar-is-resizing .sidebar-resizer .sidebar-resizer-handle {
 
 .kanban-card-title {
   font-family: var(--font-primary);
-  font-size: var(--text-sm);
+  font-size: 14.5px;
   font-weight: 600;
   color: var(--text);
   line-height: 1.4;
   word-break: break-word;
+}
+
+.kanban-card-unit {
+  font-family: var(--font-primary);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 5px;
+  line-height: 1.35;
+}
+
+.kanban-card-due {
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 10px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.1px;
+}
+
+.kanban-card-due--overdue {
+  color: var(--danger);
+  font-weight: 700;
 }
 
 /* ==========================================================================
@@ -1622,11 +1648,13 @@ body.sidebar-is-resizing .sidebar-resizer .sidebar-resizer-handle {
 }
 
 .assignment-title {
+  font-family: var(--font-primary);
   font-weight: 600;
   color: var(--text);
-  line-height: 1.35;
-  font-size: 15px;
-  max-width: 380px;
+  line-height: 1.4;
+  font-size: 14.5px;
+  max-width: 420px;
+  word-break: break-word;
 }
 
 .assignment-sub {
@@ -1635,6 +1663,15 @@ body.sidebar-is-resizing .sidebar-resizer .sidebar-resizer-handle {
   font-weight: 500;
   color: var(--muted);
   margin-top: 3px;
+  line-height: 1.35;
+}
+
+.assignment-course-name {
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.2px;
 }
 
 /* Reminders & Notes Timeline Cards */
@@ -1695,11 +1732,11 @@ body.sidebar-is-resizing .sidebar-resizer .sidebar-resizer-handle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 8px;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
+  padding: 3px 9px;
+  font-family: var(--font-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   border-radius: var(--radius-xs);
   border: 1px solid;
@@ -1736,11 +1773,11 @@ body.sidebar-is-resizing .sidebar-resizer .sidebar-resizer-handle {
 .type-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  font-family: var(--font-mono);
+  padding: 3px 9px;
+  font-family: var(--font-primary);
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   border-radius: var(--radius-xs);
   border: 1px solid var(--border);
@@ -2457,7 +2494,7 @@ body.sidebar-is-resizing .sidebar-resizer .sidebar-resizer-handle {
 .calendar-day-number { display:flex; align-items:center; justify-content:space-between; margin-bottom:9px; color:var(--text-secondary); font:600 12px var(--font-mono); }.calendar-day--today .calendar-day-number span { display:grid; place-items:center; width:26px; height:26px; border-radius:50%; background:var(--accent); color:var(--text-inverse); }.calendar-day-number b { color:var(--accent); font:700 8px var(--font-mono); letter-spacing:.5px; }
 .calendar-day-events { display:flex; min-height:0; max-height:calc(100% - 34px); flex-direction:column; gap:6px; overflow-y:auto; padding-right:2px; }.calendar-empty-dot { width:4px; height:4px; margin:4px auto; border-radius:50%; background:var(--border-strong); }
 .calendar-event { display:flex; width:100%; flex-direction:column; gap:4px; padding:8px; border:1px solid var(--border); border-left:3px solid var(--cyan); border-radius:var(--radius-sm); background:var(--surface-raised); color:var(--text); text-align:left; cursor:pointer; transition:transform var(--transition-fast),border-color var(--transition-fast),box-shadow var(--transition-fast); }.calendar-event:hover { transform:translateY(-2px); border-color:var(--accent); box-shadow:var(--shadow-subtle); }.calendar-event--active { border-left-color:var(--warning); }.calendar-event--completed { border-left-color:var(--success); opacity:.78; }.calendar-event--deadline { border-left-color:var(--danger); }
-.calendar-event-title { overflow:hidden; color:var(--text); font-size:12px; font-weight:600; line-height:1.3; text-overflow:ellipsis; white-space:nowrap; }.calendar-event-meta, .calendar-event-status { overflow:hidden; color:var(--muted); font:11px var(--font-mono); text-overflow:ellipsis; white-space:nowrap; }.calendar-event-status { color:var(--text-secondary); font-weight:600; letter-spacing:.25px; }.calendar-progress, .course-detail-progress { display:block; height:3px; overflow:hidden; border-radius:var(--radius-full); background:var(--border-strong); }.calendar-progress i, .course-detail-progress i { display:block; height:100%; border-radius:inherit; background:var(--accent); }
+.calendar-event-title { overflow:hidden; color:var(--text); font-family:var(--font-primary); font-size:12.5px; font-weight:600; line-height:1.3; text-overflow:ellipsis; white-space:nowrap; }.calendar-event-meta, .calendar-event-status { overflow:hidden; color:var(--muted); font-family:var(--font-primary); font-size:11.5px; font-weight:500; text-overflow:ellipsis; white-space:nowrap; }.calendar-event-status { color:var(--text-secondary); font-weight:600; letter-spacing:.25px; }.calendar-progress, .course-detail-progress { display:block; height:3px; overflow:hidden; border-radius:var(--radius-full); background:var(--border-strong); }.calendar-progress i, .course-detail-progress i { display:block; height:100%; border-radius:inherit; background:var(--accent); }
 .calendar-agenda { display:flex; flex-direction:column; gap:1px; background:var(--border); }.agenda-day { display:grid; grid-template-columns:150px 1fr; min-height:100px; background:var(--surface); }.agenda-day > header { padding:18px; background:var(--surface-raised); border-right:1px solid var(--border); }.agenda-day header span { display:block; color:var(--muted); font:600 11px var(--font-mono); letter-spacing:0.75px; text-transform:uppercase; }.agenda-day header strong { display:block; margin-top:5px; color:var(--text); font-size:var(--text-md); }.agenda-day > div { display:flex; flex-wrap:wrap; align-items:flex-start; gap:8px; padding:14px; }.agenda-day .calendar-event { width:min(280px,100%); }.agenda-day--today > header { box-shadow:inset 3px 0 var(--accent); }.calendar-empty-state { padding:8px; color:var(--muted); font-size:var(--text-sm); }
 .calendar-loading { padding:60px 20px; color:var(--muted); text-align:center; font:var(--text-sm) var(--font-mono); }
 .unscheduled-section { margin-top:var(--space-lg); }.unscheduled-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:12px; }.unscheduled-header h2 { margin-top:5px; font-size:var(--text-lg); }.unscheduled-header > span { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:var(--surface-raised); color:var(--accent); font:700 12px var(--font-mono); }.unscheduled-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }.unscheduled-card { display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:16px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--surface); color:var(--text); text-align:left; cursor:pointer; transition:transform var(--transition-fast),border-color var(--transition-fast); }.unscheduled-card:hover { transform:translateY(-2px); border-color:var(--accent); }.unscheduled-card strong { font-size:var(--text-sm); }.unscheduled-card span, .unscheduled-card small { color:var(--muted); font:10px var(--font-mono); }.unscheduled-card small { color:var(--text-secondary); }
@@ -5674,6 +5711,15 @@ body.landing-body {
   margin-bottom: 12px;
 }
 
+.hk-cal-event-item-meta {
+  font-family: var(--font-primary);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #8c9784;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
 .hk-cal-event-meta-grid {
   display: flex;
   align-items: center;
@@ -7112,6 +7158,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   color: #0F172A;
 }
 
+[data-theme='light'] .hk-cal-event-item-meta {
+  color: #64748B;
+}
+
 [data-theme='light'] .hk-cal-event-item-org {
   color: #475569;
 }
@@ -8098,6 +8148,46 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 [data-theme='light'] .kanban-card-title,
 [data-theme='light'] .card-title {
   color: #0F172A;
+  font-family: var(--font-primary) !important;
+}
+
+[data-theme='light'] .kanban-card-course {
+  color: #15803D !important;
+  font-family: var(--font-primary) !important;
+}
+
+[data-theme='light'] .kanban-card-unit {
+  color: #64748B !important;
+  font-family: var(--font-primary) !important;
+}
+
+[data-theme='light'] .kanban-card-due {
+  color: #475569 !important;
+  font-family: var(--font-primary) !important;
+}
+
+[data-theme='light'] .kanban-card-due--overdue {
+  color: #DC2626 !important;
+}
+
+[data-theme='light'] .assignment-course-name {
+  color: #15803D !important;
+  font-family: var(--font-primary) !important;
+}
+
+[data-theme='light'] .assignment-title {
+  color: #0F172A !important;
+  font-family: var(--font-primary) !important;
+}
+
+[data-theme='light'] .assignment-sub {
+  color: #64748B !important;
+  font-family: var(--font-primary) !important;
+}
+
+[data-theme='light'] .meta-text {
+  font-family: var(--font-primary) !important;
+  color: #475569;
 }
 
 [data-theme='light'] .table-container {

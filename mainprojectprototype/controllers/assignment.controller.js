@@ -18,10 +18,6 @@ export const getMyCourses = async (request, response) => {
       .sort({ colid: 1 })
       .toArray();
 
-    if (cachedCoursesFromDb.length === 0 && token) {
-      return syncMyCourses(request, response);
-    }
-
     const coursesWithStatus = cachedCoursesFromDb.map(courseItem => ({
       colid: courseItem.colid,
       crsid: courseItem.crsid,

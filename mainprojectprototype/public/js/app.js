@@ -575,29 +575,6 @@ async function loadAppData(refresh = false) {
 
     await loadBlockedData();
     renderAllViews();
-
-    if (!refresh && rawAssignments.length === 0 && rawCourses.length > 0) {
-      showToast("Fetching assignments from university portal in background...", "info");
-      fetch("/api/assignments/sync-assignments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({
-          email: currentUser.email,
-          token: currentUser.token,
-        }),
-      })
-      .then(async (res) => {
-        if (res.ok) {
-          const syncData = await res.json();
-          if (syncData.assignments && syncData.assignments.length > 0) {
-            rawAssignments = syncData.assignments;
-            renderAllViews();
-            showToast(`Loaded ${rawAssignments.length} assignments!`, "success");
-          }
-        }
-      })
-      .catch((e) => console.warn("Background assignment sync note:", e.message));
-    }
   } catch (err) {
     console.error("Backend API note:", err.message);
     const statusEl = document.getElementById("settingsDataSource");
@@ -1864,7 +1841,7 @@ function renderDashboardRecentTable() {
 
     tr.innerHTML = `
       <td><span class="type-badge ${typeBadgeClass}">${typeLabel}</span></td>
-      <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(item.course_name || "Course")}</span></td>
+      <td><span class="assignment-course-name">${escapeHtml(item.course_name || "Course")}</span></td>
       <td>
         <div class="assignment-title">${escapeHtml(cleanTitle)}</div>
         ${item.unit_name ? `<div class="assignment-sub">${escapeHtml(item.unit_name)}</div>` : ""}
@@ -2525,8 +2502,8 @@ function openPhaseDetailsModal(phaseId) {
             <div class="phase-detail-item-row">
               <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
                 <div style="min-width:0;">
-                  <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(cleanTitle)}">${escapeHtml(cleanTitle)}</div>
-                  <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);">${escapeHtml(item.course_name || "Course")} · ${escapeHtml(item.due_date_raw || "No Deadline")}</div>
+                  <div style="font-family:var(--font-primary);font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(cleanTitle)}">${escapeHtml(cleanTitle)}</div>
+                  <div style="font-family:var(--font-primary);font-size:11.5px;font-weight:500;color:var(--text-secondary);margin-top:2px;">${escapeHtml(item.course_name || "Course")} · ${escapeHtml(item.due_date_raw || "No Deadline")}</div>
                 </div>
               </div>
               <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
@@ -2638,16 +2615,16 @@ function renderKanbanBoard(items) {
     card.innerHTML = `
       <div class="kanban-card-top" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
         <span class="type-badge ${typeBadgeClass}">${typeLabel}</span>
-        <span class="kanban-card-course" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;" title="${escapeHtml(item.course_name || "Course")}">${escapeHtml(item.course_name || "Course")}</span>
+        <span class="kanban-card-course" title="${escapeHtml(item.course_name || "Course")}">${escapeHtml(item.course_name || "Course")}</span>
       </div>
 
       <div class="kanban-card-title" title="${escapeHtml(cleanTitle)}" style="margin-top: 8px;">
         ${escapeHtml(cleanTitle)}
       </div>
 
-      ${item.unit_name ? `<div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:6px;">${escapeHtml(item.unit_name)}</div>` : ""}
+      ${item.unit_name ? `<div class="kanban-card-unit">${escapeHtml(item.unit_name)}</div>` : ""}
 
-      <div style="font-family:var(--font-mono);font-size:10px;margin-top:10px;color:${overdue ? "var(--danger)" : "var(--text-secondary)"};">
+      <div class="kanban-card-due ${overdue ? "kanban-card-due--overdue" : ""}">
         ${overdue ? "⚠ OVERDUE: " : "Due: "}${escapeHtml(item.due_date_raw || "No Deadline")}
       </div>
 
@@ -2675,13 +2652,13 @@ function renderKanbanBoard(items) {
 
   if (todoCol && todoCol.children.length === 0)
     todoCol.innerHTML =
-      '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px;text-align:center;">NO OVERDUE ASSIGNMENTS</div>';
+      '<div style="color:var(--muted);font-family:var(--font-primary);font-size:12px;font-weight:600;padding:16px 12px;text-align:center;">NO OVERDUE ASSIGNMENTS</div>';
   if (progressCol && progressCol.children.length === 0)
     progressCol.innerHTML =
-      '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px;text-align:center;">NO PENDING ASSIGNMENTS</div>';
+      '<div style="color:var(--muted);font-family:var(--font-primary);font-size:12px;font-weight:600;padding:16px 12px;text-align:center;">NO PENDING ASSIGNMENTS</div>';
   if (doneCol && doneCol.children.length === 0)
     doneCol.innerHTML =
-      '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px;text-align:center;">NO COMPLETED ASSIGNMENTS</div>';
+      '<div style="color:var(--muted);font-family:var(--font-primary);font-size:12px;font-weight:600;padding:16px 12px;text-align:center;">NO COMPLETED ASSIGNMENTS</div>';
 }
 
 // Populates the assignments data table view with filtered assignments.
@@ -2722,7 +2699,7 @@ function renderTasksTable(items) {
     tr.innerHTML = `
       <td><span class="type-badge ${typeBadgeClass}">${typeLabel}</span></td>
       <td>
-        <span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(item.course_name || "Course")}</span>
+        <span class="assignment-course-name">${escapeHtml(item.course_name || "Course")}</span>
       </td>
       <td>
         <div class="assignment-title" title="${escapeHtml(cleanTitle)}">${escapeHtml(cleanTitle)}</div>
@@ -2839,8 +2816,8 @@ function renderBlockManagerView() {
         const cleanTitle =
           cleanHtmlTitle(a.title_html || a.title_hint) || "Assignment";
         tr.innerHTML = `
-          <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(a.course_name || "Course")}</span></td>
-          <td>${escapeHtml(cleanTitle)}</td>
+          <td><span class="assignment-course-name">${escapeHtml(a.course_name || "Course")}</span></td>
+          <td class="assignment-title" style="font-size:13.5px;">${escapeHtml(cleanTitle)}</td>
           <td><span class="meta-text">${escapeHtml(a.blocked_at || "MUTED")}</span></td>
           <td style="text-align:right">
             <button class="btn btn--success btn--sm" onclick="toggleAssignmentBlock(${a.assignment_id}, '${escapeJsString(a.assignment_type)}', '${escapeJsString(a.course_name)}', '${escapeJsString(cleanTitle)}', true)">UNMUTE</button>

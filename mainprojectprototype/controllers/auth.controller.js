@@ -1,5 +1,5 @@
-import { loginVOLP, fetchUserCourses } from "../services/volp.service.js";
-import { usersCollection, coursesCollection } from "../services/db.service.js";
+import { loginVOLP } from "../services/volp.service.js";
+import { usersCollection } from "../services/db.service.js";
 import { encrypt } from "../services/encryption.service.js";
 import { getTelegramBotInfo, generateTelegramLinkToken } from "../services/telegram.service.js";
 
@@ -37,34 +37,7 @@ export const login = async (req, res) => {
     );
 
 
-    try {
-      const liveCourses = await fetchUserCourses(token, normalizedEmail);
-      if (liveCourses.length > 0) {
-        for (const currentCourse of liveCourses) {
-          await coursesCollection.updateOne(
-            { user_email: normalizedEmail, colid: Number(currentCourse.colid) },
-            {
-              $set: {
-                crsid: currentCourse.crsid || null,
-                course_name: currentCourse.course_name,
-                semester: currentCourse.semester || null,
-                academic_year: currentCourse.academic_year || null,
-                updated_at: new Date(),
-              },
-              $setOnInsert: {
-                user_email: normalizedEmail,
-                colid: Number(currentCourse.colid),
-                is_blocked: false,
-                blocked_at: null,
-              },
-            },
-            { upsert: true },
-          );
-        }
-      }
-    } catch (courseErr) {
-      console.warn("Could not pre-fetch courses on login:", courseErr.message);
-    }
+
 
     const existingUser = await usersCollection.findOne(
       { email: normalizedEmail },
@@ -205,7 +178,6 @@ export const getTelegramConfig = async (req, res) => {
     return res.json({
       success: true,
       bot: info,
-      defaultChatId: process.env.TELEGRAM_CHAT_ID || null,
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
