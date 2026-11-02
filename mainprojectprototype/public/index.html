@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark" class="dashboard-page">
+<html lang="en" data-theme="light" class="dashboard-page">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VOLP Reminder — Assignment Console</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/styles.css?v=20261001-nontech">
+  <link rel="stylesheet" href="css/styles.css?v=20261102-white">
 </head>
 <body class="dashboard-body">
   <div class="noise-overlay"></div>
@@ -22,7 +22,7 @@
       <div class="sidebar-header">
         <div class="sidebar-brand">
           <a href="landing.html" style="text-decoration: none; color: inherit;" title="Go to Home / Landing Page">
-            <h1><span class="accent">VOLP</span> REMINDER</h1>
+            <h1><span class="brand-logo-pill">VOLP</span> REMINDER</h1>
             <div class="brand-sub">ASSIGNMENT CONSOLE</div>
           </a>
         </div>
@@ -42,22 +42,16 @@
               DASHBOARD
             </a>
           </li>
-          <li class="sidebar-nav-item" data-page="tasks">
-            <a href="#" onclick="navigateTo('tasks', event)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              ASSIGNMENTS
-            </a>
-          </li>
           <li class="sidebar-nav-item" data-page="courses">
             <a href="#" onclick="navigateTo('courses', event)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
               COURSES
             </a>
           </li>
-          <li class="sidebar-nav-item" data-page="calendar">
-            <a href="#" onclick="navigateTo('calendar', event)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
-              CALENDAR
+          <li class="sidebar-nav-item" data-page="tasks">
+            <a href="#" onclick="navigateTo('tasks', event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              ASSIGNMENTS
             </a>
           </li>
           <li class="sidebar-nav-item" data-page="blocked">
@@ -66,10 +60,16 @@
               BLOCKED ITEMS
             </a>
           </li>
+          <li class="sidebar-nav-item" data-page="calendar">
+            <a href="#" onclick="navigateTo('calendar', event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+              CALENDAR
+            </a>
+          </li>
           <li class="sidebar-nav-item" data-page="reminders">
             <a href="#" onclick="navigateTo('reminders', event)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-              REMINDERS / NOTES
+              REMINDER LOGS
             </a>
           </li>
           <li class="sidebar-nav-item" data-page="settings">
@@ -97,12 +97,11 @@
         <div class="tour-card-header" style="padding-right: 28px;">
           <div class="tour-chip">
             <span class="pulse-beacon"></span>
-            <span>SIMPLE GUIDE</span>
+            <span>QUICK GUIDE</span>
           </div>
           <span class="tour-step-count">5 STEPS</span>
         </div>
-        <div class="tour-card-title">How This App Helps You</div>
-        <p class="tour-card-desc">A quick 2-minute visual guide: automatic homework fetching, tracking deadlines & daily 8 PM Telegram push alerts.</p>
+        <div class="tour-card-title" style="margin-bottom: 10px;">Interactive App Tour</div>
         <button type="button" class="btn btn--accent-sm btn--full tour-start-btn" onclick="startInteractiveTour()" title="Start Interactive Visual Tour">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           <span>TAKE A 2-MIN TOUR</span>
@@ -119,6 +118,11 @@
           </div>
         </div>
       </div>
+
+      <!-- Draggable Desktop Resize Handle -->
+      <div class="sidebar-resizer" id="sidebarResizer" role="separator" aria-orientation="vertical" aria-label="Resize sidebar" title="Drag to resize sidebar">
+        <div class="sidebar-resizer-handle"></div>
+      </div>
     </aside>
     
     
@@ -131,7 +135,6 @@
           </button>
           <div class="header-title-group">
             <div class="header-title-text" id="headerTitle">PROJECTS DASHBOARD</div>
-            <div class="header-meta" id="headerSubMeta">VOLP ASSIGNMENT SYSTEM / LIVE SYNC ACTIVE</div>
           </div>
         </div>
         
@@ -147,7 +150,7 @@
           </button>
           
           <button class="btn btn--icon" id="themeToggleBtn" onclick="toggleTheme()" aria-label="Toggle theme">☼</button>
-          <button class="btn btn--ghost btn--sm header-action-signout" onclick="handleSignOut()" title="Sign Out">
+          <button class="btn btn--danger btn--sm header-action-signout" onclick="handleSignOut()" title="Sign Out">
             <span class="btn-text">SIGN OUT</span>
           </button>
         </div>
@@ -301,7 +304,7 @@
                   <th>ASSIGNMENT TITLE</th>
                   <th>DUE DATE</th>
                   <th>STATUS</th>
-                  <th style="text-align:right">ACTIONS</th>
+                  <th style="text-align:right; min-width:175px;">ACTIONS</th>
                 </tr>
               </thead>
               <tbody id="tasksFullTableBody">
@@ -334,34 +337,38 @@
             <div class="calendar-summary" id="calendarSummary">-- AVAILABLE COURSES</div>
           </div>
 
-          <div class="calendar-toolbar">
-            <div class="calendar-navigation">
-              <button class="btn btn--icon" onclick="shiftCalendar(-1)" aria-label="Previous period">←</button>
-              <button class="btn btn--ghost" onclick="goToCalendarToday()">TODAY</button>
-              <button class="btn btn--icon" onclick="shiftCalendar(1)" aria-label="Next period">→</button>
-              <div class="calendar-period-label" id="calendarPeriodLabel">--</div>
-            </div>
-            <div class="calendar-filters">
-              <label class="subject-filter" for="calendarCourseFilter"><span class="subject-filter-label">COURSE</span><select id="calendarCourseFilter" class="subject-filter-select" onchange="setCalendarFilter(this.value)"><option value="all">ALL COURSES</option></select></label>
+          <div class="calendar-toolbar" style="margin-bottom: 20px;">
+            <div class="calendar-filters" style="width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <label class="subject-filter" for="calendarCourseFilter">
+                <span class="subject-filter-label">COURSE</span>
+                <select id="calendarCourseFilter" class="subject-filter-select" onchange="setCalendarFilter(this.value)">
+                  <option value="all">ALL COURSES</option>
+                </select>
+              </label>
               <div class="filter-group" id="calendarStatusFilter">
                 <button class="filter-btn active" onclick="setCalendarStatusFilter('all', this)">ALL</button>
                 <button class="filter-btn" onclick="setCalendarStatusFilter('not-done', this)">NOT DONE</button>
                 <button class="filter-btn" onclick="setCalendarStatusFilter('done', this)">DONE</button>
               </div>
-              <div class="view-toggle" aria-label="Calendar view">
-                <button class="view-toggle-btn active" id="calendarViewMonth" onclick="setCalendarView('month')">MONTH</button>
-                <button class="view-toggle-btn" id="calendarViewWeek" onclick="setCalendarView('week')">WEEK</button>
-                <button class="view-toggle-btn" id="calendarViewDay" onclick="setCalendarView('day')">DAY</button>
-              </div>
             </div>
           </div>
 
-          <div class="calendar-legend">
-            <span><i class="legend-dot legend-dot--active"></i>Not done</span><span><i class="legend-dot legend-dot--completed"></i>Done</span>
+          <!-- VOLP Calendar Card formatted identically to Hackathons Calendar -->
+          <div class="hk-calendar-wrap">
+            <div class="hk-cal-controls">
+              <div class="hk-cal-controls-left">
+                <button type="button" class="btn btn--ghost btn--sm" onclick="shiftCalendar(-1)">‹ PREV</button>
+                <button type="button" class="btn btn--ghost btn--sm" onclick="goToCalendarToday()">TODAY</button>
+                <button type="button" class="btn btn--ghost btn--sm" onclick="shiftCalendar(1)">NEXT ›</button>
+              </div>
+              <div class="hk-cal-label" id="calendarPeriodLabel">NOVEMBER 2026</div>
+              <div class="hk-cal-hint">● Highlighted dates have deadlines</div>
+            </div>
+            <div class="hk-cal-grid" id="volpCalendarGrid"></div>
+            <div class="hk-cal-events" id="volpCalendarEvents"></div>
           </div>
-          <div class="calendar-upcoming" id="calendarUpcoming"></div>
-          <div class="calendar-shell" id="calendarShell"><div class="calendar-loading">Preparing your schedule…</div></div>
-          <section class="unscheduled-section" id="unscheduledSection"></section>
+
+          <section class="unscheduled-section" id="unscheduledSection" style="max-width: 860px; margin: 32px auto 0;"></section>
         </div>
 
         
@@ -400,7 +407,6 @@
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>ID</th>
                     <th>COURSE</th>
                     <th>ASSIGNMENT TITLE</th>
                     <th>BLOCKED DATE</th>
@@ -419,7 +425,7 @@
         <div class="page-view" id="page-reminders">
           <div class="page-header">
             <div>
-              <div class="section-title">REMINDERS & NOTIFICATION LOG</div>
+              <div class="section-title">REMINDER LOGS</div>
               <div class="meta-text" style="margin-top:4px;">AUTOMATIC 8 PM DAILY DIGEST STATUS & DISPATCH</div>
             </div>
             <button class="btn btn--primary" id="triggerReminderPageBtn" onclick="triggerReminder()">
@@ -441,7 +447,7 @@
           </div>
 
           <div class="settings-layout">
-            <div class="settings-card" id="settingsContentCard" style="max-width: 680px;">
+            <div class="settings-card" id="settingsContentCard">
               <div class="profile-card-header">
                 <div class="profile-avatar-large" id="settingsLargeAvatar">--</div>
                 <div>
@@ -475,9 +481,6 @@
                   <button type="button" class="btn btn--primary" onclick="syncNow()">
                     SYNC FROM VOLP NOW
                   </button>
-                  <a href="landing.html" class="btn btn--ghost">
-                    VIEW LANDING PAGE
-                  </a>
                   <button type="button" class="btn btn--danger" onclick="handleSignOut()">
                     SIGN OUT / LOGOUT
                   </button>
@@ -485,7 +488,7 @@
               </div>
             </div>
 
-            <div class="settings-card" id="settingsTelegramCard" style="max-width: 680px; margin-top: 20px;">
+            <div class="settings-card" id="settingsTelegramCard">
               <div class="profile-card-header">
                 <div class="profile-avatar-large" style="background: rgba(0, 136, 204, 0.15); border-color: #0088cc; color: #0088cc;">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
@@ -502,12 +505,18 @@
                   <div id="telegramNotConnectedView">
                     <div style="font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">Zero-Friction Connection (1-Click)</div>
                     <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5;">
-                      Click the button below to open Telegram and tap <strong>START</strong>. Your university account will be automatically recognized and connected in seconds.
+                      Choose your preferred way to open Telegram and tap <strong>START</strong>. Your university account will be automatically recognized and connected in seconds.
                     </p>
-                    <button type="button" class="btn-telegram-connect" id="btnOneClickConnect" onclick="startOneClickTelegramConnect()">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
-                      <span>CONNECT TELEGRAM IN 1-CLICK</span>
-                    </button>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                      <button type="button" class="btn-telegram-connect" id="btnOneClickConnect" onclick="startOneClickTelegramConnect('app')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+                        <span>📱 OPEN IN TELEGRAM APP</span>
+                      </button>
+                      <button type="button" class="btn-telegram-connect btn-telegram-web" id="btnOneClickConnectWeb" onclick="startOneClickTelegramConnect('web')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        <span>🌐 OPEN IN TELEGRAM WEB</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div id="telegramConnectedView" style="display: none;">
@@ -530,7 +539,10 @@
 
                 <div class="settings-footer-actions" style="margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap;">
                   <a id="openTelegramBotLink" href="#" target="_blank" class="btn btn--ghost btn--sm" style="display: none;">
-                    OPEN BOT IN TELEGRAM ↗
+                    📱 OPEN IN TELEGRAM APP ↗
+                  </a>
+                  <a id="openTelegramBotWebLink" href="#" target="_blank" class="btn btn--ghost btn--sm" style="display: none;">
+                    🌐 OPEN IN TELEGRAM WEB ↗
                   </a>
                 </div>
 
@@ -570,19 +582,19 @@
           <div class="guide-hero-banner">
             <div class="guide-hero-badge">
               <span class="pulse-beacon"></span>
-              <span>STUDENT TIME-SAVER</span>
+              <span>QUICK GUIDE</span>
             </div>
-            <h2 class="guide-hero-title">Never Miss Homework or an Assignment Again</h2>
-            <p class="guide-hero-sub">Logging into the college website every day and clicking into 16 separate subjects just to check if something is due takes forever. This tool does the boring work for you: it gathers all your tasks into one clean screen and sends you an instant Telegram alert every evening at 8:00 PM with what's due!</p>
+            <h2 class="guide-hero-title">Never Miss an Assignment Again</h2>
+            <p class="guide-hero-sub">All your 16+ college courses in one unified dashboard — plus daily 8:00 PM Telegram alerts sent straight to your phone.</p>
             
             <div class="guide-step-strip">
               <div class="guide-step-chip" onclick="startInteractiveTour(0)">
                 <span class="step-num">01</span>
-                <span class="step-title">Safe 1-Time Login</span>
+                <span class="step-title">1-Time Login</span>
               </div>
               <div class="guide-step-chip" onclick="startInteractiveTour(1)">
                 <span class="step-num">02</span>
-                <span class="step-title">1-Click Auto-Fetch</span>
+                <span class="step-title">1-Click Sync</span>
               </div>
               <div class="guide-step-chip" onclick="startInteractiveTour(2)">
                 <span class="step-num">03</span>
@@ -590,11 +602,11 @@
               </div>
               <div class="guide-step-chip" onclick="startInteractiveTour(3)">
                 <span class="step-num">04</span>
-                <span class="step-title">Mute Old Subjects</span>
+                <span class="step-title">Mute Courses</span>
               </div>
               <div class="guide-step-chip" onclick="startInteractiveTour(4)">
                 <span class="step-num">05</span>
-                <span class="step-title">Daily 8 PM Telegram</span>
+                <span class="step-title">8 PM Telegram</span>
               </div>
             </div>
           </div>
@@ -607,34 +619,33 @@
                 <span class="guide-tag">STEP 01</span>
                 <span class="guide-tech-badge">100% PRIVATE & SAFE</span>
               </div>
-              <h3 class="guide-card-title">1. Safe & Simple Sign-In</h3>
-              <p class="guide-card-desc">Log in using your existing college portal username and password. You only have to log in once! The app connects directly with the official university portal and securely remembers you so you stay signed in.</p>
+              <h3 class="guide-card-title">1. One-Time College Login</h3>
+              <p class="guide-card-desc">Sign in once with your student credentials. Direct official connection, zero plain password storage.</p>
               
               
               <div class="visual-diagram visual-diagram--auth">
                 <div class="vnode vnode--user">
                   <span class="vnode-icon">👤</span>
                   <span class="vnode-label">You Sign In Once</span>
-                  <span class="vnode-sub">Normal College Login</span>
+                  <span class="vnode-sub">Student Portal Login</span>
                 </div>
                 <div class="vflow-arrow">➔</div>
                 <div class="vnode vnode--volp">
                   <span class="vnode-icon">🏫</span>
                   <span class="vnode-label">College Portal</span>
-                  <span class="vnode-sub">Checks Your Account</span>
+                  <span class="vnode-sub">Direct Verification</span>
                 </div>
                 <div class="vflow-arrow">➔</div>
                 <div class="vnode vnode--db">
                   <span class="vnode-icon">🔒</span>
                   <span class="vnode-label">Safe & Remembered</span>
-                  <span class="vnode-sub">Zero Password Storage</span>
+                  <span class="vnode-sub">Encrypted Session</span>
                 </div>
               </div>
 
               <ul class="guide-bullets">
-                <li>Your password is never saved anywhere — complete security and privacy.</li>
-                <li>You don't need to re-enter your credentials every time you open the app.</li>
-                <li>Works smoothly even if the college portal is temporarily slow.</li>
+                <li>Zero plain password storage — 100% private.</li>
+                <li>Stay signed in automatically across visits.</li>
               </ul>
 
               <div class="guide-card-footer">
@@ -648,8 +659,8 @@
                 <span class="guide-tag">STEP 02</span>
                 <span class="guide-tech-badge">SAVES 20-30 MIN DAILY</span>
               </div>
-              <h3 class="guide-card-title">2. Gathers All Subjects in 1 Click</h3>
-              <p class="guide-card-desc">Normally, you must click through every subject, unit, and chapter to check for new work. Clicking <strong>SYNC VOLP</strong> automatically checks all your 16+ courses in the background and brings every assignment into one unified list.</p>
+              <h3 class="guide-card-title">2. 1-Click Sync Across All Courses</h3>
+              <p class="guide-card-desc">Click <strong>SYNC VOLP</strong> to instantly fetch theory homework and lab practicals across all 16+ subjects.</p>
               
               
               <div class="visual-diagram visual-diagram--sync">
@@ -674,9 +685,8 @@
               </div>
 
               <ul class="guide-bullets">
-                <li>Collects both written assignments and lab/practical submissions.</li>
-                <li>Knows automatically if you already submitted your answer or if it's pending.</li>
-                <li>Shows the exact deadline and marks for every single task.</li>
+                <li>Auto-detects submitted vs pending assignments.</li>
+                <li>Shows exact submission deadlines and marks.</li>
               </ul>
 
               <div class="guide-card-footer">
@@ -690,8 +700,8 @@
                 <span class="guide-tag">STEP 03</span>
                 <span class="guide-tech-badge">EASY COLOR CODING</span>
               </div>
-              <h3 class="guide-card-title">3. Track Deadlines at a Glance</h3>
-              <p class="guide-card-desc">No more writing deadlines on scraps of paper. See everything laid out neatly with clear color labels: pending homework, what's due soon, and what's already completed. You can also view them on a monthly calendar!</p>
+              <h3 class="guide-card-title">3. Visual Board & Monthly Calendar</h3>
+              <p class="guide-card-desc">See what's due with clear color codes: urgent, pending, and completed. Switch between Kanban and Monthly Calendar.</p>
               
               
               <div class="visual-diagram visual-diagram--tasks">
@@ -709,9 +719,8 @@
               </div>
 
               <ul class="guide-bullets">
-                <li>Green tags for work you already finished; yellow/red for work coming up.</li>
-                <li>Filter by any subject or search by keyword in one second.</li>
-                <li>Click the Calendar tab to see your entire month scheduled like a personal planner.</li>
+                <li>Kanban columns for To-Do, In-Progress & Done.</li>
+                <li>Quick search and one-click course filtering.</li>
               </ul>
 
               <div class="guide-card-footer">
@@ -724,10 +733,10 @@
             <div class="guide-card">
               <div class="guide-card-top">
                 <span class="guide-tag">STEP 04</span>
-                <span class="guide-tech-badge">NO CLUTTER</span>
+                <span class="guide-tech-badge">ZERO CLUTTER</span>
               </div>
               <h3 class="guide-card-title">4. Silence Finished or Extra Subjects</h3>
-              <p class="guide-card-desc">Enrolled in an elective or lab that's already over, or a subject you don't need reminders for? Just click "Block" to mute it. It stays safely on your college portal, but stops cluttering your screen and inbox.</p>
+              <p class="guide-card-desc">Passed an elective or lab? Click <strong>Block</strong> to mute it from your daily board and Telegram reminders.</p>
               
               
               <div class="visual-diagram visual-diagram--block">
@@ -745,9 +754,8 @@
               </div>
 
               <ul class="guide-bullets">
-                <li>Mute whole subjects or individual tasks with one click.</li>
-                <li>Keeps your daily view focused only on subjects that actually matter right now.</li>
-                <li>You can un-mute any subject at any time under the "BLOCKED ITEMS" tab.</li>
+                <li>Hides clutter without affecting official portal records.</li>
+                <li>Restore any course anytime from Blocked Items.</li>
               </ul>
 
               <div class="guide-card-footer">
@@ -759,10 +767,10 @@
             <div class="guide-card" style="grid-column: 1 / -1;">
               <div class="guide-card-top">
                 <span class="guide-tag">STEP 05</span>
-                <span class="guide-tech-badge">AUTOMATIC EVENING REMINDER</span>
+                <span class="guide-tech-badge">DAILY EVENING PUSH</span>
               </div>
-              <h3 class="guide-card-title">5. Daily 8:00 PM Telegram Alert Directly to Your Phone</h3>
-              <p class="guide-card-desc">You don't even have to open this website every day! Every evening at 8:00 PM, the system automatically checks your pending homework across all active subjects and sends your Telegram bot a clean, instant push notification with only the tasks you still need to finish.</p>
+              <h3 class="guide-card-title">5. Daily 8:00 PM Telegram Push Alerts</h3>
+              <p class="guide-card-desc">No need to open the site daily. Every evening at 8:00 PM, an automated summary of only pending work arrives on your Telegram.</p>
               
               
               <div class="telegram-mock-card" style="margin: 16px 0; border: 1px solid rgba(0, 136, 204, 0.35); background: rgba(0, 136, 204, 0.03); border-radius: var(--radius-md); overflow: hidden;">
@@ -808,7 +816,7 @@
 
       </main>
       <footer class="app-footer">
-        <span>VOLP REMINDER · <a href="landing.html" style="color: var(--muted); text-decoration: underline;">Home</a> · <a href="login.html" onclick="handleSignOut()" style="color: var(--muted); text-decoration: underline;">Sign Out</a></span>
+        <span>VOLP REMINDER · <a href="landing.html" style="color: var(--muted); text-decoration: underline;">Home</a> · <a href="login.html" onclick="handleSignOut()" style="color: var(--danger); font-weight: 600; text-decoration: underline;">Sign Out</a></span>
         <span>ASSIGNMENT CONSOLE · <span id="appFooterYear">2026</span></span>
       </footer>
     </div>

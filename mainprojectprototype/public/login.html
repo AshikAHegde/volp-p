@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark" class="login-page">
+<html lang="en" data-theme="light" class="login-page">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VOLP Reminder — Sign In</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=20261102-formatlogo">
 </head>
 <body class="login-wrapper">
   <div class="noise-overlay"></div>
@@ -20,10 +20,12 @@
   <button class="btn btn--icon theme-toggle-fixed" id="themeToggleBtn" aria-label="Toggle Theme">☼</button>
 
   <div class="login-card">
-    <a href="landing.html" style="text-decoration: none; color: inherit;" title="VOLP Reminder Home">
+    <a href="landing.html" class="login-brand-header" title="VOLP Reminder Home">
       <div class="login-header-title">
-        <span class="accent">VOLP</span> REMINDER
+        <span class="brand-logo-pill">VOLP</span>
+        <span class="brand-name">REMINDER</span>
       </div>
+      <div class="login-header-sub">ASSIGNMENT CONSOLE</div>
     </a>
 
     <div class="auth-error-banner" id="errorBanner"></div>
@@ -65,17 +67,27 @@
 
   <script>
     const themeBtn = document.getElementById('themeToggleBtn');
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
-    themeBtn.textContent = savedTheme === 'dark' ? '☼' : '◐';
+    themeBtn.textContent = savedTheme === 'dark' ? '☼' : '☼';
 
     themeBtn.addEventListener('click', () => {
       const cur = document.documentElement.getAttribute('data-theme');
       const next = cur === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('theme', next);
-      themeBtn.textContent = next === 'dark' ? '☼' : '◐';
+      themeBtn.textContent = next === 'dark' ? '☼' : '☼';
     });
+
+    // Show session expiration message if redirected from an expired 2-hour backend session
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('expired') === 'true') {
+      const banner = document.getElementById('errorBanner');
+      if (banner) {
+        banner.textContent = 'Your session expired after 2 hours. Please log in again to continue.';
+        banner.style.display = 'block';
+      }
+    }
 
     // Submits the login form credentials to the authentication API and saves session data.
     async function handleLogin(e) {
@@ -102,10 +114,12 @@
             showError('Authentication succeeded but no session token was received.');
             return;
           }
+          // Persist is_premium in localStorage so premium features show immediately without layout shift
           localStorage.setItem('volp_user', JSON.stringify({
             email: data.email || username,
             token: data.token,
-            telegram_chat_id: data.telegram_chat_id || ''
+            telegram_chat_id: data.telegram_chat_id || '',
+            is_premium: Boolean(data.is_premium)
           }));
           window.location.href = 'dashboard.html';
           return;

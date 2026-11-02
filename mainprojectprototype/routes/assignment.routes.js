@@ -5,7 +5,8 @@ import {
   syncMyCourses,
   getMyAssignments,
   syncMyAssignments,
-  triggerReminderSimulation
+  triggerReminderSimulation,
+  getReminderLogs
 } from '../controllers/assignment.controller.js';
 
 const router = express.Router();
@@ -19,5 +20,6 @@ router.post('/sync-courses', requireUser, syncMyCourses);
 router.post('/sync-assignments', requireUser, syncMyAssignments);
 
 router.post('/trigger-8pm-reminder', requireUser, triggerReminderSimulation);
+router.get('/reminder-logs', requireUser, getReminderLogs);
 
 export default router;

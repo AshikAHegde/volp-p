@@ -197,7 +197,9 @@ export const generateTelegramLinkToken = async (userEmail) => {
   }
 
   const linkUrl = botUser ? `https://t.me/${botUser}?start=${token}` : null;
-  return { token, botUsername: botUser, linkUrl };
+  const webUrl = botUser ? `https://web.telegram.org/k/#?tgaddr=${encodeURIComponent(`tg://resolve?domain=${botUser}&start=${token}`)}` : null;
+  const appUrl = botUser ? `tg://resolve?domain=${botUser}&start=${token}` : null;
+  return { token, botUsername: botUser, linkUrl, webUrl, appUrl };
 };
 
 /**

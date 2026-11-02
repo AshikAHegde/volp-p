@@ -39,7 +39,11 @@ export function projectRateLimiter(req, res, next) {
     ? req.path.slice(0, -1)
     : req.path;
 
-  if (strictRoutes.has(normalizedPath)) {
+  // Route live upstream scraping refresh requests to strict limiter to avoid rate limit bypass
+  const isLiveRefresh = (normalizedPath === '/api/assignments/my-courses' || normalizedPath === '/api/assignments/my-assignments') &&
+    (Boolean(req.body?.refresh) || Boolean(req.query?.refresh));
+
+  if (strictRoutes.has(normalizedPath) || isLiveRefresh) {
     return strictLimiter(req, res, next);
   }
 

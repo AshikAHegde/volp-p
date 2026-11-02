@@ -2,7 +2,9 @@ import { coursesCollection } from '../services/db.service.js';
 
 // Retrieves all blocked courses for a specific user from the database.
 export const getBlockedCourses = async (req, res) => {
-  const { email } = req.query;
+  // Enforce session email from requireUser to prevent IDOR vulnerabilities
+  const rawEmail = req.user?.email || req.query.email;
+  const email = (rawEmail || '').trim().toLowerCase();
   if (!email) return res.status(400).json({ error: 'email query param is required.' });
 
   try {
@@ -21,7 +23,10 @@ export const getBlockedCourses = async (req, res) => {
 
 // Updates or toggles the blocked status of a course for a user.
 export const updateCourseBlockStatus = async (req, res) => {
-  const { email, colid, course_name, is_blocked } = req.body;
+  // Enforce session email from requireUser to prevent IDOR on updates
+  const rawEmail = req.user?.email || req.body.email;
+  const email = (rawEmail || '').trim().toLowerCase();
+  const { colid, course_name, is_blocked } = req.body;
   if (!email || !colid || typeof is_blocked !== 'boolean') {
     return res.status(400).json({ error: 'email, colid, and boolean is_blocked are required.' });
   }

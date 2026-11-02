@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.routes.js';
 import assignmentRoutes from './routes/assignment.routes.js';
 import blockedRoutes from './routes/blocked_courses.routes.js';
 import blockedAssignmentRoutes from './routes/blocked_assignments.routes.js';
+import hackathonsRoutes from './routes/hackathons.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,6 +42,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/blocked', blockedRoutes);
 app.use('/api/blocked-assignments', blockedAssignmentRoutes);
+app.use('/api/hackathons', hackathonsRoutes);
 
 await initDB();
 startCronJob();

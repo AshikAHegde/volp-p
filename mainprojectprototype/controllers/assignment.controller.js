@@ -1,10 +1,11 @@
 import { fetchUserAssignments, fetchUserCourses } from '../services/volp.service.js';
 import { triggerCronNow } from '../services/cron.service.js';
-import { coursesCollection, assignmentsCollection } from '../services/db.service.js';
+import { coursesCollection, assignmentsCollection, usersCollection, reminderLogsCollection } from '../services/db.service.js';
 
 // Retrieves cached courses for the user from the database or triggers a live sync if refresh is requested or cache is empty.
 export const getMyCourses = async (request, response) => {
-  const { email, token } = request.user;
+  const { token } = request.user;
+  const email = (request.user?.email || '').trim().toLowerCase();
   const refresh = Boolean(request.body?.refresh || request.query?.refresh);
 
   if (refresh) {
@@ -44,16 +45,19 @@ export const getMyCourses = async (request, response) => {
 
 // Fetches live courses from the VOLP portal and updates the database cache.
 export const syncMyCourses = async (request, response) => {
-  const { email, token } = request.user;
+  const { token } = request.user;
+  const email = (request.user?.email || '').trim().toLowerCase();
 
   try {
     const cachedCoursesFromDb = await coursesCollection
       .find({ user_email: email })
       .toArray();
 
-    const blockedStatusMap = new Map(
-      cachedCoursesFromDb.map(c => [Number(c.colid), Boolean(c.is_blocked)])
-    );
+    const blockedStatusMap = new Map();
+    cachedCoursesFromDb.forEach(c => {
+      blockedStatusMap.set(Number(c.colid), Boolean(c.is_blocked));
+      blockedStatusMap.set(String(c.colid), Boolean(c.is_blocked));
+    });
 
     const liveCourses = await fetchUserCourses(token, email);
 
@@ -242,7 +246,9 @@ export const triggerReminderSimulation = async (request, response) => {
   const { email, token } = request.user;
 
   try {
-    const result = await triggerCronNow(email, token);
+    // Look up telegram_chat_id to pass down to triggerCronNow and avoid duplicate DB queries
+    const user = await usersCollection.findOne({ email }, { projection: { telegram_chat_id: 1 } });
+    const result = await triggerCronNow(email, token, user?.telegram_chat_id);
     response.json({
       success: true,
       message: result?.message || `8 PM Telegram Reminder dispatch executed for ${email}.`,
@@ -250,5 +256,27 @@ export const triggerReminderSimulation = async (request, response) => {
     });
   } catch (cronError) {
     response.status(500).json({ error: 'Cron trigger failed: ' + cronError.message });
+  }
+};
+
+// Retrieves recent 8 PM reminder dispatch logs for the authenticated user.
+export const getReminderLogs = async (request, response) => {
+  const { email } = request.user;
+  try {
+    if (!reminderLogsCollection) {
+      return response.json({ success: true, logs: [] });
+    }
+    const logs = await reminderLogsCollection
+      .find({ user_email: email })
+      .sort({ created_at: -1 })
+      .limit(30)
+      .toArray();
+
+    response.json({
+      success: true,
+      logs
+    });
+  } catch (err) {
+    response.status(500).json({ error: 'Failed to fetch reminder logs: ' + err.message });
   }
 };

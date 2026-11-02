@@ -81,16 +81,19 @@ const makeCol = () => ({
   }),
   findOne: jest.fn().mockResolvedValue(null),
   updateOne: jest.fn().mockResolvedValue({}),
+  insertOne: jest.fn().mockResolvedValue({}),
 });
 
 const mockUsersCol = makeCol();
 const mockCoursesCol = makeCol();
 const mockAssignmentsCol = makeCol();
+const mockReminderLogsCol = makeCol();
 
 await jest.unstable_mockModule("../services/db.service.js", () => ({
   usersCollection: mockUsersCol,
   coursesCollection: mockCoursesCol,
   assignmentsCollection: mockAssignmentsCol,
+  reminderLogsCollection: mockReminderLogsCol,
 }));
 
 

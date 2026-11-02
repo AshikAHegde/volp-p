@@ -2,7 +2,8 @@ import { assignmentsCollection } from '../services/db.service.js';
 
 // Retrieves all blocked assignments for a specific user from the database.
 export const getBlockedAssignments = async (req, res) => {
-  const { email } = req.query;
+  // Enforce session email from requireUser to prevent IDOR vulnerabilities
+  const email = req.user?.email || req.query.email;
   if (!email) return res.status(400).json({ error: 'Email required.' });
 
   try {
@@ -25,7 +26,9 @@ export const getBlockedAssignments = async (req, res) => {
 
 // Updates or toggles the blocked status of an assignment for a user.
 export const updateAssignmentBlockStatus = async (req, res) => {
-  const { email, assignment_id, assignment_type, colid, course_name, title_hint, is_blocked } = req.body;
+  // Enforce session email from requireUser to prevent IDOR on updates
+  const email = req.user?.email || req.body.email;
+  const { assignment_id, assignment_type, colid, course_name, title_hint, is_blocked } = req.body;
   if (!email || !assignment_id || !assignment_type || typeof is_blocked !== 'boolean') {
     return res.status(400).json({ error: 'email, assignment_id, assignment_type, and boolean is_blocked are required.' });
   }

@@ -2,7 +2,7 @@ import 'dotenv/config';
 import cron from 'node-cron';
 import { fetchUserAssignments, loginVOLP } from './volp.service.js';
 import { sendAssignmentReminderTelegram } from './telegram.service.js';
-import { usersCollection, coursesCollection, assignmentsCollection } from './db.service.js';
+import { usersCollection, coursesCollection, assignmentsCollection, reminderLogsCollection } from './db.service.js';
 import { decrypt } from './encryption.service.js';
 
 let isCronRunning = false;
@@ -92,9 +92,38 @@ export const startCronJob = () => {
           );
 
           console.log(`   📋 ${allAssignments.length} total → ${assignments.length} after assignment blocks`);
-          await sendAssignmentReminderTelegram(user.email, assignments, user.telegram_chat_id);
+          const sendResult = await sendAssignmentReminderTelegram(user.email, assignments, user.telegram_chat_id);
+          if (reminderLogsCollection?.insertOne) {
+            try {
+              const pendingCount = assignments.filter(a => !a.is_submitted && !a.is_blocked).length;
+              await reminderLogsCollection.insertOne({
+                user_email: user.email,
+                trigger_type: 'CRON',
+                status: sendResult?.success ? 'DELIVERED' : (sendResult?.reason === 'NO_CHAT_ID' ? 'AWAITING_TELEGRAM' : 'FAILED'),
+                pending_count: pendingCount,
+                recipient: sendResult?.recipient || user.telegram_chat_id || (sendResult?.reason === 'NO_CHAT_ID' ? 'NOT CONNECTED' : 'N/A'),
+                message: sendResult?.message || (sendResult?.success ? `Automated 8:00 PM Telegram alert dispatched with ${pendingCount} pending assignment(s).` : `Automated 8:00 PM dispatch note: ${sendResult?.reason || 'Notification pending'}`),
+                created_at: new Date()
+              });
+            } catch (logErr) {
+              console.warn('Could not record cron log:', logErr.message);
+            }
+          }
         } catch (err) {
           console.log(`⚠ Failed to process user ${user.email}:`, err.message);
+          if (reminderLogsCollection?.insertOne) {
+            try {
+              await reminderLogsCollection.insertOne({
+                user_email: user.email,
+                trigger_type: 'CRON',
+                status: 'FAILED',
+                pending_count: 0,
+                recipient: user.telegram_chat_id || 'N/A',
+                message: `Automated 8:00 PM cron failed: ${err.message}`,
+                created_at: new Date()
+              });
+            } catch (_) {}
+          }
         }
       }
     } finally {
@@ -104,7 +133,7 @@ export const startCronJob = () => {
 };
 
 // Manually triggers the reminder email process for a specified user.
-export const triggerCronNow = async (userEmail, token) => {
+export const triggerCronNow = async (userEmail, token, explicitChatId = null) => {
   console.log(`⚡ Manually triggering 8:00 PM reminder check for ${userEmail}...`);
 
   const blockedRows = await coursesCollection
@@ -156,6 +185,28 @@ export const triggerCronNow = async (userEmail, token) => {
   );
 
   console.log(`   📋 ${allAssignments.length} total → ${assignments.length} after assignment blocks`);
-  return sendAssignmentReminderTelegram(userEmail, assignments);
+  // Forward explicitChatId if provided to optimize Telegram dispatch and prevent redundant DB lookups
+  const sendResult = explicitChatId
+    ? await sendAssignmentReminderTelegram(userEmail, assignments, explicitChatId)
+    : await sendAssignmentReminderTelegram(userEmail, assignments);
+
+  if (reminderLogsCollection?.insertOne) {
+    try {
+      const pendingCount = assignments.filter(a => !a.is_submitted && !a.is_blocked).length;
+      await reminderLogsCollection.insertOne({
+        user_email: userEmail,
+        trigger_type: 'MANUAL',
+        status: sendResult?.success ? 'DELIVERED' : (sendResult?.reason === 'NO_CHAT_ID' ? 'AWAITING_TELEGRAM' : 'FAILED'),
+        pending_count: pendingCount,
+        recipient: sendResult?.recipient || explicitChatId || (sendResult?.reason === 'NO_CHAT_ID' ? 'NOT CONNECTED' : 'N/A'),
+        message: sendResult?.message || (sendResult?.success ? `Manual 8 PM Telegram alert dispatched with ${pendingCount} pending assignment(s).` : `Manual 8 PM dispatch note: ${sendResult?.reason || 'Notification pending'}`),
+        created_at: new Date()
+      });
+    } catch (logErr) {
+      console.warn('Could not record manual reminder log:', logErr.message);
+    }
+  }
+
+  return sendResult;
 };
 

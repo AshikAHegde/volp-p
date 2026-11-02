@@ -13,31 +13,36 @@ export const login = async (req, res) => {
       .json({ error: "Username and password are required." });
   }
 
+  const normalizedEmail = String(username).trim().toLowerCase();
+
   try {
     const token = await loginVOLP(username, password);
     const encryptedPassword = encrypt(password);
+    // Set 2-hour platform-independent session expiration timestamp in MongoDB
+    const tokenExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
 
     await usersCollection.updateOne(
-      { email: username },
+      { email: normalizedEmail },
       {
         $set: {
           token,
+          token_expires_at: tokenExpiresAt,
           encrypted_password: encryptedPassword,
           updated_at: new Date(),
         },
         $unset: { password: "" },
-        $setOnInsert: { email: username, created_at: new Date() },
+        $setOnInsert: { email: normalizedEmail, created_at: new Date() },
       },
       { upsert: true },
     );
 
 
     try {
-      const liveCourses = await fetchUserCourses(token, username);
+      const liveCourses = await fetchUserCourses(token, normalizedEmail);
       if (liveCourses.length > 0) {
         for (const currentCourse of liveCourses) {
           await coursesCollection.updateOne(
-            { user_email: username, colid: Number(currentCourse.colid) },
+            { user_email: normalizedEmail, colid: Number(currentCourse.colid) },
             {
               $set: {
                 crsid: currentCourse.crsid || null,
@@ -47,7 +52,7 @@ export const login = async (req, res) => {
                 updated_at: new Date(),
               },
               $setOnInsert: {
-                user_email: username,
+                user_email: normalizedEmail,
                 colid: Number(currentCourse.colid),
                 is_blocked: false,
                 blocked_at: null,
@@ -62,16 +67,23 @@ export const login = async (req, res) => {
     }
 
     const existingUser = await usersCollection.findOne(
-      { email: username },
-      { projection: { telegram_chat_id: 1 } }
+      { email: normalizedEmail },
+      { projection: { telegram_chat_id: 1, is_premium: 1 } }
     );
+
+    // Auto-preserve premium access for primary developer account or existing premium status
+    const isPremiumUser = existingUser?.is_premium === true || normalizedEmail === 'ashik.hegde24@vit.edu';
+    if (isPremiumUser && !existingUser?.is_premium) {
+      await usersCollection.updateOne({ email: normalizedEmail }, { $set: { is_premium: true } });
+    }
 
     res.json({
       success: true,
       message: "VOLP Login & User Registration Successful",
-      email: username,
+      email: normalizedEmail,
       token,
       telegram_chat_id: existingUser?.telegram_chat_id || "",
+      is_premium: isPremiumUser,
     });
   } catch (err) {
     res.status(401).json({ error: "Authentication failed: " + err.message });
@@ -96,11 +108,17 @@ export const getActiveSession = async (req, res) => {
 
     const user = await usersCollection.findOne(
       { token },
-      { projection: { _id: 0, email: 1, token: 1, telegram_chat_id: 1, updated_at: 1 } },
+      { projection: { _id: 0, email: 1, token: 1, telegram_chat_id: 1, is_premium: 1, token_expires_at: 1, updated_at: 1 } },
     );
 
     if (!user) {
       return res.status(401).json({ error: "Invalid or expired session token. Please log in again." });
+    }
+
+    // Invalidate session if backend 2-hour expiration window has elapsed
+    if (user.token_expires_at && new Date() > new Date(user.token_expires_at)) {
+      await usersCollection.updateOne({ token }, { $unset: { token: "" } });
+      return res.status(401).json({ error: "Session expired after 2 hours. Please log in again." });
     }
 
     return res.json({
@@ -108,6 +126,7 @@ export const getActiveSession = async (req, res) => {
       email: user.email,
       token: user.token,
       telegram_chat_id: user.telegram_chat_id || "",
+      is_premium: user.is_premium === true,
     });
   } catch (err) {
     return res
@@ -119,24 +138,19 @@ export const getActiveSession = async (req, res) => {
 // Invalidates the current session token in the database upon user logout.
 export const logout = async (req, res) => {
   try {
-    const authHeader = req.headers.authorization || req.get("authorization") || "";
-    let token = "";
-
-    if (authHeader.startsWith("Bearer ")) {
-      token = authHeader.slice(7).trim();
-    } else if (req.body?.token) {
-      token = String(req.body.token).trim();
+    // Invalidate session strictly for the authenticated user from req.user
+    const token = req.user?.token || (req.headers.authorization || '').replace(/^Bearer\s+/, '').trim();
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized: Session token missing." });
     }
 
-    if (token) {
-      await usersCollection.updateOne(
-        { token },
-        {
-          $unset: { token: "" },
-          $set: { updated_at: new Date() },
-        },
-      );
-    }
+    await usersCollection.updateOne(
+      { token },
+      {
+        $unset: { token: "" },
+        $set: { updated_at: new Date() },
+      },
+    );
 
     return res.json({
       success: true,
@@ -217,7 +231,9 @@ export const getTelegramLinkToken = async (req, res) => {
       success: true,
       token: result.token,
       botUsername: result.botUsername,
-      linkUrl: result.linkUrl
+      linkUrl: result.linkUrl,
+      webUrl: result.webUrl,
+      appUrl: result.appUrl
     });
   } catch (err) {
     return res.status(500).json({ error: "Failed to generate Telegram link: " + err.message });
@@ -271,6 +287,42 @@ export const disconnectTelegram = async (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+};
+
+// Developer-only: sets or revokes premium access for a user.
+// Protected by the ADMIN_SECRET header — never expose to the frontend.
+export const setPremium = async (req, res) => {
+  const secret = req.headers['x-admin-secret'];
+  const adminSecret = process.env.ADMIN_SECRET;
+
+  if (!adminSecret || secret !== adminSecret) {
+    return res.status(403).json({ error: 'Forbidden: invalid admin secret.' });
+  }
+
+  const { email, is_premium } = req.body;
+  if (!email || typeof is_premium !== 'boolean') {
+    return res.status(400).json({ error: 'email (string) and is_premium (boolean) are required.' });
+  }
+
+  try {
+    const result = await usersCollection.updateOne(
+      { email },
+      { $set: { is_premium, updated_at: new Date() } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: `No user found with email: ${email}` });
+    }
+
+    return res.json({
+      success: true,
+      message: `User ${email} premium access set to ${is_premium}.`,
+      email,
+      is_premium,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to update premium status: ' + err.message });
   }
 };
 
