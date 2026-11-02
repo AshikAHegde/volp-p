@@ -550,7 +550,17 @@ async function loadAppData(refresh = false) {
     if (courseRes.status === 401 || assignRes.status === 401) {
       localStorage.removeItem("volp_user");
       window.location.href = "login.html?expired=true";
-      return;
+      return { success: false, error: "SESSION_EXPIRED" };
+    }
+
+    if (courseRes.status === 429 || assignRes.status === 429) {
+      const errRes = courseRes.status === 429 ? courseRes : assignRes;
+      const errJson = await errRes.json().catch(() => ({}));
+      throw new Error(errJson.message || "Rate limit reached: Max 10 syncs per 15 minutes to protect college servers.");
+    }
+
+    if (!courseRes.ok && !assignRes.ok) {
+      throw new Error("Failed to communicate with university sync server.");
     }
 
     if (courseRes.ok) {
@@ -575,6 +585,7 @@ async function loadAppData(refresh = false) {
 
     await loadBlockedData();
     renderAllViews();
+    return { success: true, count: rawAssignments.length };
   } catch (err) {
     console.error("Backend API note:", err.message);
     const statusEl = document.getElementById("settingsDataSource");
@@ -583,6 +594,8 @@ async function loadAppData(refresh = false) {
       statusEl.style.color = "var(--accent)";
     }
     renderAllViews();
+    if (refresh) throw err;
+    return { success: false, error: err.message };
   }
 }
 
@@ -2958,18 +2971,51 @@ function clearReminderLogs() {
   renderRemindersView(true);
 }
 
-// Displays the full-screen live sync loading overlay.
+let syncProgressInterval = null;
+let isSyncInProgress = false;
+
+// Progressive status messages shown to user during portal scraping
+const SYNC_STAGES = [
+  "Connecting to university VOLP servers...",
+  "Fetching registered courses and syllabi...",
+  "Scanning course units and topic outlines...",
+  "Extracting subjective assignments & questions...",
+  "Checking hands-on assignments & due dates...",
+  "Analyzing submission statuses & CIE deliverables...",
+  "Finalizing data sync and updating your dashboard..."
+];
+
+// Displays the full-screen live sync loading overlay with live dynamic status hints.
 function showSyncProgress() {
   const overlay = document.getElementById("syncOverlay");
   if (!overlay) return;
+
+  const msgEl = overlay.querySelector(".sync-progress-message");
+  if (msgEl) {
+    msgEl.textContent = SYNC_STAGES[0];
+  }
+
   overlay.style.display = "flex";
   void overlay.offsetWidth;
   overlay.classList.add("active");
   overlay.setAttribute("aria-hidden", "false");
+
+  if (syncProgressInterval) clearInterval(syncProgressInterval);
+  let stageIdx = 0;
+  syncProgressInterval = setInterval(() => {
+    stageIdx = (stageIdx + 1) % SYNC_STAGES.length;
+    if (msgEl) {
+      msgEl.textContent = SYNC_STAGES[stageIdx];
+    }
+  }, 12000);
 }
 
-// Hides the full-screen live sync loading overlay.
+// Hides the full-screen live sync loading overlay and stops progress cycling.
 function hideSyncProgress() {
+  if (syncProgressInterval) {
+    clearInterval(syncProgressInterval);
+    syncProgressInterval = null;
+  }
   const overlay = document.getElementById("syncOverlay");
   if (!overlay) return;
   overlay.classList.remove("active");
@@ -2978,40 +3024,54 @@ function hideSyncProgress() {
 }
 window.hideSyncProgress = hideSyncProgress;
 
-// Returns a Promise that rejects after a safety timeout (35 seconds).
+// Returns a Promise that rejects after a safety timeout (4 minutes) to prevent infinite hanging.
 function createSyncTimeout() {
   return new Promise((resolve, reject) => {
-    setTimeout(() => reject(new Error("SYNC_TIMEOUT")), 35 * 1000);
+    setTimeout(() => reject(new Error("SYNC_TIMEOUT")), 240 * 1000);
   });
 }
 
 // Initiates a live sync from the university portal with progress overlay.
 async function syncNow() {
+  if (isSyncInProgress) {
+    showToast("A sync is already in progress. Please wait...", "info");
+    return;
+  }
+
   const btn = document.getElementById("syncBtn");
   const label = document.getElementById("syncBtnLabel");
 
+  isSyncInProgress = true;
   if (btn) btn.disabled = true;
   if (label) label.textContent = "SYNCING VOLP...";
   showSyncProgress();
 
   try {
-    await Promise.race([loadAppData(true), createSyncTimeout()]);
-    showToast("VOLP Live Sync completed successfully", "success");
+    // Wait for the full backend scraping process to finish and update the UI
+    const result = await Promise.race([loadAppData(true), createSyncTimeout()]);
+
+    // Close loading overlay now that data is rendered into DOM
+    hideSyncProgress();
+
+    const count = result?.count ?? rawAssignments.length;
+    showToast(`VOLP Live Sync completed! Loaded ${count} deliverables.`, "success");
+
     const syncStatusLabel = document.getElementById("lastSyncStatusLabel");
     if (syncStatusLabel) {
       syncStatusLabel.textContent = `LAST SYNC: JUST NOW (${new Date().toLocaleTimeString()})`;
     }
   } catch (err) {
+    hideSyncProgress();
     if (err.message === "SYNC_TIMEOUT") {
       showToast(
-        "Live sync completed in background. Your dashboard is up to date.",
-        "info",
+        "Live sync is taking longer than usual. The server is still processing in the background.",
+        "warning",
       );
     } else {
-      showToast("Sync completed with available data", "info");
+      showToast(err.message || "Sync failed. Loaded available data.", "danger");
     }
   } finally {
-    hideSyncProgress();
+    isSyncInProgress = false;
     if (btn) btn.disabled = false;
     if (label) label.textContent = "SYNC VOLP";
   }

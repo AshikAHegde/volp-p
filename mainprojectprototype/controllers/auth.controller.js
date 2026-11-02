@@ -44,11 +44,7 @@ export const login = async (req, res) => {
       { projection: { telegram_chat_id: 1, is_premium: 1 } }
     );
 
-    // Auto-preserve premium access for primary developer account or existing premium status
-    const isPremiumUser = existingUser?.is_premium === true || normalizedEmail === 'ashik.hegde24@vit.edu';
-    if (isPremiumUser && !existingUser?.is_premium) {
-      await usersCollection.updateOne({ email: normalizedEmail }, { $set: { is_premium: true } });
-    }
+    const isPremiumUser = existingUser?.is_premium === true;
 
     res.json({
       success: true,

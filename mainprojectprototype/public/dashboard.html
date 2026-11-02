@@ -12,7 +12,7 @@
   <meta http-equiv="Expires" content="0">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" type="image/png" href="/assets/logo.svg">
-  <link rel="stylesheet" href="css/styles.css?v=20261102-mutecolors">
+  <link rel="stylesheet" href="css/styles.css?v=20261102-synchint">
 </head>
 <body class="dashboard-body">
   <div class="noise-overlay"></div>
@@ -1208,6 +1208,10 @@
       <div class="sync-progress-kicker">LIVE VOLP SYNC</div>
       <div class="sync-progress-title">UPDATING YOUR COURSES &amp; ASSIGNMENTS</div>
       <p class="sync-progress-message">Fetching the latest deliverables from your university portal...</p>
+      <div class="sync-progress-duration">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>It will take some minutes (approx. 2+ min) to sync all portal courses</span>
+      </div>
       <div class="sync-progress-dots" aria-hidden="true"><span></span><span></span><span></span></div>
       <div style="margin-top: 18px;">
         <button type="button" class="btn btn--ghost btn--sm" onclick="hideSyncProgress()" style="font-size: 11px; padding: 6px 14px; border-radius: 6px; letter-spacing: 0.5px; color: var(--text-secondary);">
@@ -1294,6 +1298,6 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="js/app.js?v=20261102-mutecolors"></script>
+  <script src="js/app.js?v=20261102-synchint"></script>
 </body>
 </html>
