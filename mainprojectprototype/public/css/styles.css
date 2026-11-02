@@ -6414,6 +6414,42 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 /* VOLP Calendar & Hackathon Calendar in Light Mode */
+/* Calendar Hero Banner in Light Mode — Matches the exact rich glowing dark card from Dark Mode */
+[data-theme='light'] .calendar-hero {
+  background: radial-gradient(circle at 85% 15%, rgba(220, 255, 71, 0.22), transparent 42%),
+              radial-gradient(circle at 10% 90%, rgba(34, 197, 94, 0.16), transparent 45%),
+              linear-gradient(135deg, #090C08 0%, #121810 50%, #0E140D 100%) !important;
+  border: 1px solid rgba(220, 255, 71, 0.25) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme='light'] .calendar-hero .eyebrow {
+  color: #DCFF47 !important;
+  font-family: var(--font-primary) !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.8px !important;
+  text-transform: uppercase !important;
+}
+
+[data-theme='light'] .calendar-hero .calendar-title {
+  color: #FFFFFF !important;
+  letter-spacing: -0.04em !important;
+}
+
+[data-theme='light'] .calendar-hero .calendar-subtitle {
+  color: #A3B19B !important;
+}
+
+[data-theme='light'] .calendar-hero .calendar-summary {
+  background: rgba(220, 255, 71, 0.12) !important;
+  border: 1px solid #DCFF47 !important;
+  color: #DCFF47 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 14px rgba(220, 255, 71, 0.18) !important;
+}
+
 [data-theme='light'] .hk-calendar-wrap {
   background: #FFFFFF;
   border-color: rgba(0, 0, 0, 0.12);
