@@ -1774,22 +1774,22 @@ function renderDashboardProjectsGrid() {
     const isBlocked = isCourseBlocked(course);
 
     const card = document.createElement("div");
-    card.className = "project-card";
+    card.className = `project-card ${isBlocked ? "project-card--muted" : ""}`;
     card.innerHTML = `
       <div class="project-card-header">
-        <div class="project-card-title">${escapeHtml(course.course_name)}</div>
+        <div class="project-card-title">${escapeHtml(course.course_name && course.course_name !== "NA" ? course.course_name : "Course Module")}</div>
         <ul class="project-card-meta-list">
-          <li><span class="meta-key">Course Code:</span> ${escapeHtml(course.crsid ? String(course.crsid) : "N/A")}</li>
-          <li><span class="meta-key">Semester:</span> ${escapeHtml(course.semester || "N/A")}</li>
-          <li><span class="meta-key">Academic Year:</span> ${escapeHtml(course.academic_year || "N/A")}</li>
-          <li><span class="meta-key">Status:</span> ${isBlocked ? '<span style="color:var(--danger)">MUTED</span>' : '<span style="color:var(--success)">ACTIVE</span>'}</li>
+          <li><span class="meta-key">Semester:</span> ${escapeHtml(course.semester || "Semester I")}</li>
+          <li><span class="meta-key">Academic Year:</span> ${escapeHtml(course.academic_year || "2026-2027")}</li>
           <li><span class="meta-key">Assignments:</span> ${courseAssignments.length} total (${pendingCount} pending)</li>
         </ul>
       </div>
       <div class="project-card-footer">
-        <span class="meta-text" style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-secondary);">${course.crsid ? escapeHtml(String(course.crsid)) : ""}</span>
-        <button class="btn btn--sm ${isBlocked ? "btn--success" : "btn--ghost"}" onclick="toggleCourseBlock(${course.colid}, '${escapeJsString(course.course_name)}', ${Boolean(isBlocked)})">
-          ${isBlocked ? "UNMUTE" : "MUTE"}
+        <span class="badge ${isBlocked ? "badge--blocked" : "badge--submitted"}" style="font-size:11px;padding:3px 9px;">
+          ${isBlocked ? "MUTED" : "ACTIVE"}
+        </span>
+        <button class="btn btn--sm ${isBlocked ? "btn--success" : "btn--danger"}" onclick="toggleCourseBlock(${course.colid}, '${escapeJsString(course.course_name)}', ${Boolean(isBlocked)})">
+          ${isBlocked ? "UNMUTE COURSE" : "MUTE COURSE"}
         </button>
       </div>
     `;
@@ -1857,7 +1857,7 @@ function renderDashboardRecentTable() {
         </span>
       </td>
       <td style="text-align:right">
-        <button class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
+        <button class="btn btn--sm ${item.is_blocked ? "btn--success" : "btn--danger"}" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
           ${item.is_blocked ? "UNMUTE" : "MUTE"}
         </button>
       </td>
@@ -2634,7 +2634,7 @@ function renderKanbanBoard(items) {
         </span>
         <div style="display:inline-flex;align-items:center;gap:5px;">
           ${assignmentCalendarButton(item)}
-          <button type="button" class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
+          <button type="button" class="btn btn--sm ${item.is_blocked ? "btn--success" : "btn--danger"}" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
             ${item.is_blocked ? "UNMUTE" : "MUTE"}
           </button>
         </div>
@@ -2718,7 +2718,7 @@ function renderTasksTable(items) {
       <td style="text-align:right">
         <div class="assignment-actions-wrap">
           ${assignmentCalendarButton(item)}
-          <button type="button" class="btn btn--ghost btn--sm" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
+          <button type="button" class="btn btn--sm ${item.is_blocked ? "btn--success" : "btn--danger"}" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
             ${item.is_blocked ? "UNMUTE" : "MUTE"}
           </button>
         </div>
@@ -2755,20 +2755,20 @@ function renderCoursesView() {
     ).length;
 
     const card = document.createElement("div");
-    card.className = "project-card";
+    card.className = `project-card ${isBlocked ? "project-card--muted" : ""}`;
     card.innerHTML = `
       <div class="project-card-header">
-        <div class="project-card-title">${escapeHtml(course.course_name)}</div>
+        <div class="project-card-title">${escapeHtml(course.course_name && course.course_name !== "NA" ? course.course_name : "Course Module")}</div>
         <ul class="project-card-meta-list">
-          <li><span class="meta-key">Course Code:</span> ${escapeHtml(course.crsid ? String(course.crsid) : "N/A")}</li>
-          <li><span class="meta-key">Semester:</span> ${escapeHtml(course.semester || "N/A")}</li>
-          <li><span class="meta-key">Academic Year:</span> ${escapeHtml(course.academic_year || "N/A")}</li>
-          <li><span class="meta-key">Status:</span> ${isBlocked ? '<span style="color:var(--danger)">MUTED</span>' : '<span style="color:var(--success)">ACTIVE</span>'}</li>
+          <li><span class="meta-key">Semester:</span> ${escapeHtml(course.semester || "Semester I")}</li>
+          <li><span class="meta-key">Academic Year:</span> ${escapeHtml(course.academic_year || "2026-2027")}</li>
           <li><span class="meta-key">Assignments:</span> ${courseAssignments.length} total (${pendingCount} pending)</li>
         </ul>
       </div>
       <div class="project-card-footer">
-        <span class="meta-text" style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-secondary);">${course.crsid ? escapeHtml(String(course.crsid)) : ""}</span>
+        <span class="badge ${isBlocked ? "badge--blocked" : "badge--submitted"}" style="font-size:11px;padding:3px 9px;">
+          ${isBlocked ? "MUTED" : "ACTIVE"}
+        </span>
         <button class="btn btn--sm ${isBlocked ? "btn--success" : "btn--danger"}" onclick="toggleCourseBlock(${course.colid}, '${escapeJsString(course.course_name)}', ${Boolean(isBlocked)})">
           ${isBlocked ? "UNMUTE COURSE" : "MUTE COURSE"}
         </button>
@@ -2791,7 +2791,7 @@ function renderBlockManagerView() {
       blockedC.forEach((c) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${escapeHtml(c.crsid ? String(c.crsid) : "—")}</span></td>
+          <td><span class="badge badge--blocked" style="font-size:10.5px;padding:2px 8px;">MUTED</span></td>
           <td><strong>${escapeHtml(c.course_name)}</strong></td>
           <td><span class="meta-text">${escapeHtml(c.blocked_at || "MUTED")}</span></td>
           <td style="text-align:right">
