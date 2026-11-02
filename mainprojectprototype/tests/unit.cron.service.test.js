@@ -94,6 +94,7 @@ await jest.unstable_mockModule("../services/db.service.js", () => ({
   coursesCollection: mockCoursesCol,
   assignmentsCollection: mockAssignmentsCol,
   reminderLogsCollection: mockReminderLogsCol,
+  pgPool: { query: jest.fn() },
 }));
 
 

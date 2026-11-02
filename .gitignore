@@ -32,5 +32,8 @@ volp-reminder/**
 *.log
 .DS_Store
 Thumbs.db
-mainprojectprototype/volp_api_testing/
+volp_api_testing/
+volp_api_testing/**
+**/volp_api_testing/
+**/volp_api_testing/**
 *.md

@@ -1,4 +1,5 @@
 import { pgPool } from '../services/db.service.js';
+import { runHackathonsPipeline } from '../services/hackathon_pipeline.service.js';
 
 // Safely format registration links with full https:// protocol and valid domain path
 function buildEventUrl(primary, fallback, domain = 'unstop.com') {
@@ -126,10 +127,41 @@ export const listHackathons = async (req, res) => {
   } catch (err) {
     if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || err.code === '3D000') {
       return res.status(503).json({
-        error: 'Hackathon database not available. Ensure POSTGRES_* env vars are configured and n8n has populated the tables.',
+        error: 'Hackathon database not available. Ensure POSTGRES_* env vars are configured and PostgreSQL is reachable.',
       });
     }
     console.error('Hackathon controller error:', err.message);
     return res.status(500).json({ error: 'Failed to fetch hackathons: ' + err.message });
+  }
+};
+
+/**
+ * Triggers the live ingestion pipeline for Devpost and Unstop,
+ * fetching current hackathons and upserting them into PostgreSQL.
+ * Restricted to Premium users or Admin.
+ */
+export const syncHackathonsPipeline = async (req, res) => {
+  try {
+    const devpostPages = Math.min(10, Math.max(1, parseInt(req.body?.devpostPages || '5', 10)));
+    const unstopPages = Math.min(5, Math.max(1, parseInt(req.body?.unstopPages || '2', 10)));
+    const unstopPerPage = Math.min(100, Math.max(10, parseInt(req.body?.unstopPerPage || '50', 10)));
+
+    const stats = await runHackathonsPipeline({
+      devpostPages,
+      unstopPages,
+      unstopPerPage,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Hackathon pipeline sync completed successfully.',
+      triggered_by: req.user?.email || 'admin',
+      stats,
+    });
+  } catch (err) {
+    console.error('Hackathon pipeline trigger error:', err.message);
+    return res.status(500).json({
+      error: 'Failed to execute hackathons pipeline: ' + err.message,
+    });
   }
 };

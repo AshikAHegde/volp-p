@@ -3,7 +3,7 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { initDB } from './services/db.service.js';
-import { startCronJob } from './services/cron.service.js';
+import { startCronJob, startHackathonCron } from './services/cron.service.js';
 import { startTelegramPolling } from './services/telegram.service.js';
 import { projectRateLimiter } from './middleware/rate-limit.middleware.js';
 
@@ -46,6 +46,7 @@ app.use('/api/hackathons', hackathonsRoutes);
 
 await initDB();
 startCronJob();
+startHackathonCron();
 startTelegramPolling();
 
 // Starts the Express server listener on the configured port.

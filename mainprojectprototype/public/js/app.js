@@ -57,12 +57,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!initUserSession()) return;
   const footerYear = document.getElementById("appFooterYear");
   if (footerYear) footerYear.textContent = new Date().getFullYear();
+
+  // Immediately restore previously active tab from localStorage or URL hash
+  initActiveTab();
+
   renderAllViews();
   await loadAppData();
 
-  const hashPage = (window.location.hash || "").replace("#", "").trim();
-  if (hashPage && document.getElementById(`page-${hashPage}`)) {
-    navigateTo(hashPage);
+  // Refresh tab-specific content after asynchronous data load
+  if (currentTab === "hackathons") {
+    loadHackathonPage();
+  } else if (currentTab === "calendar") {
+    renderCalendarCourseFilter();
+    renderCalendarView();
+  } else if (currentTab === "reminders") {
+    renderRemindersView();
   }
 
   document.addEventListener("keydown", (e) => {
@@ -380,6 +389,9 @@ function handleSignOut() {
     }).catch(() => {});
   }
   localStorage.removeItem("volp_user");
+  try {
+    localStorage.removeItem("volp_active_tab");
+  } catch (_) {}
   showToast("Signed out successfully", "info");
   setTimeout(() => {
     window.location.href = "login.html";
@@ -629,11 +641,38 @@ async function loadBlockedData() {
   }
 }
 
+// Restores the previously active navigation tab from localStorage or URL hash.
+function initActiveTab() {
+  const hashPage = (window.location.hash || "").replace("#", "").trim();
+  let savedTab = "";
+  try {
+    savedTab = localStorage.getItem("volp_active_tab") || "";
+  } catch (_) {}
+
+  let targetPage = hashPage || savedTab || "dashboard";
+
+  // Validate that the target page element actually exists
+  if (!document.getElementById(`page-${targetPage}`)) {
+    targetPage = "dashboard";
+  }
+
+  // If hackathons tab was saved but user is not premium, default to dashboard
+  if (targetPage === "hackathons" && currentUser?.is_premium !== true) {
+    targetPage = "dashboard";
+  }
+
+  navigateTo(targetPage);
+}
+
 // Switches active view pages and updates navigation highlights and headers.
 function navigateTo(pageId, event) {
   if (event) event.preventDefault();
 
   currentTab = pageId;
+  try {
+    localStorage.setItem("volp_active_tab", pageId);
+  } catch (_) {}
+
   document
     .querySelectorAll(".page-view")
     .forEach((el) => el.classList.remove("active"));
@@ -3858,6 +3897,58 @@ async function fetchHackathonEvents() {
   }
 }
 
+// Triggers the backend Devpost & Unstop hackathons ingestion pipeline.
+async function syncHackathonsPipeline() {
+  const btn = document.getElementById("btnSyncPipeline");
+  const origText = btn ? btn.innerHTML : "⚡ SYNC PIPELINE";
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spin" style="display:inline-block;animation:spin 1s linear infinite;">↻</span> SYNCING PIPELINE…`;
+  }
+
+  showToast("⚡ Starting Devpost & Unstop ingestion pipeline…", "info");
+
+  try {
+    const res = await fetch("/api/hackathons/pipeline/sync", {
+      method: "POST",
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ devpostPages: 5, unstopPages: 3, unstopPerPage: 50 }),
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        localStorage.removeItem("volp_user");
+        window.location.href = "login.html?expired=true";
+        return;
+      }
+      const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+      throw new Error(errData.error || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const stats = data.stats || {};
+    const devUpserted = stats.devpost?.upserted || 0;
+    const unstUpserted = stats.unstop?.upserted || 0;
+    const totalInDb = stats.totalInDatabase || (devUpserted + unstUpserted);
+
+    showToast(`✓ Pipeline completed! ${devUpserted} Devpost + ${unstUpserted} Unstop events synced (${totalInDb} in DB).`, "success");
+
+    // Refresh display
+    await fetchHackathonEvents();
+  } catch (err) {
+    showToast(`Pipeline sync failed: ${err.message}`, "error");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origText;
+    }
+  }
+}
+
 // Categorizes a hackathon event into its chronological deadline phase.
 function getHackathonPhase(ev) {
   if (!ev || !ev.deadline) {
@@ -5090,5 +5181,7 @@ window.toggleSelectAllInHkPhase     = toggleSelectAllInHkPhase;
 window.batchExportHkCalendarSelected = batchExportHkCalendarSelected;
 // Expose VOLP calendar selection handler globally
 window.selectVolpCalendarDay        = selectVolpCalendarDay;
+window.navigateTo                   = navigateTo;
+window.initActiveTab                = initActiveTab;
 
 

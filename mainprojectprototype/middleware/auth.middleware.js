@@ -77,3 +77,15 @@ export const requirePremium = async (req, res, next) => {
     return res.status(500).json({ error: 'Authentication service unavailable.' });
   }
 };
+
+// Allows either a user with is_premium === true OR an admin with valid x-admin-secret
+export const requirePremiumOrAdmin = async (req, res, next) => {
+  const adminSecret = req.headers['x-admin-secret'] || req.get('x-admin-secret');
+  if (adminSecret && process.env.ADMIN_SECRET && adminSecret === process.env.ADMIN_SECRET) {
+    req.user = { email: 'admin@volp.internal', is_premium: true, role: 'admin' };
+    return next();
+  }
+
+  // Fallback to standard requirePremium check
+  return requirePremium(req, res, next);
+};

@@ -965,6 +965,9 @@
             <button type="button" class="btn btn--ghost btn--sm" onclick="fetchHackathonEvents()" style="margin-left:auto;font-family:var(--font-mono);font-size:11px;" title="Refresh live hackathons from Postgres database">
               ↻ REFRESH LIVE
             </button>
+            <button type="button" class="btn btn--primary btn--sm" id="btnSyncPipeline" onclick="syncHackathonsPipeline()" style="margin-left:8px;font-family:var(--font-mono);font-size:11px;" title="Trigger live pipeline fetch from Devpost & Unstop into PostgreSQL">
+              ⚡ SYNC PIPELINE
+            </button>
           </div>
 
           <!-- Main Interactive Filter & Search Toolbar -->
