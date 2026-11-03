@@ -17,6 +17,7 @@ let hkCalSelected = null;
 let selectedHackathons = new Set();
 let currentHkPhaseFilter = "all";
 let currentHkModeFilter = "all";
+let currentHkTeamFilter = "all";
 let currentHkFeeFilter = "all";
 let currentHkThemeFilter = "all";
 let currentHkSortOption = "deadline_asc";
@@ -37,6 +38,7 @@ let currentProgressFilter = "all";
 let currentStartDateFilter = "";
 let currentEndDateFilter = "";
 let currentSortOption = "due_asc";
+let currentCourseMuteFilter = "all";
 let selectedAssignments = new Set();
 let isAdvancedFilterOpen = false;
 let isPhaseSectionCollapsed = false;
@@ -713,6 +715,9 @@ function navigateTo(pageId, event) {
     renderCalendarCourseFilter();
     renderCalendarView();
   }
+  if (pageId === "courses") {
+    renderCoursesView();
+  }
   if (pageId === "hackathons") {
     // Refresh hackathons when navigating to the tab to ensure live database sync
     loadHackathonPage(true);
@@ -741,7 +746,7 @@ function closeSidebar() {
 function getBlockedCourseIds() {
   const set = new Set();
   rawCourses.forEach((c) => {
-    if (c.is_blocked) set.add(Number(c.colid));
+    if (c.is_blocked || (c.blocked_at != null && c.blocked_at !== "")) set.add(Number(c.colid));
   });
   blockedCoursesList.forEach((c) => {
     if (c.colid !== undefined && c.colid !== null) set.add(Number(c.colid));
@@ -753,7 +758,7 @@ function getBlockedCourseIds() {
 function getBlockedAssignmentKeys() {
   const set = new Set();
   rawAssignments.forEach((a) => {
-    if (a.is_blocked) set.add(`${a.assignment_id}:${a.assignment_type}`);
+    if (a.is_blocked || (a.blocked_at != null && a.blocked_at !== "")) set.add(`${a.assignment_id}:${a.assignment_type}`);
   });
   blockedAssignmentsList.forEach((a) => {
     if (a.assignment_id) set.add(`${a.assignment_id}:${a.assignment_type}`);
@@ -764,7 +769,7 @@ function getBlockedAssignmentKeys() {
 // Checks whether an assignment or its parent course is blocked.
 function isAssignmentBlocked(item) {
   if (!item) return false;
-  if (item.is_blocked) return true;
+  if (item.is_blocked || (item.blocked_at != null && item.blocked_at !== "")) return true;
   const blockedCourseIds = getBlockedCourseIds();
   if (item.colid && blockedCourseIds.has(Number(item.colid))) return true;
   const blockedAssignmentKeys = getBlockedAssignmentKeys();
@@ -1027,12 +1032,12 @@ function renderCalendarView() {
 
             return `
               <div class="hk-cal-event-item">
-                <div style="min-width:0;flex:1;">
+                <div class="hk-cal-event-item-main" style="min-width:0;flex:1;max-width:100%;">
                   <div class="hk-cal-event-item-title">${escapeHtml(title)}</div>
                   <div class="hk-cal-event-item-meta">${escapeHtml(courseName)} · ${escapeHtml(type)} · ⏰ Due ${escapeHtml(timeStr)}</div>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-                  <span class="badge badge--${isDone ? "submitted" : "pending"}" style="font-size:10px;padding:4px 8px;font-weight:700;">${isDone ? "DONE" : "NOT DONE"}</span>
+                <div class="hk-cal-event-item-action" style="display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;">
+                  <span class="badge badge--${isDone ? "submitted badge--active" : "pending"}" style="font-size:10px;padding:4px 8px;font-weight:700;">${isDone ? "DONE" : "NOT DONE"}</span>
                   <button type="button" class="hk-register-btn" onclick="openAssignmentDetails(${Number(assignment.assignment_id)}, '${escapeJsString(assignment.assignment_type || "")}')" style="white-space:nowrap;font-size:10px;padding:6px 12px;cursor:pointer;">DETAILS ↗</button>
                 </div>
               </div>
@@ -1798,10 +1803,10 @@ function renderDashboardProjectsGrid() {
         </ul>
       </div>
       <div class="project-card-footer">
-        <span class="badge ${isBlocked ? "badge--blocked" : "badge--submitted"}" style="font-size:11px;padding:3px 9px;">
+        <span class="badge ${isBlocked ? "badge--blocked badge--muted" : "badge--submitted badge--active"}" style="font-size:11px;padding:3px 9px;">
           ${isBlocked ? "MUTED" : "ACTIVE"}
         </span>
-        <button class="btn btn--sm ${isBlocked ? "btn--success" : "btn--danger"}" onclick="toggleCourseBlock(${course.colid}, '${escapeJsString(course.course_name)}', ${Boolean(isBlocked)})">
+        <button class="btn btn--sm btn--neutral" onclick="toggleCourseBlock(${course.colid}, '${escapeJsString(course.course_name)}', ${Boolean(isBlocked)})">
           ${isBlocked ? "UNMUTE COURSE" : "MUTE COURSE"}
         </button>
       </div>
@@ -1870,7 +1875,7 @@ function renderDashboardRecentTable() {
         </span>
       </td>
       <td style="text-align:right">
-        <button class="btn btn--sm ${item.is_blocked ? "btn--success" : "btn--danger"}" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
+        <button class="btn btn--sm btn--neutral" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
           ${item.is_blocked ? "UNMUTE" : "MUTE"}
         </button>
       </td>
@@ -2647,7 +2652,7 @@ function renderKanbanBoard(items) {
         </span>
         <div style="display:inline-flex;align-items:center;gap:5px;">
           ${assignmentCalendarButton(item)}
-          <button type="button" class="btn btn--sm ${item.is_blocked ? "btn--success" : "btn--danger"}" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
+          <button type="button" class="btn btn--sm btn--neutral" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
             ${item.is_blocked ? "UNMUTE" : "MUTE"}
           </button>
         </div>
@@ -2731,7 +2736,7 @@ function renderTasksTable(items) {
       <td style="text-align:right">
         <div class="assignment-actions-wrap">
           ${assignmentCalendarButton(item)}
-          <button type="button" class="btn btn--sm ${item.is_blocked ? "btn--success" : "btn--danger"}" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
+          <button type="button" class="btn btn--sm btn--neutral" onclick="toggleAssignmentBlock(${item.assignment_id}, '${escapeJsString(item.assignment_type)}', '${escapeJsString(item.course_name)}', '${escapeJsString(cleanTitle)}', ${Boolean(item.is_blocked)})">
             ${item.is_blocked ? "UNMUTE" : "MUTE"}
           </button>
         </div>
@@ -2741,25 +2746,92 @@ function renderTasksTable(items) {
   });
 }
 
-// Renders all enrolled courses into the courses grid view.
+// Filter courses by Muted / Non-muted (Active).
+function setCourseMuteFilter(filter, btn) {
+  currentCourseMuteFilter = filter;
+  document.querySelectorAll("#courseMuteFilterGroup .filter-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.filter === filter);
+  });
+  renderCoursesView();
+}
+
+// Clears course search input.
+function clearCoursesSearch() {
+  const input = document.getElementById("coursesSearchInput");
+  if (input) input.value = "";
+  const btn = document.getElementById("coursesSearchClearBtn");
+  if (btn) btn.style.display = "none";
+  renderCoursesView();
+}
+
+// Triggered on course search typing.
+function filterCoursesView() {
+  const input = document.getElementById("coursesSearchInput");
+  const q = (input?.value || "").trim().toLowerCase();
+  const btn = document.getElementById("coursesSearchClearBtn");
+  if (btn) btn.style.display = q ? "inline-flex" : "none";
+  renderCoursesView();
+}
+
+// Renders all enrolled courses into the courses grid view with active/muted and search filtering.
 function renderCoursesView() {
   const grid = document.getElementById("allCoursesGrid");
   if (!grid) return;
 
   grid.innerHTML = "";
   const metaCount = document.getElementById("coursesCountMeta");
-  if (metaCount)
-    metaCount.textContent = `${rawCourses.length} ENROLLED COURSES`;
 
   if (rawCourses.length === 0) {
+    if (metaCount) metaCount.textContent = "0 ENROLLED COURSES";
     grid.innerHTML =
       '<div style="color:var(--muted);font-family:var(--font-mono);font-size:12px;padding:24px;">NO ENROLLED COURSES FOUND</div>';
     return;
   }
 
   const blockedIds = getBlockedCourseIds();
-  rawCourses.forEach((course) => {
-    const isBlocked = Boolean(course.is_blocked) || blockedIds.has(Number(course.colid));
+  const isCourseBlocked = (c) => Boolean(c.is_blocked) || blockedIds.has(Number(c.colid));
+
+  const searchInput = document.getElementById("coursesSearchInput");
+  const q = (searchInput?.value || "").trim().toLowerCase();
+
+  const coursesToDisplay = rawCourses.filter((course) => {
+    const isBlocked = isCourseBlocked(course);
+
+    // Muted / Non-muted filtering
+    if (currentCourseMuteFilter === "muted" && !isBlocked) return false;
+    if (currentCourseMuteFilter === "active" && isBlocked) return false;
+
+    // Search query filtering
+    if (q) {
+      const name = (course.course_name || "").toLowerCase();
+      const code = (course.colid || "").toString().toLowerCase();
+      const sem = (course.semester || "").toLowerCase();
+      if (!name.includes(q) && !code.includes(q) && !sem.includes(q)) return false;
+    }
+
+    return true;
+  });
+
+  if (metaCount) {
+    if (currentCourseMuteFilter === "all" && !q) {
+      metaCount.textContent = `${rawCourses.length} ENROLLED COURSES`;
+    } else if (currentCourseMuteFilter === "muted") {
+      metaCount.textContent = `${coursesToDisplay.length} MUTED COURSES`;
+    } else if (currentCourseMuteFilter === "active") {
+      metaCount.textContent = `${coursesToDisplay.length} NON-MUTED COURSES`;
+    } else {
+      metaCount.textContent = `${coursesToDisplay.length} OF ${rawCourses.length} COURSES`;
+    }
+  }
+
+  if (coursesToDisplay.length === 0) {
+    grid.innerHTML =
+      '<div style="color:var(--muted);font-family:var(--font-mono);font-size:12px;padding:36px;text-align:center;grid-column:1/-1;">NO COURSES MATCHING FILTER</div>';
+    return;
+  }
+
+  coursesToDisplay.forEach((course) => {
+    const isBlocked = isCourseBlocked(course);
     const courseAssignments = rawAssignments.filter(
       (a) => Number(a.colid) === Number(course.colid),
     );
@@ -2779,10 +2851,10 @@ function renderCoursesView() {
         </ul>
       </div>
       <div class="project-card-footer">
-        <span class="badge ${isBlocked ? "badge--blocked" : "badge--submitted"}" style="font-size:11px;padding:3px 9px;">
+        <span class="badge ${isBlocked ? "badge--blocked badge--muted" : "badge--submitted badge--active"}" style="font-size:11px;padding:3px 9px;">
           ${isBlocked ? "MUTED" : "ACTIVE"}
         </span>
-        <button class="btn btn--sm ${isBlocked ? "btn--success" : "btn--danger"}" onclick="toggleCourseBlock(${course.colid}, '${escapeJsString(course.course_name)}', ${Boolean(isBlocked)})">
+        <button class="btn btn--sm btn--neutral" onclick="toggleCourseBlock(${course.colid}, '${escapeJsString(course.course_name)}', ${Boolean(isBlocked)})">
           ${isBlocked ? "UNMUTE COURSE" : "MUTE COURSE"}
         </button>
       </div>
@@ -2808,7 +2880,7 @@ function renderBlockManagerView() {
           <td><strong>${escapeHtml(c.course_name)}</strong></td>
           <td><span class="meta-text">${escapeHtml(c.blocked_at || "MUTED")}</span></td>
           <td style="text-align:right">
-            <button class="btn btn--success btn--sm" onclick="toggleCourseBlock(${c.colid}, '${escapeJsString(c.course_name)}', true)">UNMUTE</button>
+            <button class="btn btn--neutral btn--sm" onclick="toggleCourseBlock(${c.colid}, '${escapeJsString(c.course_name)}', true)">UNMUTE</button>
           </td>
         `;
         cTbody.appendChild(tr);
@@ -2833,7 +2905,7 @@ function renderBlockManagerView() {
           <td class="assignment-title" style="font-size:13.5px;">${escapeHtml(cleanTitle)}</td>
           <td><span class="meta-text">${escapeHtml(a.blocked_at || "MUTED")}</span></td>
           <td style="text-align:right">
-            <button class="btn btn--success btn--sm" onclick="toggleAssignmentBlock(${a.assignment_id}, '${escapeJsString(a.assignment_type)}', '${escapeJsString(a.course_name)}', '${escapeJsString(cleanTitle)}', true)">UNMUTE</button>
+            <button class="btn btn--neutral btn--sm" onclick="toggleAssignmentBlock(${a.assignment_id}, '${escapeJsString(a.assignment_type)}', '${escapeJsString(a.course_name)}', '${escapeJsString(cleanTitle)}', true)">UNMUTE</button>
           </td>
         `;
         aTbody.appendChild(tr);
@@ -4438,6 +4510,9 @@ function renderHkActiveFilterChips() {
   if (currentHkModeFilter !== "all") {
     chips.push({ label: `Mode: ${currentHkModeFilter.toUpperCase()}`, onRemove: "setHkModeFilter('all')" });
   }
+  if (currentHkTeamFilter !== "all") {
+    chips.push({ label: `Format: ${currentHkTeamFilter.toUpperCase()}`, onRemove: "setHkTeamFilter('all')" });
+  }
   if (currentHkFeeFilter !== "all") {
     chips.push({ label: `Fee: ${currentHkFeeFilter.toUpperCase()}`, onRemove: "setHkFeeFilter('all')" });
   }
@@ -4503,6 +4578,26 @@ function filterHackathons() {
     filtered = filtered.filter((e) => !(e.mode || "").toLowerCase().includes("offline"));
   } else if (currentHkModeFilter === "offline") {
     filtered = filtered.filter((e) => (e.mode || "").toLowerCase().includes("offline"));
+  }
+
+  // 3b. Participation Type (all / individual / team)
+  if (currentHkTeamFilter && currentHkTeamFilter !== "all") {
+    filtered = filtered.filter((e) => {
+      const ts = (e.team_size || "").toLowerCase().trim();
+      if (!ts) {
+        return currentHkTeamFilter === "individual";
+      }
+      const isSoloOnly = ts === "1 members" || ts === "1 member" || ts === "individual" || ts === "solo";
+      const isMultiOnly = /^[2-9]|\b[2-9]\s*members|\b[2-9]\s*-\s*[0-9]+/.test(ts);
+      const isFlexible = ts.includes("-") && ts.startsWith("1-");
+
+      if (currentHkTeamFilter === "individual") {
+        return isSoloOnly || isFlexible;
+      } else if (currentHkTeamFilter === "team") {
+        return isMultiOnly || isFlexible;
+      }
+      return true;
+    });
   }
 
   // 4. Entry Fee (all / free / paid)
@@ -4583,6 +4678,20 @@ function setHkModeFilter(mode, btn) {
   } else {
     document.querySelector(`#hkModeFilterGroup .filter-btn[data-mode="${mode}"]`)?.classList.add("active");
   }
+  filterHackathons();
+}
+
+// Participation / Team filter toggle (ALL, INDIVIDUAL, TEAM).
+function setHkTeamFilter(team, btn) {
+  currentHkTeamFilter = team;
+  document.querySelectorAll("#hkTeamFilterGroup .filter-btn").forEach((b) => b.classList.remove("active"));
+  if (btn) {
+    btn.classList.add("active");
+  } else {
+    document.querySelector(`#hkTeamFilterGroup .filter-btn[data-team="${team}"]`)?.classList.add("active");
+  }
+  const sel = document.getElementById("hkFilterTeamSelect");
+  if (sel) sel.value = team;
   filterHackathons();
 }
 
@@ -4680,6 +4789,7 @@ function applyHkAdvancedFilters() {
 function resetAllHkFilters() {
   hackathonSource = "all";
   currentHkModeFilter = "all";
+  currentHkTeamFilter = "all";
   currentHkFeeFilter = "all";
   currentHkPhaseFilter = "all";
   currentHkThemeFilter = "all";
@@ -4691,6 +4801,8 @@ function resetAllHkFilters() {
   if (searchEl) searchEl.value = "";
   const feeSel = document.getElementById("hkFilterFeeSelect");
   if (feeSel) feeSel.value = "all";
+  const teamSel = document.getElementById("hkFilterTeamSelect");
+  if (teamSel) teamSel.value = "all";
   const phaseSel = document.getElementById("hkFilterPhaseSelect");
   if (phaseSel) phaseSel.value = "all";
   const themeSel = document.getElementById("hkFilterThemeSelect");
@@ -4707,6 +4819,9 @@ function resetAllHkFilters() {
   });
   document.querySelectorAll("#hkModeFilterGroup .filter-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.mode === "all");
+  });
+  document.querySelectorAll("#hkTeamFilterGroup .filter-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.team === "all");
   });
 
   filterHackathons();
@@ -5020,6 +5135,27 @@ function buildHackathonCard(ev) {
   const hasRealPrize = ev.prize && ev.prize.toLowerCase() !== "not specified" && ev.prize.trim() !== "";
   const prizeDisplay = hasRealPrize ? ev.prize : "Certificates & Rewards";
 
+  const tsRaw = (ev.team_size || "").toLowerCase().trim();
+  const isSoloOnly = tsRaw === "1 members" || tsRaw === "1 member" || tsRaw === "individual" || tsRaw === "solo";
+  const isMultiOnly = /^[2-9]|\b[2-9]\s*members|\b[2-9]\s*-\s*[0-9]+/.test(tsRaw);
+  const isFlexible = tsRaw.includes("-") && tsRaw.startsWith("1-");
+
+  let teamBadge = "";
+  let teamMetaHtml = "";
+  if (isSoloOnly) {
+    teamBadge = `<span class="hk-badge hk-badge--individual" title="Individual / Solo event">👤 INDIVIDUAL</span>`;
+    teamMetaHtml = `<span class="hackathon-meta-label">👤 Format</span><span class="hackathon-meta-value">1 Member (Individual)</span>`;
+  } else if (isFlexible) {
+    teamBadge = `<span class="hk-badge hk-badge--team" title="Individual or Team allowed (${escHtml(ev.team_size)})">👥 INDIVIDUAL / TEAM</span>`;
+    teamMetaHtml = `<span class="hackathon-meta-label">👥 Team Size</span><span class="hackathon-meta-value">${escHtml(ev.team_size)}</span>`;
+  } else if (isMultiOnly) {
+    teamBadge = `<span class="hk-badge hk-badge--team" title="Team event (${escHtml(ev.team_size)})">👥 TEAM</span>`;
+    teamMetaHtml = `<span class="hackathon-meta-label">👥 Team Size</span><span class="hackathon-meta-value">${escHtml(ev.team_size)}</span>`;
+  } else if (ev.team_size) {
+    teamBadge = `<span class="hk-badge hk-badge--team">👥 ${escHtml(ev.team_size)}</span>`;
+    teamMetaHtml = `<span class="hackathon-meta-label">👥 Team Size</span><span class="hackathon-meta-value">${escHtml(ev.team_size)}</span>`;
+  }
+
   return `<div class="hackathon-card">
     <div class="hackathon-card-header">
       ${logoHtml}
@@ -5029,13 +5165,13 @@ function buildHackathonCard(ev) {
       </div>
     </div>
     <div class="hackathon-badges">
-      ${srcBadge}${modeBadge}${feeBadge}
+      ${srcBadge}${modeBadge}${feeBadge}${teamBadge}
       <span class="hk-phase-tag hk-phase-tag--${phase.status}">${phase.statusLabel}</span>
       ${subtypeBadge}
     </div>
     <div class="hackathon-meta">
       <span class="hackathon-meta-label">🏆 Prize</span><span class="hackathon-meta-value hackathon-meta-value--prize" title="${escHtml(prizeDisplay)}">${escHtml(prizeDisplay)}</span>
-      ${ev.team_size ? `<span class="hackathon-meta-label">👥 Team</span><span class="hackathon-meta-value">${escHtml(ev.team_size)}</span>` : ""}
+      ${teamMetaHtml}
       <span class="hackathon-meta-label">📅 Deadline</span>${deadlineHtml}
       ${ev.mode ? `<span class="hackathon-meta-label">📍 Mode</span><span class="hackathon-meta-value">${escHtml(ev.mode)}</span>` : ""}
     </div>
@@ -5188,6 +5324,16 @@ function renderHkCalEvents() {
         const prizeDisplay = hasRealPrize ? ev.prize : "Certificates & Rewards";
         const formattedDeadline = formatHkDeadline(ev.deadline);
 
+        const tsRaw = (ev.team_size || "").toLowerCase().trim();
+        const isSoloOnly = tsRaw === "1 members" || tsRaw === "1 member" || tsRaw === "individual" || tsRaw === "solo";
+        const isMultiOnly = /^[2-9]|\b[2-9]\s*members|\b[2-9]\s*-\s*[0-9]+/.test(tsRaw);
+        const isFlexible = tsRaw.includes("-") && tsRaw.startsWith("1-");
+        let teamBadge = "";
+        if (isSoloOnly) teamBadge = `<span class="hk-badge hk-badge--individual">👤 INDIVIDUAL</span>`;
+        else if (isFlexible) teamBadge = `<span class="hk-badge hk-badge--team">👥 INDIVIDUAL / TEAM</span>`;
+        else if (isMultiOnly) teamBadge = `<span class="hk-badge hk-badge--team">👥 TEAM</span>`;
+        else if (ev.team_size) teamBadge = `<span class="hk-badge hk-badge--team">👥 ${escHtml(ev.team_size)}</span>`;
+
         return `
       <div class="hk-cal-event-item">
         <div class="hk-cal-event-item-main">
@@ -5195,6 +5341,7 @@ function renderHkCalEvents() {
             ${srcBadge}
             ${modeBadge}
             ${feeBadge}
+            ${teamBadge}
             ${subtypeBadge}
             <span class="hk-phase-tag hk-phase-tag--${phase.status}">${phase.statusLabel}</span>
           </div>
@@ -5209,7 +5356,11 @@ function renderHkCalEvents() {
               <span class="hk-meta-icon">⏰</span>
               <span class="hk-meta-text">${escHtml(formattedDeadline)}</span>
             </div>
-            ${ev.team_size ? `
+            ${isSoloOnly ? `
+            <div class="hk-meta-pill">
+              <span class="hk-meta-icon">👤</span>
+              <span class="hk-meta-text">1 Member (Solo)</span>
+            </div>` : ev.team_size ? `
             <div class="hk-meta-pill">
               <span class="hk-meta-icon">👥</span>
               <span class="hk-meta-text">${escHtml(ev.team_size)}</span>
@@ -5264,6 +5415,7 @@ window.applyHkAdvancedFilters       = applyHkAdvancedFilters;
 window.resetAllHkFilters            = resetAllHkFilters;
 window.clearHkSearchInput           = clearHkSearchInput;
 window.setHkModeFilter              = setHkModeFilter;
+window.setHkTeamFilter              = setHkTeamFilter;
 window.setHkFeeFilter               = setHkFeeFilter;
 window.setHkPhaseFilter             = setHkPhaseFilter;
 window.toggleHkPhaseFilter          = toggleHkPhaseFilter;
@@ -5284,5 +5436,8 @@ window.batchExportHkCalendarSelected = batchExportHkCalendarSelected;
 window.selectVolpCalendarDay        = selectVolpCalendarDay;
 window.navigateTo                   = navigateTo;
 window.initActiveTab                = initActiveTab;
+window.setCourseMuteFilter          = setCourseMuteFilter;
+window.clearCoursesSearch           = clearCoursesSearch;
+window.filterCoursesView            = filterCoursesView;
 
 

@@ -129,7 +129,12 @@ export const fetchUserAssignments = async (
     const courseTitle = course.code || course.course_name || `Course ${colid}`;
 
     // Skip if this course is blocked by the user
-    if (blockedColids.has(colid)) {
+    if (
+      blockedColids.has(colid) ||
+      blockedColids.has(Number(colid)) ||
+      blockedColids.has(String(colid)) ||
+      (crsid && (blockedColids.has(crsid) || blockedColids.has(Number(crsid)) || blockedColids.has(String(crsid))))
+    ) {
       console.log(
         `🚫 Skipping blocked course colid=${colid} (${courseTitle}) for ${email}`,
       );

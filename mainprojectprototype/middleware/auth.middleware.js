@@ -15,7 +15,7 @@ export const requireUser = async (req, res, next) => {
 
   try {
     const user = await usersCollection.findOne(
-      { token },
+      { $or: [{ token }, { active_tokens: token }] },
       { projection: { _id: 0, email: 1, token: 1, is_premium: 1, token_expires_at: 1, created_at: 1, updated_at: 1 } }
     );
 
@@ -53,7 +53,7 @@ export const requirePremium = async (req, res, next) => {
 
   try {
     const user = await usersCollection.findOne(
-      { token },
+      { $or: [{ token }, { active_tokens: token }] },
       { projection: { _id: 0, email: 1, token: 1, is_premium: 1, token_expires_at: 1, created_at: 1, updated_at: 1 } }
     );
 

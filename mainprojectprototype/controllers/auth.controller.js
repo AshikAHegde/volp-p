@@ -35,6 +35,7 @@ export const login = async (req, res) => {
           encrypted_password: encryptedPassword,
           updated_at: new Date(),
         },
+        $addToSet: { active_tokens: token },
         $unset: { password: "" },
         $setOnInsert: {
           email: normalizedEmail,
@@ -75,7 +76,7 @@ export const getActiveSession = async (req, res) => {
     }
 
     const user = await usersCollection.findOne(
-      { token },
+      { $or: [{ token }, { active_tokens: token }] },
       { projection: { _id: 0, email: 1, token: 1, telegram_chat_id: 1, is_premium: 1, token_expires_at: 1, updated_at: 1 } },
     );
 

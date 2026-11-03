@@ -96,12 +96,10 @@ export const sendAssignmentReminderTelegram = async (userEmail, assignments = []
     return { success: false, reason: 'NO_CHAT_ID', message: msg };
   }
 
-  const pendingAssignments = assignments.filter((a) => !a.is_submitted && !a.is_blocked);
-
-  let messageText = '';
+  const pendingAssignments = assignments.filter((a) => !a.is_submitted && !a.is_blocked && a.is_blocked !== 'true' && a.is_blocked !== 1);
 
   if (pendingAssignments.length === 0) {
-    messageText = [
+    const messageText = [
       `🎉 <b>VOLP Assignment Digest</b>`,
       ``,
       `Hello <b>${escapeTelegramHtml(userEmail)}</b>!`,
@@ -109,36 +107,97 @@ export const sendAssignmentReminderTelegram = async (userEmail, assignments = []
       ``,
       `<i>Synced at ${new Date().toLocaleTimeString()}</i>`,
     ].join('\n');
-  } else {
-    messageText = [
-      `📚 <b>VOLP 8 PM Assignment Reminder</b>`,
-      `Hello <b>${escapeTelegramHtml(userEmail)}</b>,`,
-      `You have <b>${pendingAssignments.length} pending assignment(s)</b>:`,
-      ``,
-      ...pendingAssignments.map((a, idx) => {
-        const typeBadge = a.assignment_type ? `[${escapeTelegramHtml(a.assignment_type)}]` : '';
-        const dueDate = a.due_date_raw ? `📅 Due: <b>${escapeTelegramHtml(a.due_date_raw)}</b>` : '📅 Due: No date specified';
-        const title = a.title_html ? escapeTelegramHtml(a.title_html.replace(/<[^>]+>/g, '').trim()) : 'Untitled Assignment';
-        return [
-          `<b>${idx + 1}. ${escapeTelegramHtml(a.course_name)}</b> ${typeBadge}`,
-          `📝 ${title}`,
-          `${dueDate}`,
-          `───────────────────`
-        ].join('\n');
-      }),
-      ``,
-      `⚡ <i>Submit on VOLP before deadlines to avoid penalties!</i>`
-    ].join('\n');
+
+    const result = await sendTelegramMessage(chatId, messageText, { parseMode: 'HTML' });
+    console.log(`✓ Telegram reminder sent to ${userEmail} (chat ${chatId}). Message ID: ${result?.message_id}`);
+
+    return {
+      success: true,
+      messageId: result?.message_id,
+      recipient: chatId,
+      count: 0,
+      message: `Telegram alert sent (0 pending assignments).`
+    };
   }
 
-  const result = await sendTelegramMessage(chatId, messageText, { parseMode: 'HTML' });
-  console.log(`✓ Telegram reminder sent to ${userEmail} (chat ${chatId}). Message ID: ${result?.message_id}`);
+  // Format all assignment entries defensively (truncating overly long titles)
+  const formattedItems = pendingAssignments.map((a, idx) => {
+    const typeBadge = a.assignment_type ? `[${escapeTelegramHtml(a.assignment_type)}]` : '';
+    const dueDate = a.due_date_raw ? `📅 Due: <b>${escapeTelegramHtml(a.due_date_raw)}</b>` : '📅 Due: No date specified';
+    const rawTitle = a.title_html ? a.title_html.replace(/<[^>]+>/g, '').trim() : 'Untitled Assignment';
+    const title = escapeTelegramHtml(rawTitle.length > 300 ? rawTitle.substring(0, 297) + '...' : rawTitle);
+    return [
+      `<b>${idx + 1}. ${escapeTelegramHtml(a.course_name)}</b> ${typeBadge}`,
+      `📝 ${title}`,
+      `${dueDate}`,
+      `───────────────────`
+    ].join('\n');
+  });
+
+  // Group items into chunks to strictly respect Telegram's 4,096 char limit
+  const MAX_CHUNK_PAYLOAD_LENGTH = 3000;
+  const itemChunks = [];
+  let currentChunk = [];
+  let currentLength = 0;
+
+  for (const itemText of formattedItems) {
+    if (currentChunk.length > 0 && (currentLength + itemText.length + 1) > MAX_CHUNK_PAYLOAD_LENGTH) {
+      itemChunks.push(currentChunk);
+      currentChunk = [itemText];
+      currentLength = itemText.length;
+    } else {
+      currentChunk.push(itemText);
+      currentLength += itemText.length + 1;
+    }
+  }
+  if (currentChunk.length > 0) {
+    itemChunks.push(currentChunk);
+  }
+
+  const totalParts = itemChunks.length;
+  const messages = itemChunks.map((chunk, partIndex) => {
+    const partNum = partIndex + 1;
+    const isFirst = partIndex === 0;
+    const isLast = partIndex === totalParts - 1;
+
+    const lines = [
+      totalParts > 1
+        ? `📚 <b>VOLP 8 PM Assignment Reminder (${partNum}/${totalParts})</b>`
+        : `📚 <b>VOLP 8 PM Assignment Reminder</b>`,
+      `Hello <b>${escapeTelegramHtml(userEmail)}</b>,`,
+    ];
+
+    if (isFirst) {
+      lines.push(`You have <b>${pendingAssignments.length} pending assignment(s)</b>:`);
+    }
+
+    lines.push('');
+    lines.push(...chunk);
+
+    if (isLast) {
+      lines.push('');
+      lines.push(`⚡ <i>Submit on VOLP before deadlines to avoid penalties!</i>`);
+    }
+
+    return lines.join('\n');
+  });
+
+  let lastResult = null;
+  for (let i = 0; i < messages.length; i++) {
+    lastResult = await sendTelegramMessage(chatId, messages[i], { parseMode: 'HTML' });
+    if (messages.length > 1 && i < messages.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+  }
+
+  console.log(`✓ Telegram reminder sent to ${userEmail} (chat ${chatId}, ${messages.length} message(s)). Message ID: ${lastResult?.message_id}`);
 
   return {
     success: true,
-    messageId: result?.message_id,
+    messageId: lastResult?.message_id,
     recipient: chatId,
     count: pendingAssignments.length,
+    chunksSent: messages.length,
     message: `Telegram alert sent (${pendingAssignments.length} pending assignments).`
   };
 };

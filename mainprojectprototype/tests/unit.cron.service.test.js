@@ -392,15 +392,13 @@ describe("startCronJob", () => {
     expect(mockSendEmail).toHaveBeenCalledTimes(2);
   });
 
-  test("callback: re-authenticates via loginVOLP and decrypt when fetch throws for user with encrypted_password", async () => {
+  test("callback: proactively re-authenticates via loginVOLP and decrypt when user has encrypted_password, updates DB, before fetching assignments", async () => {
     mockUsersCol.find.mockReturnValue({
       toArray: jest.fn().mockResolvedValue([
         { email: "user@vit.ac.in", token: "expired_token", encrypted_password: "enc_password_123" }
       ]),
     });
-    mockFetchUserAssignments
-      .mockRejectedValueOnce(new Error("VOLP session expired"))
-      .mockResolvedValueOnce([mkAss(10)]);
+    mockFetchUserAssignments.mockResolvedValueOnce([mkAss(10)]);
     mockLoginVOLP.mockResolvedValueOnce("fresh_new_token");
 
     const cb = scheduleAndGetCallback();
@@ -410,7 +408,10 @@ describe("startCronJob", () => {
     expect(mockLoginVOLP).toHaveBeenCalledWith("user@vit.ac.in", "decrypted_enc_password_123");
     expect(mockUsersCol.updateOne).toHaveBeenCalledWith(
       { email: "user@vit.ac.in" },
-      { $set: { token: "fresh_new_token", updated_at: expect.any(Date) } }
+      expect.objectContaining({
+        $set: { token: "fresh_new_token", updated_at: expect.any(Date) },
+        $addToSet: { active_tokens: "fresh_new_token" },
+      })
     );
     expect(mockFetchUserAssignments).toHaveBeenCalledWith("fresh_new_token", "user@vit.ac.in", expect.any(Set));
     expect(mockSendEmail).toHaveBeenCalled();
@@ -469,6 +470,55 @@ describe("startCronJob", () => {
     await cb(); // second run — flag must have been reset
 
     expect(mockFetchUserAssignments).toHaveBeenCalledTimes(2);
+  });
+
+  test("callback: stores fetched assignments in DB via updateOne before filtering", async () => {
+    mockUsersCol.find.mockReturnValue({
+      toArray: jest.fn().mockResolvedValue([mkUser("u@vit.ac.in")]),
+    });
+    mockFetchUserAssignments.mockResolvedValue([
+      { assignment_id: 101, assignment_type: "HANDS_ON", course_name: "CS101", title_html: "Task 1", is_submitted: false }
+    ]);
+
+    const cb = scheduleAndGetCallback();
+    await cb();
+
+    expect(mockAssignmentsCol.updateOne).toHaveBeenCalledWith(
+      {
+        user_email: "u@vit.ac.in",
+        assignment_id: 101,
+        assignment_type: "HANDS_ON"
+      },
+      expect.objectContaining({
+        $set: expect.objectContaining({ course_name: "CS101" }),
+        $setOnInsert: expect.objectContaining({ is_blocked: false })
+      }),
+      { upsert: true }
+    );
+  });
+
+  test("callback: stores newly discovered courses in DB via updateOne before filtering", async () => {
+    mockUsersCol.find.mockReturnValue({
+      toArray: jest.fn().mockResolvedValue([mkUser("u@vit.ac.in")]),
+    });
+    mockFetchUserAssignments.mockResolvedValue([
+      { colid: 888, assignment_id: 101, assignment_type: "HANDS_ON", course_name: "Machine Learning", title_html: "Task 1", is_submitted: false }
+    ]);
+
+    const cb = scheduleAndGetCallback();
+    await cb();
+
+    expect(mockCoursesCol.updateOne).toHaveBeenCalledWith(
+      {
+        user_email: "u@vit.ac.in",
+        colid: 888
+      },
+      expect.objectContaining({
+        $set: expect.objectContaining({ course_name: "Machine Learning" }),
+        $setOnInsert: expect.objectContaining({ is_blocked: false })
+      }),
+      { upsert: true }
+    );
   });
 });
 
@@ -628,6 +678,47 @@ describe("triggerCronNow", () => {
   test("propagates error thrown by sendEmail", async () => {
     mockSendEmail.mockRejectedValue(new Error("SMTP failed"));
     await expect(triggerCronNow("u@vit.ac.in", "tok")).rejects.toThrow("SMTP failed");
+  });
+
+  test("stores fetched assignments in DB via updateOne before filtering", async () => {
+    mockFetchUserAssignments.mockResolvedValue([
+      { assignment_id: 202, assignment_type: "SUBJECTIVE", course_name: "Math", title_html: "Quiz 2", is_submitted: false }
+    ]);
+
+    await triggerCronNow("student@vit.ac.in", "tok_test");
+
+    expect(mockAssignmentsCol.updateOne).toHaveBeenCalledWith(
+      {
+        user_email: "student@vit.ac.in",
+        assignment_id: 202,
+        assignment_type: "SUBJECTIVE"
+      },
+      expect.objectContaining({
+        $set: expect.objectContaining({ course_name: "Math" }),
+        $setOnInsert: expect.objectContaining({ is_blocked: false })
+      }),
+      { upsert: true }
+    );
+  });
+
+  test("stores newly discovered courses in DB via updateOne before filtering", async () => {
+    mockFetchUserAssignments.mockResolvedValue([
+      { colid: 999, assignment_id: 202, assignment_type: "SUBJECTIVE", course_name: "Compiler Design", title_html: "Quiz 2", is_submitted: false }
+    ]);
+
+    await triggerCronNow("student@vit.ac.in", "tok_test");
+
+    expect(mockCoursesCol.updateOne).toHaveBeenCalledWith(
+      {
+        user_email: "student@vit.ac.in",
+        colid: 999
+      },
+      expect.objectContaining({
+        $set: expect.objectContaining({ course_name: "Compiler Design" }),
+        $setOnInsert: expect.objectContaining({ is_blocked: false })
+      }),
+      { upsert: true }
+    );
   });
 });
 

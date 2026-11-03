@@ -8,14 +8,35 @@ export const getBlockedCourses = async (req, res) => {
   if (!email) return res.status(400).json({ error: 'email query param is required.' });
 
   try {
+    const emailFilter = (rawEmail && rawEmail !== email)
+      ? { $or: [{ user_email: email }, { user_email: rawEmail }] }
+      : { user_email: email };
+
     const rows = await coursesCollection
       .find(
-        { user_email: email, is_blocked: true },
-        { projection: { _id: 0, colid: 1, crsid: 1, course_name: 1, semester: 1, academic_year: 1, blocked_at: 1 } }
+        {
+          ...emailFilter,
+          $or: [
+            { is_blocked: true },
+            { blocked_at: { $ne: null, $exists: true } }
+          ]
+        },
+        { projection: { _id: 0, colid: 1, crsid: 1, course_name: 1, semester: 1, academic_year: 1, blocked_at: 1, is_blocked: 1 } }
       )
       .sort({ blocked_at: -1 })
       .toArray();
-    res.json({ success: true, email, blocked: rows });
+
+    const formattedRows = rows.map(r => ({
+      colid: r.colid,
+      crsid: r.crsid,
+      course_name: r.course_name,
+      semester: r.semester,
+      academic_year: r.academic_year,
+      blocked_at: r.blocked_at,
+      is_blocked: Boolean(r.is_blocked || (r.blocked_at != null && r.blocked_at !== ''))
+    }));
+
+    res.json({ success: true, email, blocked: formattedRows });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch blocked courses: ' + err.message });
   }

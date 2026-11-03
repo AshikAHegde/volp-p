@@ -252,12 +252,6 @@
               <h1 class="page-title">Assignments &amp; Tasks</h1>
               <p class="page-subtitle">Track, filter, and review all subjective, hands-on, and quiz deliverables across enrolled modules.</p>
             </div>
-            <div class="page-header-actions">
-              <button type="button" class="btn btn--primary btn--sm" onclick="syncNow()">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-                <span>SYNC VOLP</span>
-              </button>
-            </div>
           </div>
 
           <!-- Overall Dynamic Statistics Banner -->
@@ -399,6 +393,21 @@
             </div>
             <div class="page-header-actions">
               <span class="meta-badge" id="coursesCountMeta">-- ENROLLED COURSES</span>
+            </div>
+          </div>
+
+          <!-- Courses Interactive Toolbar: Search & Muted / Non-Muted Filter -->
+          <div class="toolbar" style="margin-bottom: 20px;">
+            <div class="search-input-wrapper">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" class="search-input" id="coursesSearchInput" placeholder="SEARCH ENROLLED COURSES..." oninput="filterCoursesView()" onkeyup="filterCoursesView()">
+              <button type="button" class="search-clear-btn" id="coursesSearchClearBtn" onclick="clearCoursesSearch()" title="Clear search" style="display:none;">✕</button>
+            </div>
+
+            <div class="filter-group" id="courseMuteFilterGroup">
+              <button class="filter-btn active" data-filter="all" onclick="setCourseMuteFilter('all', this)">ALL COURSES</button>
+              <button class="filter-btn" data-filter="active" onclick="setCourseMuteFilter('active', this)">NON-MUTED</button>
+              <button class="filter-btn" data-filter="muted" onclick="setCourseMuteFilter('muted', this)">MUTED</button>
             </div>
           </div>
           
@@ -1046,6 +1055,13 @@
               <button class="filter-btn" data-mode="offline" onclick="setHkModeFilter('offline', this)">OFFLINE</button>
             </div>
 
+            <!-- Participation / Team Filter Group -->
+            <div class="filter-group" id="hkTeamFilterGroup">
+              <button class="filter-btn active" data-team="all" onclick="setHkTeamFilter('all', this)">ALL SIZES</button>
+              <button class="filter-btn" data-team="individual" onclick="setHkTeamFilter('individual', this)">👤 INDIVIDUAL</button>
+              <button class="filter-btn" data-team="team" onclick="setHkTeamFilter('team', this)">👥 TEAM</button>
+            </div>
+
             <!-- Sort Dropdown -->
             <label class="subject-filter" for="hkSortSelect">
               <span class="subject-filter-label">SORT</span>
@@ -1100,6 +1116,15 @@
                   <option value="all">ALL (FREE &amp; PAID)</option>
                   <option value="free">FREE REGISTRATION ONLY</option>
                   <option value="paid">PAID ENTRY ONLY</option>
+                </select>
+              </div>
+
+              <div class="filter-panel-group">
+                <label class="filter-field-label" for="hkFilterTeamSelect">PARTICIPATION FORMAT</label>
+                <select id="hkFilterTeamSelect" class="filter-field-select" onchange="setHkTeamFilter(this.value)">
+                  <option value="all">ALL SIZES (INDIVIDUAL &amp; TEAM)</option>
+                  <option value="individual">👤 INDIVIDUAL (SOLO / 1 MEMBER)</option>
+                  <option value="team">👥 TEAM (2+ MEMBERS)</option>
                 </select>
               </div>
 

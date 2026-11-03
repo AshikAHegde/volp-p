@@ -3,19 +3,31 @@ import { assignmentsCollection } from '../services/db.service.js';
 // Retrieves all blocked assignments for a specific user from the database.
 export const getBlockedAssignments = async (req, res) => {
   // Enforce session email from requireUser to prevent IDOR vulnerabilities
-  const email = req.user?.email || req.query.email;
+  const rawEmail = req.user?.email || req.query.email;
+  const email = (rawEmail || '').trim().toLowerCase();
   if (!email) return res.status(400).json({ error: 'Email required.' });
 
   try {
+    const emailFilter = (rawEmail && rawEmail !== email)
+      ? { $or: [{ user_email: email }, { user_email: rawEmail }] }
+      : { user_email: email };
+
     const rows = await assignmentsCollection
       .find(
-        { user_email: email, is_blocked: true },
-        { projection: { _id: 0, assignment_id: 1, assignment_type: 1, colid: 1, course_name: 1, unit_name: 1, title_html: 1, due_date_raw: 1, blocked_at: 1 } }
+        {
+          ...emailFilter,
+          $or: [
+            { is_blocked: true },
+            { blocked_at: { $ne: null, $exists: true } }
+          ]
+        },
+        { projection: { _id: 0, assignment_id: 1, assignment_type: 1, colid: 1, course_name: 1, unit_name: 1, title_html: 1, due_date_raw: 1, blocked_at: 1, is_blocked: 1 } }
       )
       .sort({ blocked_at: -1 })
       .toArray();
     rows.forEach(row => {
       row.title_hint = row.title_html;
+      row.is_blocked = Boolean(row.is_blocked || (row.blocked_at != null && row.blocked_at !== ''));
       delete row.title_html;
     });
     res.json({ success: true, blocked: rows });
@@ -27,7 +39,8 @@ export const getBlockedAssignments = async (req, res) => {
 // Updates or toggles the blocked status of an assignment for a user.
 export const updateAssignmentBlockStatus = async (req, res) => {
   // Enforce session email from requireUser to prevent IDOR on updates
-  const email = req.user?.email || req.body.email;
+  const rawEmail = req.user?.email || req.body.email;
+  const email = (rawEmail || '').trim().toLowerCase();
   const { assignment_id, assignment_type, colid, course_name, title_hint, is_blocked } = req.body;
   if (!email || !assignment_id || !assignment_type || typeof is_blocked !== 'boolean') {
     return res.status(400).json({ error: 'email, assignment_id, assignment_type, and boolean is_blocked are required.' });

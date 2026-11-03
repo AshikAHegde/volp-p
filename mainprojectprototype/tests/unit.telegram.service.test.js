@@ -147,6 +147,36 @@ describe('telegram.service.js', () => {
       );
       expect(res.recipient).toBe('db_chat_777');
     });
+
+    test('chunks long assignment lists across multiple Telegram messages under 4096 chars', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ ok: true, result: { message_id: 404 } }),
+      });
+
+      // Generate 55 pending assignments (similar to user samyak with 54)
+      const largeList = Array.from({ length: 55 }, (_, i) => ({
+        course_name: `Computer Engineering Course ${i + 1}`,
+        assignment_type: 'HANDS_ON',
+        title_html: `Lab Experiment Assignment ${i + 1} with detailed problem statement`,
+        due_date_raw: `2026-11-15 23:59:00`,
+        is_submitted: false,
+        is_blocked: false,
+      }));
+
+      const res = await sendAssignmentReminderTelegram('samyak@vit.edu', largeList, '7526762528');
+
+      expect(res.success).toBe(true);
+      expect(res.count).toBe(55);
+      expect(res.chunksSent).toBeGreaterThan(1);
+      expect(global.fetch.mock.calls.length).toBe(res.chunksSent);
+
+      // Verify that every single sent message chunk is strictly below Telegram's 4,096 character limit
+      for (const call of global.fetch.mock.calls) {
+        const body = JSON.parse(call[1].body);
+        expect(body.text.length).toBeLessThan(4096);
+      }
+    });
   });
 
   describe('getTelegramBotInfo', () => {
