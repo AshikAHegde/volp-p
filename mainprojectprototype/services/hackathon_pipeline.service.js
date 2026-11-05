@@ -94,6 +94,20 @@ export async function fetchDevpostHackathons({ maxPages = 5 } = {}) {
         await Promise.all(chunk.map(async (item) => {
           attempted++;
           try {
+            // Do not store hackathon in database if it is already ended
+            if (item.open_state === 'ended') {
+              return;
+            }
+            if (item.time_left_to_submission && /ended|concluded/i.test(item.time_left_to_submission)) {
+              return;
+            }
+            const endDate = parseDevpostEndDate(item.submission_period_dates);
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            if (endDate && endDate < startOfToday) {
+              return;
+            }
+
             const rawPrize = item.prize_amount || '';
             const cleanPrize = stripHtml(rawPrize) || null;
             const thumbUrl = normalizeUrl(item.thumbnail_url);
@@ -242,6 +256,21 @@ export async function fetchUnstopHackathons({
               const deadline = item.regnRequirements?.end_regn_dt || item.end_date || null;
               const detailsClean = item.details ? stripHtml(item.details).slice(0, 1000) : null;
 
+              // Do not store hackathon in database if it is already ended/expired
+              const completionDateRaw = deadline || item.end_date;
+              const now = new Date();
+              const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+              if (item.status && ['EXPIRED', 'CLOSED', 'ENDED', 'CONCLUDED'].includes(String(item.status).toUpperCase()) && String(item.regn_open) === '0') {
+                return; // Skip already ended hackathon
+              }
+              if (completionDateRaw) {
+                const parsedCompDate = new Date(completionDateRaw);
+                if (!isNaN(parsedCompDate.getTime()) && parsedCompDate < startOfToday) {
+                  return; // Skip already ended hackathon
+                }
+              }
+
               await pgPool.query(unstopSql, [
                 item.id,
                 item.title || 'Untitled Unstop Competition',
@@ -281,6 +310,127 @@ export async function fetchUnstopHackathons({
   return { attempted, upserted, errors };
 }
 
+const VALID_MONTH_NAMES = /^(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)/i;
+
+/**
+ * Parses Devpost submission period date strings into a valid Date object.
+ * Examples:
+ *   "Nov 02, 2026"
+ *   "Oct 27 - Dec 22, 2026"
+ *   "Nov 02 - 05, 2026"
+ *   "Jul 16, 2026 - Jan 15, 2027"
+ */
+export function parseDevpostEndDate(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  const str = raw.trim();
+  if (!str) return null;
+
+  // Try direct Date parsing if it has digits and no range separator
+  if (!str.includes(' - ')) {
+    if (/\d/.test(str)) {
+      const directDate = new Date(str);
+      if (!isNaN(directDate.getTime())) {
+        if (!str.includes(':') && !str.includes('T')) {
+          directDate.setHours(23, 59, 59, 999);
+        }
+        return directDate;
+      }
+    }
+    return null;
+  }
+
+  // Handle range formats: "Oct 27 - Dec 22, 2026", "Nov 02 - 05, 2026", "Dec 19, 2026 - Jan 18, 2027"
+  const parts = str.split(/\s*-\s*/);
+  if (parts.length >= 2) {
+    const startPart = parts[0].trim();
+    const endPart = parts[parts.length - 1].trim();
+
+    // 1. Try parsing endPart directly (e.g. "Dec 22, 2026", "Jan 18, 2027")
+    if (/\d/.test(endPart) && (VALID_MONTH_NAMES.test(endPart) || /^\d{4}/.test(endPart))) {
+      let d = new Date(endPart);
+      if (!isNaN(d.getTime())) {
+        if (!endPart.includes(':')) d.setHours(23, 59, 59, 999);
+        return d;
+      }
+    }
+
+    // 2. Month only in startPart: e.g. start="Nov 02", end="05, 2026" or "05"
+    const monthMatch = startPart.match(VALID_MONTH_NAMES);
+    const dayMatch = endPart.match(/\b\d{1,2}\b/);
+    if (monthMatch && dayMatch) {
+      const yearMatch = endPart.match(/,?\s*(\d{4})$/) || startPart.match(/,?\s*(\d{4})$/);
+      const year = yearMatch ? yearMatch[1] : new Date().getFullYear();
+      const month = monthMatch[1];
+      const day = dayMatch[0];
+      const d = new Date(`${month} ${day}, ${year}`);
+      if (!isNaN(d.getTime())) {
+        d.setHours(23, 59, 59, 999);
+        return d;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Deletes events from unstop_events and devpost_events that were completed 7+ days ago.
+ * @param {object} options
+ * @param {number} options.days - Number of days past completion to delete (default: 7)
+ */
+export async function deleteExpiredHackathons({ days = 7 } = {}) {
+  try {
+    // 1. Delete Unstop events completed 7+ days ago
+    // Evaluates completion timestamp COALESCE(deadline, end_date) against NOW() - INTERVAL '7 days'
+    const unstopDeleteSql = `
+      DELETE FROM unstop_events
+       WHERE (
+         COALESCE(deadline, end_date) IS NOT NULL
+         AND COALESCE(deadline, end_date) ~ $1
+         AND COALESCE(deadline, end_date)::timestamptz < NOW() - ($2 || ' days')::INTERVAL
+       )
+    `;
+    const unstopRes = await pgPool.query(unstopDeleteSql, ['^[0-9]{4}-[0-9]{2}-[0-9]{2}', String(days)]);
+
+    // 2. Delete Devpost events completed 7+ days ago
+    const { rows: devpostRows } = await pgPool.query(
+      'SELECT id, submission_period, status, updated_at FROM devpost_events'
+    );
+    const now = new Date();
+    const threshold = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    const expiredDevpostIds = [];
+
+    for (const row of devpostRows) {
+      const endDate = parseDevpostEndDate(row.submission_period);
+      if (endDate) {
+        if (endDate < threshold) {
+          expiredDevpostIds.push(row.id);
+        }
+      } else if (row.status === 'ended' && row.updated_at && new Date(row.updated_at) < threshold) {
+        expiredDevpostIds.push(row.id);
+      }
+    }
+
+    let devpostDeleted = 0;
+    if (expiredDevpostIds.length > 0) {
+      const devpostRes = await pgPool.query(
+        'DELETE FROM devpost_events WHERE id = ANY($1::bigint[])',
+        [expiredDevpostIds]
+      );
+      devpostDeleted = devpostRes.rowCount || 0;
+    }
+
+    return {
+      unstopDeleted: unstopRes.rowCount || 0,
+      devpostDeleted,
+      totalDeleted: (unstopRes.rowCount || 0) + devpostDeleted,
+    };
+  } catch (err) {
+    console.error('Error deleting expired hackathons:', err.message);
+    return { unstopDeleted: 0, devpostDeleted: 0, totalDeleted: 0, error: err.message };
+  }
+}
+
 /**
  * Runs the complete ingestion pipeline across both Devpost and Unstop,
  * upserting fresh live records into the PostgreSQL database.
@@ -292,10 +442,12 @@ export async function runHackathonsPipeline({
 } = {}) {
   const startTime = Date.now();
 
-  // Clean any lingering empty/null placeholder rows
+  // First, delete completed events from 7+ days ago and clean any placeholder rows
+  let deletedStats = { unstopDeleted: 0, devpostDeleted: 0, totalDeleted: 0 };
   try {
     await pgPool.query('DELETE FROM unstop_events WHERE title IS NULL');
     await pgPool.query('DELETE FROM devpost_events WHERE title IS NULL');
+    deletedStats = await deleteExpiredHackathons({ days: 7 });
   } catch (_) {}
 
   // Run both fetchers in parallel
@@ -340,6 +492,7 @@ export async function runHackathonsPipeline({
       totalInDatabase: totalUnstopInDb,
       errors: unstop.errors.slice(0, 5),
     },
+    deletedExpired: deletedStats,
     totalUpserted: devpost.upserted + unstop.upserted,
     totalInDatabase: totalDevpostInDb + totalUnstopInDb,
   };

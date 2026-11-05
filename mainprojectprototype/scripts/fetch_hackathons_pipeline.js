@@ -25,6 +25,9 @@ try {
 
   console.log('\n────────────────────────────────────────────────────');
   console.log(`✅ Pipeline execution completed in ${(result.durationMs / 1000).toFixed(2)}s`);
+  if (result.deletedExpired?.totalDeleted > 0) {
+    console.log(`🗑️  Pruned ${result.deletedExpired.totalDeleted} events completed 7+ days ago (${result.deletedExpired.unstopDeleted} Unstop, ${result.deletedExpired.devpostDeleted} Devpost)`);
+  }
   console.log(`📊 Devpost: ${result.devpost.upserted}/${result.devpost.attempted} events upserted (Total in DB: ${result.devpost.totalInDatabase})`);
   console.log(`📊 Unstop:  ${result.unstop.upserted}/${result.unstop.attempted} events upserted (Total in DB: ${result.unstop.totalInDatabase})`);
   console.log(`🏆 Total Live Hackathons in Database: ${result.totalInDatabase}`);

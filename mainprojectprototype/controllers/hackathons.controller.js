@@ -1,5 +1,9 @@
 import { pgPool } from '../services/db.service.js';
-import { runHackathonsPipeline } from '../services/hackathon_pipeline.service.js';
+import {
+  runHackathonsPipeline,
+  deleteExpiredHackathons,
+  parseDevpostEndDate,
+} from '../services/hackathon_pipeline.service.js';
 
 // Safely format registration links with full https:// protocol and valid domain path
 function buildEventUrl(primary, fallback, domain = 'unstop.com') {
@@ -22,26 +26,50 @@ export const listHackathons = async (req, res) => {
   const searchLike = search ? `%${search}%` : null;
 
   try {
+    // ── Step 1: First delete the events which were completed 7 days before ──────
+    await deleteExpiredHackathons({ days: 7 });
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const isoDatePattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}';
+
+    // ── Step 2: Fetch and keep only current ongoing or future events (after current date)
     // ── Unstop events ───────────────────────────────────────────────────────────
     let unstopRows = [];
     if (source === 'all' || source === 'unstop') {
-      // Bound query to a safe limit to prevent unbounded memory spikes
+      // Filter in SQL to keep only ongoing or future events (deadline or end_date >= CURRENT_DATE)
       const unstopQuery = searchLike
         ? `SELECT id, title, organization_name, type, subtype, event_mode,
                   team_size, prize_pool, is_paid, seo_url, short_url,
-                  logo_url, deadline, status, region
+                  logo_url, deadline, status, region, end_date
              FROM unstop_events
             WHERE (title ILIKE $1 OR organization_name ILIKE $1 OR subtype ILIKE $1)
+              AND (
+                (COALESCE(deadline, end_date) IS NOT NULL
+                 AND COALESCE(deadline, end_date) ~ $2
+                 AND COALESCE(deadline, end_date)::timestamptz >= CURRENT_DATE)
+                OR (deadline IS NULL AND end_date IS NULL)
+              )
             ORDER BY created_at DESC
             LIMIT 2000`
         : `SELECT id, title, organization_name, type, subtype, event_mode,
                   team_size, prize_pool, is_paid, seo_url, short_url,
-                  logo_url, deadline, status, region
+                  logo_url, deadline, status, region, end_date
              FROM unstop_events
+            WHERE (
+                (COALESCE(deadline, end_date) IS NOT NULL
+                 AND COALESCE(deadline, end_date) ~ $1
+                 AND COALESCE(deadline, end_date)::timestamptz >= CURRENT_DATE)
+                OR (deadline IS NULL AND end_date IS NULL)
+              )
             ORDER BY created_at DESC
             LIMIT 2000`;
 
-      const { rows } = await pgPool.query(unstopQuery, searchLike ? [searchLike] : []);
+      const unstopParams = searchLike
+        ? [searchLike, isoDatePattern]
+        : [isoDatePattern];
+
+      const { rows } = await pgPool.query(unstopQuery, unstopParams);
       unstopRows = rows.map((r) => ({
         // Namespace ID with provider prefix to prevent collision across sources
         id:           `unstop_${r.id}`,
@@ -56,7 +84,8 @@ export const listHackathons = async (req, res) => {
         is_paid:      Boolean(r.is_paid),
         url:          buildEventUrl(r.seo_url, r.short_url, 'unstop.com'),
         logo_url:     r.logo_url      || null,
-        deadline:     r.deadline      || null,
+        deadline:     r.deadline      || r.end_date || null,
+        end_date:     r.end_date      || null,
         status:       r.status        || null,
       }));
     }
@@ -81,34 +110,47 @@ export const listHackathons = async (req, res) => {
             LIMIT 2000`;
 
       const { rows } = await pgPool.query(devpostQuery, searchLike ? [searchLike] : []);
-      devpostRows = rows.map((r) => {
-        let themeNames = [];
-        try {
-          const parsed = typeof r.themes === 'string' ? JSON.parse(r.themes) : (r.themes || []);
-          if (Array.isArray(parsed)) themeNames = parsed.map((t) => t && t.name).filter(Boolean);
-        } catch (_) {}
+      devpostRows = rows
+        .map((r) => {
+          let themeNames = [];
+          try {
+            const parsed = typeof r.themes === 'string' ? JSON.parse(r.themes) : (r.themes || []);
+            if (Array.isArray(parsed)) themeNames = parsed.map((t) => t && t.name).filter(Boolean);
+          } catch (_) {}
 
-        const prize = r.prize_amount
-          || (r.cash_prizes ? `${r.cash_prizes} cash prizes` : 'Not specified');
+          const prize = r.prize_amount
+            || (r.cash_prizes ? `${r.cash_prizes} cash prizes` : 'Not specified');
 
-        return {
-          // Namespace ID with provider prefix to prevent collision across sources
-          id:           `devpost_${r.id}`,
-          source:       'devpost',
-          title:        r.title         || 'Untitled Hackathon',
-          organization: r.organization_name || null,
-          type:         'Hackathon',
-          subtype:      themeNames.slice(0, 3).join(', ') || null,
-          mode:         r.location      || 'Online',
-          team_size:    null,
-          prize,
-          is_paid:      false,
-          url:          buildEventUrl(r.url, null, 'devpost.com'),
-          logo_url:     r.thumbnail_url || null,
-          deadline:     r.submission_period || r.time_left || null,
-          status:       r.status        || null,
-        };
-      });
+          const parsedEndDate = parseDevpostEndDate(r.submission_period);
+
+          return {
+            // Namespace ID with provider prefix to prevent collision across sources
+            id:                `devpost_${r.id}`,
+            source:            'devpost',
+            title:             r.title         || 'Untitled Hackathon',
+            organization:      r.organization_name || null,
+            type:              'Hackathon',
+            subtype:           themeNames.slice(0, 3).join(', ') || null,
+            mode:              r.location      || 'Online',
+            team_size:         null,
+            prize,
+            is_paid:           false,
+            url:               buildEventUrl(r.url, null, 'devpost.com'),
+            logo_url:          r.thumbnail_url || null,
+            deadline:          parsedEndDate ? parsedEndDate.toISOString() : (r.submission_period || r.time_left || null),
+            submission_period: r.submission_period || null,
+            status:            r.status        || null,
+            _endDate:          parsedEndDate,
+          };
+        })
+        // Keep only current ongoing or future events (after current date)
+        .filter((item) => {
+          if (item._endDate) {
+            return item._endDate >= startOfToday;
+          }
+          return item.status !== 'ended';
+        })
+        .map(({ _endDate, ...rest }) => rest);
     }
 
     // Direct database query result merging without artificial fallbacks

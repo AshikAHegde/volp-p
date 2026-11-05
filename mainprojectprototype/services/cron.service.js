@@ -621,26 +621,3 @@ export const triggerCronNow = async (userEmail, token, explicitChatId = null) =>
   return sendResult;
 };
 
-// Schedules and initiates the recurring background cron job for Devpost & Unstop hackathons ingestion.
-export const startHackathonCron = () => {
-  const schedule = process.env.HACKATHON_CRON_SCHEDULE || '0 6,18 * * *';
-  console.log(`⏰ Scheduling Hackathon Ingestion Pipeline Cron ("${schedule}")...`);
-
-  cron.schedule(schedule, async () => {
-    console.log('\n🔔 [CRON] Starting scheduled Hackathons Ingestion Pipeline (Devpost + Unstop)...');
-    try {
-      const { runHackathonsPipeline } = await import('./hackathon_pipeline.service.js');
-      const stats = await runHackathonsPipeline({
-        devpostPages: 5,
-        unstopPages: 3,
-        unstopPerPage: 50,
-      });
-      console.log(`✓ [CRON] Hackathons pipeline completed: ${stats.totalUpserted} events updated (Total in DB: ${stats.totalInDatabase}).`);
-    } catch (err) {
-      console.error('❌ [CRON] Scheduled hackathons pipeline error:', err.message);
-    }
-  }, {
-    timezone: process.env.CRON_TIMEZONE || 'Asia/Kolkata',
-  });
-};
-

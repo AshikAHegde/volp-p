@@ -4001,7 +4001,13 @@ async function fetchHackathonEvents() {
     }
 
     const data = await res.json();
-    hackathonEvents = data.events || [];
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Keep only current ongoing or future events (on or after current date)
+    hackathonEvents = (data.events || []).filter((e) => {
+      const d = parseHkDate(e.deadline);
+      return !d || d >= startOfToday;
+    });
     populateHkThemes();
     filterHackathons();
   } catch (err) {
@@ -4072,6 +4078,61 @@ async function syncHackathonsPipeline() {
   }
 }
 
+const VALID_HK_MONTH_NAMES = /^(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)/i;
+
+// Robust parser for hackathon deadline dates supporting ISO dates, standard date strings,
+// and Devpost date ranges like "Oct 27 - Dec 22, 2026" or "Nov 02 - 05, 2026".
+function parseHkDate(raw) {
+  if (!raw) return null;
+  if (raw instanceof Date) return isNaN(raw.getTime()) ? null : raw;
+  if (typeof raw !== "string") return null;
+  const str = raw.trim();
+  if (!str) return null;
+
+  if (!str.includes(" - ")) {
+    if (/\d/.test(str)) {
+      const directDate = new Date(str);
+      if (!isNaN(directDate.getTime())) {
+        if (!str.includes(":") && !str.includes("T")) {
+          directDate.setHours(23, 59, 59, 999);
+        }
+        return directDate;
+      }
+    }
+    return null;
+  }
+
+  const parts = str.split(/\s*-\s*/);
+  if (parts.length >= 2) {
+    const startPart = parts[0].trim();
+    const endPart = parts[parts.length - 1].trim();
+
+    if (/\d/.test(endPart) && (VALID_HK_MONTH_NAMES.test(endPart) || /^\d{4}/.test(endPart))) {
+      let d = new Date(endPart);
+      if (!isNaN(d.getTime())) {
+        if (!endPart.includes(":")) d.setHours(23, 59, 59, 999);
+        return d;
+      }
+    }
+
+    const monthMatch = startPart.match(VALID_HK_MONTH_NAMES);
+    const dayMatch = endPart.match(/\b\d{1,2}\b/);
+    if (monthMatch && dayMatch) {
+      const yearMatch = endPart.match(/,?\s*(\d{4})$/) || startPart.match(/,?\s*(\d{4})$/);
+      const year = yearMatch ? yearMatch[1] : new Date().getFullYear();
+      const month = monthMatch[1];
+      const day = dayMatch[0];
+      const d = new Date(`${month} ${day}, ${year}`);
+      if (!isNaN(d.getTime())) {
+        d.setHours(23, 59, 59, 999);
+        return d;
+      }
+    }
+  }
+
+  return null;
+}
+
 // Categorizes a hackathon event into its chronological deadline phase.
 function getHackathonPhase(ev) {
   if (!ev || !ev.deadline) {
@@ -4083,8 +4144,8 @@ function getHackathonPhase(ev) {
       order: 6,
     };
   }
-  const dl = new Date(ev.deadline);
-  if (isNaN(dl.getTime())) {
+  const dl = parseHkDate(ev.deadline);
+  if (!dl || isNaN(dl.getTime())) {
     return {
       id: "unscheduled",
       name: "Phase 6: Flexible / Rolling",
@@ -4094,9 +4155,10 @@ function getHackathonPhase(ev) {
     };
   }
   const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diffHours = (dl.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-  if (diffHours < 0) {
+  if (diffHours < 0 && dl < startOfToday) {
     return {
       id: "concluded",
       name: "Phase 5: Concluded / Expired",
@@ -4208,7 +4270,7 @@ function computeChronologicalHkPhases(events) {
   return phaseDefs.map((def) => {
     const items = events.filter((ev) => getHackathonPhase(ev).id === def.id);
     const validDates = items
-      .map((ev) => (ev.deadline ? new Date(ev.deadline) : null))
+      .map((ev) => (ev.deadline ? parseHkDate(ev.deadline) : null))
       .filter((d) => d && !isNaN(d.getTime()));
 
     let startText = "N/A";
@@ -4469,13 +4531,13 @@ function populateHkThemes() {
 function sortHackathons(events, sortOption) {
   return [...events].sort((a, b) => {
     if (sortOption === "deadline_asc") {
-      const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
-      const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+      const da = a.deadline ? parseHkDate(a.deadline)?.getTime() ?? Infinity : Infinity;
+      const db = b.deadline ? parseHkDate(b.deadline)?.getTime() ?? Infinity : Infinity;
       return (isNaN(da) ? Infinity : da) - (isNaN(db) ? Infinity : db);
     }
     if (sortOption === "deadline_desc") {
-      const da = a.deadline ? new Date(a.deadline).getTime() : -Infinity;
-      const db = b.deadline ? new Date(b.deadline).getTime() : -Infinity;
+      const da = a.deadline ? parseHkDate(a.deadline)?.getTime() ?? -Infinity : -Infinity;
+      const db = b.deadline ? parseHkDate(b.deadline)?.getTime() ?? -Infinity : -Infinity;
       return (isNaN(db) ? -Infinity : db) - (isNaN(da) ? -Infinity : da);
     }
     if (sortOption === "title_asc") {
@@ -4626,8 +4688,8 @@ function filterHackathons() {
     start.setHours(0, 0, 0, 0);
     filtered = filtered.filter((e) => {
       if (!e.deadline) return false;
-      const d = new Date(e.deadline);
-      return !isNaN(d.getTime()) && d >= start;
+      const d = parseHkDate(e.deadline);
+      return d && !isNaN(d.getTime()) && d >= start;
     });
   }
   if (currentHkEndDateFilter) {
@@ -4635,8 +4697,8 @@ function filterHackathons() {
     end.setHours(23, 59, 59, 999);
     filtered = filtered.filter((e) => {
       if (!e.deadline) return false;
-      const d = new Date(e.deadline);
-      return !isNaN(d.getTime()) && d <= end;
+      const d = parseHkDate(e.deadline);
+      return d && !isNaN(d.getTime()) && d <= end;
     });
   }
 
@@ -5074,8 +5136,8 @@ function hkChangePage(delta) {
 // Formats a raw deadline date into a clean, human-readable string.
 function formatHkDeadline(raw) {
   if (!raw) return "No Deadline Specified";
-  const d = new Date(raw);
-  if (isNaN(d.getTime())) return String(raw);
+  const d = parseHkDate(raw);
+  if (!d || isNaN(d.getTime())) return String(raw);
   return d.toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -5214,8 +5276,8 @@ function renderHkCalendar() {
   const eventsOnDay = {};
   for (const ev of hackathonFiltered) {
     if (!ev.deadline) continue;
-    const d = new Date(ev.deadline);
-    if (isNaN(d.getTime())) continue;
+    const d = parseHkDate(ev.deadline);
+    if (!d || isNaN(d.getTime())) continue;
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     if (!eventsOnDay[key]) eventsOnDay[key] = [];
     eventsOnDay[key].push(ev);
@@ -5280,8 +5342,8 @@ function renderHkCalEvents() {
   const eventsOnDay = {};
   for (const ev of hackathonFiltered) {
     if (!ev.deadline) continue;
-    const d = new Date(ev.deadline);
-    if (isNaN(d.getTime())) continue;
+    const d = parseHkDate(ev.deadline);
+    if (!d || isNaN(d.getTime())) continue;
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     if (!eventsOnDay[key]) eventsOnDay[key] = [];
     eventsOnDay[key].push(ev);

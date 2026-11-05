@@ -1,0 +1,53 @@
+name: Render Free Instance Keep-Alive & 8 PM Reminder Trigger
+
+# This workflow ensures your Render Free Tier instance stays alive and reliably triggers
+# the 8:00 PM IST daily assignment reminders even if the server was spun down due to inactivity.
+
+on:
+  schedule:
+    # Ping every 14 minutes between 06:00 and 22:00 UTC (11:30 AM to 03:30 AM IST)
+    # This prevents Render from sleeping during the daytime and evening hours.
+    - cron: '*/14 6-22 * * *'
+
+    # Exactly at 14:30 UTC = 20:00 (8:00 PM) IST every single day
+    - cron: '30 14 * * *'
+
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab anytime
+
+jobs:
+  ping-and-trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Keep-Alive & Trigger Reminders
+        env:
+          RENDER_APP_URL: ${{ secrets.RENDER_APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$RENDER_APP_URL" ]; then
+            echo "⚠ RENDER_APP_URL secret is not set in GitHub repository secrets."
+            echo "  Go to GitHub -> Repo Settings -> Secrets and variables -> Actions"
+            echo "  Add RENDER_APP_URL with your app URL (e.g. https://volp-reminder.onrender.com)"
+            exit 0
+          fi
+
+          CLEAN_URL="${RENDER_APP_URL%/}"
+
+          # 1. Ping the lightweight health endpoint to ensure the instance is awake
+          echo "Pinging health check: $CLEAN_URL/api/health"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 60 "$CLEAN_URL/api/health" || echo "failed")
+          echo "Health check HTTP response: $HTTP_STATUS"
+
+          # 2. Check current UTC time
+          CURRENT_HOUR=$(date -u +"%H")
+          CURRENT_MIN=$(date -u +"%M")
+          echo "Current time (UTC): $CURRENT_HOUR:$CURRENT_MIN"
+
+          # 3. If running near 14:30 UTC (8:00 PM IST) or manually dispatched, trigger batch reminders
+          if ([ "$CURRENT_HOUR" = "14" ] && [ "$CURRENT_MIN" -ge 25 ] && [ "$CURRENT_MIN" -le 40 ]) || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Triggering 8:00 PM IST Assignment Reminders Batch..."
+            RESPONSE=$(curl -s -X POST "$CLEAN_URL/api/cron/trigger-reminders" \
+              -H "x-cron-secret: $CRON_SECRET" \
+              -H "Content-Type: application/json" \
+              -m 120 || echo '{"error":"Request timed out or failed"}')
+            echo "Trigger response: $RESPONSE"
+          fi
