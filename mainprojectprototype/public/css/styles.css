@@ -5685,15 +5685,119 @@ body.landing-body {
   font-size: 13px;
 }
 
-/* Pagination */
+/* ── Hackathon Pagination & Display Controls ───────────────── */
+.hackathon-pagination,
 .hk-pagination {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 36px;
+  margin-bottom: 28px;
+  padding: 14px 20px;
+  background: #11150e;
+  border: 1px solid #283323;
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.hk-pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hk-page-size-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--text-secondary, #9e9e9e);
+  text-transform: uppercase;
+}
+
+.hk-page-size-select {
+  background: #0d100b;
+  border: 1px solid #283323;
+  border-radius: 6px;
+  color: var(--text-primary, #ffffff);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hk-page-size-select:hover,
+.hk-page-size-select:focus {
+  border-color: var(--accent, #c8ff3d);
+  box-shadow: 0 0 10px rgba(200, 255, 61, 0.2);
+}
+
+.hk-pagination-nav {
+  display: flex;
+  align-items: center;
   gap: 12px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-subtle);
+}
+
+.hk-page-info {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--text-primary, #ffffff);
+  background: #090c07;
+  border: 1px solid #232d1c;
+  border-radius: 6px;
+  padding: 6px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.hk-pag-btn {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  min-height: 32px;
+  padding: 6px 16px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.hk-pag-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+  border-color: #232d1c;
+  color: var(--text-muted, #757575);
+}
+
+@media (max-width: 640px) {
+  .hackathon-pagination,
+  .hk-pagination {
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    padding: 16px 14px;
+  }
+  .hk-pagination-left,
+  .hk-pagination-nav {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* ── Hackathon Deadline Calendar ───────────────────────────── */

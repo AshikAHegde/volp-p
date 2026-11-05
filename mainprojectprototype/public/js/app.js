@@ -9,7 +9,8 @@ let blockedAssignmentsList = [];
 let hackathonEvents = [];
 let hackathonFiltered = [];
 let hackathonPage = 1;
-let hackathonLimit = 24;
+let savedHkLimit = parseInt(localStorage.getItem("volp_hk_limit"), 10);
+let hackathonLimit = [24, 50, 100].includes(savedHkLimit) ? savedHkLimit : 100;
 let hackathonSource = 'all';
 let hackathonTab = 'list';
 let hkCalDate = new Date();
@@ -5091,12 +5092,13 @@ function renderHackathonList() {
   const pag  = document.getElementById("hkPagination");
   if (!grid) return;
 
-  const total      = hackathonFiltered.length;
-  const totalPages = Math.ceil(total / hackathonLimit) || 1;
-  hackathonPage    = Math.min(hackathonPage, totalPages);
+  const total = hackathonFiltered.length;
+  const effectiveLimit = Math.max(1, parseInt(hackathonLimit, 10) || 100);
+  const totalPages = Math.ceil(total / effectiveLimit) || 1;
+  hackathonPage = Math.min(Math.max(1, hackathonPage), totalPages);
 
-  const start   = (hackathonPage - 1) * hackathonLimit;
-  const pageEvs = hackathonFiltered.slice(start, start + hackathonLimit);
+  const start   = (hackathonPage - 1) * effectiveLimit;
+  const pageEvs = hackathonFiltered.slice(start, start + effectiveLimit);
 
   if (pageEvs.length === 0) {
     grid.innerHTML = `<div class="hackathon-empty">
@@ -5113,16 +5115,42 @@ function renderHackathonList() {
 
   grid.innerHTML = pageEvs.map(buildHackathonCard).join("");
 
-  // Pagination
+  // Pagination & Display Controls
   if (pag) {
-    pag.style.display = totalPages > 1 ? "flex" : "none";
+    pag.style.display = total > 0 ? "flex" : "none";
+
     const pageInfo = document.getElementById("hkPageInfo");
-    if (pageInfo) pageInfo.textContent = `PAGE ${hackathonPage} / ${totalPages}  (${total} EVENTS)`;
+    if (pageInfo) {
+      pageInfo.textContent = `PAGE ${hackathonPage} / ${totalPages}  (${total} EVENTS)`;
+    }
+
     const prevBtn = document.getElementById("hkPrevBtn");
     const nextBtn = document.getElementById("hkNextBtn");
     if (prevBtn) prevBtn.disabled = hackathonPage <= 1;
     if (nextBtn) nextBtn.disabled = hackathonPage >= totalPages;
+
+    const bottomSelect = document.getElementById("hkPageSizeSelect");
+    if (bottomSelect) bottomSelect.value = String(effectiveLimit);
+    const topSelect = document.getElementById("hkTopPageSizeSelect");
+    if (topSelect) topSelect.value = String(effectiveLimit);
   }
+}
+
+// Changes the number of hackathon cards shown per page.
+function setHkPageSize(size) {
+  hackathonLimit = Math.max(1, parseInt(size, 10) || 100);
+  try {
+    localStorage.setItem("volp_hk_limit", String(hackathonLimit));
+  } catch (_) {}
+
+  const bottomSelect = document.getElementById("hkPageSizeSelect");
+  const topSelect = document.getElementById("hkTopPageSizeSelect");
+  const val = String(hackathonLimit);
+  if (bottomSelect) bottomSelect.value = val;
+  if (topSelect) topSelect.value = val;
+
+  hackathonPage = 1;
+  renderHackathonList();
 }
 
 // Changes the hackathon list page by delta (+1 / -1).
@@ -5467,6 +5495,7 @@ window.filterHackathons             = filterHackathons;
 window.setHackathonSource           = setHackathonSource;
 window.switchHackathonTab           = switchHackathonTab;
 window.renderHackathonList          = renderHackathonList;
+window.setHkPageSize                = setHkPageSize;
 window.hkChangePage                 = hkChangePage;
 window.hkCalShift                   = hkCalShift;
 window.hkCalToday                   = hkCalToday;

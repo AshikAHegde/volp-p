@@ -1057,6 +1057,16 @@
               </select>
             </label>
 
+            <!-- Cards Per Page Dropdown -->
+            <label class="subject-filter" for="hkTopPageSizeSelect">
+              <span class="subject-filter-label">SHOW</span>
+              <select id="hkTopPageSizeSelect" class="subject-filter-select" onchange="setHkPageSize(this.value)">
+                <option value="100" selected>100 / PAGE (MAX)</option>
+                <option value="50">50 / PAGE</option>
+                <option value="24">24 / PAGE</option>
+              </select>
+            </label>
+
             <!-- Advanced Filters Button -->
             <button type="button" class="btn btn--ghost btn--sm" id="hkAdvancedFilterToggleBtn" onclick="toggleHkAdvancedFilters()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
@@ -1142,10 +1152,20 @@
           <!-- Sub-view 1: Event List Grid -->
           <div id="hkListView">
             <div class="hackathon-grid" id="hackathonGrid"></div>
-            <div class="hackathon-pagination" id="hkPagination" style="display:none;">
-              <button class="btn btn--ghost btn--sm" id="hkPrevBtn" onclick="hkChangePage(-1)">← PREV</button>
-              <span class="hk-page-info" id="hkPageInfo">PAGE 1</span>
-              <button class="btn btn--ghost btn--sm" id="hkNextBtn" onclick="hkChangePage(1)">NEXT →</button>
+            <div class="hackathon-pagination hk-pagination" id="hkPagination" style="display:none;">
+              <div class="hk-pagination-left">
+                <label class="hk-page-size-label" for="hkPageSizeSelect">SHOW:</label>
+                <select id="hkPageSizeSelect" class="hk-page-size-select" onchange="setHkPageSize(this.value)">
+                  <option value="100" selected>100 CARDS (MAX)</option>
+                  <option value="50">50 CARDS</option>
+                  <option value="24">24 CARDS</option>
+                </select>
+              </div>
+              <div class="hk-pagination-nav">
+                <button type="button" class="btn btn--ghost btn--sm hk-pag-btn" id="hkPrevBtn" onclick="hkChangePage(-1)">← PREV</button>
+                <span class="hk-page-info" id="hkPageInfo">PAGE 1</span>
+                <button type="button" class="btn btn--ghost btn--sm hk-pag-btn" id="hkNextBtn" onclick="hkChangePage(1)">NEXT →</button>
+              </div>
             </div>
           </div>
 
